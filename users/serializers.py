@@ -18,7 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = fields
 
 
-class RegisterSerializer(serializers.ModelSerializer):
+class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
     token = serializers.SerializerMethodField()
 
@@ -36,3 +36,28 @@ class RegisterSerializer(serializers.ModelSerializer):
             'refresh': str(refresh),
             'access': str(refresh.access_token),
         }
+
+
+class UserChangePasswordSerializer(serializers.Serializer):
+    old_password = serializers.CharField(required=True)
+    new_password = serializers.CharField(required=True)
+
+    def validate_new_password(self, value):
+        # optional:  validation rules hier
+        if len(value) < 7:
+            raise serializers.ValidationError("Password too short (min 7 characters)")
+        return value
+
+
+class RequestPasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+
+class ConfirmPasswordResetSerializer(serializers.Serializer):
+    token = serializers.UUIDField()
+    new_password = serializers.CharField()
+
+    def validate_new_password(self, value):
+        if len(value) < 7:
+            raise serializers.ValidationError("Password too short")
+        return value

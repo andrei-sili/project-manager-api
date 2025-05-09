@@ -21,11 +21,17 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 
+from users.views import RequestPasswordResetView, ConfirmPasswordResetView
+
 auth_urlpatterns = [
     path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
+request_confirm_pass_urlpatterns = [
+    path('api/request-reset-password/', RequestPasswordResetView.as_view(), name='request-reset-password'),
+    path('api/confirm-reset-password/', ConfirmPasswordResetView.as_view(), name='confirm-reset-password'),
+]
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('users.urls')),
-] + auth_urlpatterns
+] + auth_urlpatterns + request_confirm_pass_urlpatterns
