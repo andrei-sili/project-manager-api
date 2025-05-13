@@ -51,28 +51,4 @@ class PasswordResetToken(models.Model):
         return timezone.now() > self.created_at + timedelta(hours=1)
 
 
-class Team(models.Model):
-    name = models.CharField(max_length=100)
-    created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='teams_created')
-    members = models.ManyToManyField(CustomUser, through='TeamMembership', related_name='teams_joined')
 
-    def __str__(self):
-        return self.name
-
-
-class TeamMembership(models.Model):
-    TYPE_CHOICES = [
-        ('admin', 'Admin'),
-        ('manager', 'Manager'),
-        ('developer', 'Developer')
-    ]
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
-    role = models.CharField(max_length=9, choices=TYPE_CHOICES)
-    joined_at = models.DateTimeField(auto_now_add=True, editable=False)
-
-    class Meta:
-        unique_together = ('user', 'team')
-
-    def __str__(self):
-        return f"{self.user} - {self.team} ({self.role})"
