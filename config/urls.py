@@ -34,4 +34,7 @@ request_confirm_pass_urlpatterns = [
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include('users.urls')),
-] + auth_urlpatterns + request_confirm_pass_urlpatterns
+    path('api/', include('teams.urls'))
+]
+urlpatterns += auth_urlpatterns
+urlpatterns += request_confirm_pass_urlpatterns
