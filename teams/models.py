@@ -23,7 +23,7 @@ class TeamMembership(models.Model):
     ]
 
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    team = models.ForeignKey(Team, on_delete=models.CASCADE)
+    team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='membership_set')
     role = models.CharField(max_length=9, choices=ROLE_CHOICES)
     joined_at = models.DateTimeField(auto_now_add=True, editable=False)
 
