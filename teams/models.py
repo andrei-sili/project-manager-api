@@ -4,7 +4,7 @@ from users.models import CustomUser
 
 
 class Team(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, unique=True)
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='teams_created')
     members = models.ManyToManyField(CustomUser, through='TeamMembership', related_name='teams_joined')
 
