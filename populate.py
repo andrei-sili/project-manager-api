@@ -1,7 +1,7 @@
 import os
 import django
 
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project_manager_api.settings")
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 from users.models import CustomUser
@@ -44,4 +44,4 @@ team2 = Team.objects.create(name="QA Team", created_by=created_users[1])
 TeamMembership.objects.create(team=team2, user=created_users[1], role='admin')
 TeamMembership.objects.create(team=team2, user=created_users[2], role='developer')
 
-print("Successful populated db")
+print("DB Successful populated !")
