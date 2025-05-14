@@ -4,7 +4,9 @@ from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_simplejwt.tokens import RefreshToken
 
+from teams.models import TeamMembership
 from users.models import CustomUser, PasswordResetToken
 from users.serializers import UserSerializer, UserRegisterSerializer, UserChangePasswordSerializer, \
     ConfirmPasswordResetSerializer, RequestPasswordResetSerializer
@@ -104,3 +106,47 @@ class ConfirmPasswordResetView(APIView):
             return Response({'detail': 'Password reset successful.'}, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RegisterAndAcceptInviteView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email")
+        password = request.data.get("password")
+        first_name = request.data.get("first_name")
+        last_name = request.data.get("last_name")
+        team_id = request.data.get("team_id")
+
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            return Response({"error": "Invalid invitation."}, status=404)
+
+        if user.has_usable_password():
+            return Response({"error": "User already registered."}, status=400)
+
+        user.first_name = first_name
+        user.last_name = last_name
+        user.set_password(password)
+        user.save()
+
+        try:
+            membership = TeamMembership.objects.get(user=user, team_id=team_id)
+            if membership.status != 'pending':
+                return Response({'error': 'Invitation already handled.'}, status=400)
+            membership.status = 'accepted'
+            membership.save()
+        except TeamMembership.DoesNotExist:
+            return Response({'error': 'No pending invite found.'}, status=404)
+
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+            "user": {
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name
+            }
+        })
