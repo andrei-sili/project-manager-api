@@ -40,3 +40,10 @@ class TeamCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Team
         fields = ['name']
+
+
+# teams/serializers.py
+
+class InviteMemberSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    role = serializers.ChoiceField(choices=TeamMembership.ROLE_CHOICES)
