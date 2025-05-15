@@ -20,21 +20,37 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
-
+from rest_framework_nested import routers
+from projects.views import ProjectViewSet
+from tasks.views import TaskViewSet
 from users.views import RequestPasswordResetView, ConfirmPasswordResetView
 
+#  JWT Auth
 auth_urlpatterns = [
     path('api/login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
+
+#  Reset password
 request_confirm_pass_urlpatterns = [
     path('api/request-reset-password/', RequestPasswordResetView.as_view(), name='request-reset-password'),
     path('api/confirm-reset-password/', ConfirmPasswordResetView.as_view(), name='confirm-reset-password'),
 ]
+
+#  Routers
+router = routers.SimpleRouter()
+router.register('projects', ProjectViewSet, basename='projects')
+
+projects_router = routers.NestedSimpleRouter(router, 'projects', lookup='project')
+projects_router.register('tasks', TaskViewSet, basename='project-tasks')
+
+#  Final urlpatterns
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include(router.urls)),           # /api/projects/
+    path('api/', include(projects_router.urls)),  # /api/projects/<id>/tasks/
     path('api/', include('users.urls')),
-    path('api/', include('teams.urls'))
-]
-urlpatterns += auth_urlpatterns
-urlpatterns += request_confirm_pass_urlpatterns
+    path('api/', include('teams.urls')),
+] + auth_urlpatterns + request_confirm_pass_urlpatterns
+
+
