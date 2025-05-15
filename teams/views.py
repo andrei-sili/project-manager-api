@@ -64,6 +64,7 @@ class TeamViewSet(viewsets.ModelViewSet):
             role=role,
             status='pending'
         )
+        self.send_invite_email(user, team)
 
         return Response({'status': 'invitation sent', 'email': email})
 
