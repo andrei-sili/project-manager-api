@@ -121,10 +121,10 @@ class RegisterAndAcceptInviteView(APIView):
         try:
             user = CustomUser.objects.get(email=email)
         except CustomUser.DoesNotExist:
-            return Response({"error": "Invalid invitation."}, status=404)
+            return Response({"error": "Invalid invitation."}, status=status.HTTP_404_NOT_FOUND)
 
         if user.has_usable_password():
-            return Response({"error": "User already registered."}, status=400)
+            return Response({"error": "User already registered."}, status=status.HTTP_400_BAD_REQUEST)
 
         user.first_name = first_name
         user.last_name = last_name
@@ -134,11 +134,11 @@ class RegisterAndAcceptInviteView(APIView):
         try:
             membership = TeamMembership.objects.get(user=user, team_id=team_id)
             if membership.status != 'pending':
-                return Response({'error': 'Invitation already handled.'}, status=400)
+                return Response({'error': 'Invitation already handled.'}, status=status.HTTP_400_BAD_REQUEST)
             membership.status = 'accepted'
             membership.save()
         except TeamMembership.DoesNotExist:
-            return Response({'error': 'No pending invite found.'}, status=404)
+            return Response({'error': 'No pending invite found.'}, status=status.HTTP_404_NOT_FOUND)
 
         refresh = RefreshToken.for_user(user)
         return Response({
