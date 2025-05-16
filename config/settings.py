@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     'teams',
     'tasks',
     'projects',
+    'comments',
+    'taskfiles',
     'rest_framework_simplejwt',
     'django_filters',
 ]
