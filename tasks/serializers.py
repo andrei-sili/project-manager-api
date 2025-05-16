@@ -6,8 +6,9 @@ from users.models import CustomUser
 
 
 class TaskSerializer(serializers.ModelSerializer):
-    assigned_to = serializers.StringRelatedField()
+    assigned_to = serializers.SerializerMethodField()
     created_by = serializers.StringRelatedField()
+    project = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -20,8 +21,17 @@ class TaskSerializer(serializers.ModelSerializer):
             'due_date',
             'assigned_to',
             'created_by',
+            'project',
             'created_at',
         ]
+
+    def get_assigned_to(self, obj):
+        if obj.assigned_to:
+            return f"{obj.assigned_to.first_name} {obj.assigned_to.last_name}"
+        return None
+
+    def get_project(self, obj):
+        return obj.project.name
 
 
 class TaskCreateSerializer(serializers.ModelSerializer):
