@@ -26,7 +26,7 @@ class TaskSerializer(serializers.ModelSerializer):
 
 class TaskCreateSerializer(serializers.ModelSerializer):
     project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
-    assigned_to = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all())
+    assigned_to = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False)
 
     class Meta:
         model = Task

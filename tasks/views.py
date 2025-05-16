@@ -1,4 +1,5 @@
-from rest_framework import viewsets, permissions, status
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, permissions, status, filters
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
@@ -11,6 +12,10 @@ from tasks.serializers import TaskSerializer, TaskCreateSerializer
 
 class TaskViewSet(viewsets.ModelViewSet):
     queryset = Task.objects.all()
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    filterset_fields = ['status', 'priority', 'assigned_to', 'project']
+    ordering_fields = ['due_date', 'created_at']
+    search_fields = ['title', 'description']
 
     def get_permissions(self):
         if self.action in ['update', 'partial_update', 'destroy']:

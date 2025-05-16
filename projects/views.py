@@ -1,4 +1,5 @@
-from rest_framework import viewsets, permissions
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import viewsets, permissions, filters
 from rest_framework.exceptions import PermissionDenied
 
 from projects.models import Project
@@ -9,6 +10,10 @@ from projects.serializers import ProjectCreateSerializer, ProjectSerializer
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     permission_classes = [permissions.IsAuthenticated, IsTeamMember]
+    filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
+    filterset_fields = ['team__id', 'created_by__id']
+    ordering_fields = ['created_at', 'name']
+    search_fields = ['name', 'description']
 
     def get_queryset(self):
         return Project.objects.filter(team__members=self.request.user)
