@@ -18,3 +18,7 @@ class TaskFileSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         return request.build_absolute_uri(obj.file.url) if request else obj.file.url
 
+    def validate_file(self, value):
+        if value.size > 5 * 1024 * 1024:  # 5MB
+            raise serializers.ValidationError("File too large (max 5MB)")
+        return value

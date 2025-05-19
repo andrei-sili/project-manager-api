@@ -17,7 +17,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         if not task.project.team.members.filter(id=self.request.user.id).exists():
             raise PermissionDenied("You are not a member of this team.")
 
-        return Comment.objects.filter(task=task, parent__isnull=True).prefetch_related('replies')
+        return Comment.objects.filter(task=task, parent__isnull=True).prefetch_related('replies').order_by('-created_at')
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
