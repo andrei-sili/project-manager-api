@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'django_filters',
     'notify',
+    'logs',
 ]
 
 AUTH_USER_MODEL = 'users.CustomUser'

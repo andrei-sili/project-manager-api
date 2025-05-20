@@ -23,6 +23,7 @@ from rest_framework_simplejwt.views import (
 from rest_framework_nested import routers
 
 from comments.views import CommentViewSet
+from logs.views import ActivityLogViewSet
 from notify.views import NotificationViewSet
 from projects.views import ProjectViewSet
 from taskfiles.views import TaskFileViewSet
@@ -52,6 +53,7 @@ tasks_router = routers.NestedSimpleRouter(projects_router, r'tasks', lookup='tas
 tasks_router.register(r'comments', CommentViewSet, basename='task-comments')
 tasks_router.register('files', TaskFileViewSet, basename='task-files')
 router.register('notifications', NotificationViewSet, basename='notifications')
+router.register('logs', ActivityLogViewSet, basename='logs')
 
 #  Final urlpatterns
 urlpatterns = [

@@ -8,6 +8,7 @@ from asgiref.sync import async_to_sync
 from comments.models import Comment
 from comments.permisions import IsProjectTeamMember
 from comments.serializers import CommentCreateSerializer, CommentSerializer
+from logs.services import log_activity
 from notify.services import notify_user
 from tasks.models import Task
 
@@ -45,6 +46,15 @@ class CommentViewSet(viewsets.ModelViewSet):
                 email_body=f"{self.request.user.first_name} commented on your task '{task.title}' in project '{task.project.name}'."
             )
 
+        log_activity(
+            user=self.request.user,
+            action='commented',
+            target_type='comment',
+            target_id=comment.id,
+            target_repr=f"Comment on task: {task.title}",
+            project=task.project
+        )
+
     def list(self, request, *args, **kwargs):
         queryset = self.get_queryset()
         page = self.paginate_queryset(queryset)
@@ -55,3 +65,14 @@ class CommentViewSet(viewsets.ModelViewSet):
 
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
+
+    def perform_destroy(self, instance):
+        log_activity(
+            user=self.request.user,
+            action='deleted',
+            target_type='task',
+            target_id=instance.id,
+            target_repr=f"Task: {instance.title}",
+            project=instance.project
+        )
+        instance.delete()
