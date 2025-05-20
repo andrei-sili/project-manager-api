@@ -5,6 +5,7 @@ from rest_framework import viewsets, permissions, status, filters
 from rest_framework.exceptions import PermissionDenied
 from channels.layers import get_channel_layer
 
+from logs.services import log_activity
 from notify.services import notify_user
 from projects.models import Project
 from projects.permisions import IsTeamMember
@@ -57,4 +58,35 @@ class TaskViewSet(viewsets.ModelViewSet):
                 email_body=f"You have been assigned a new task in project '{project.name}'."
             )
 
+        log_activity(
+            user=self.request.user,
+            action='created',
+            target_type='task',
+            target_id=task.id,
+            target_repr=f"Task: {task.title}",
+            project=project
+        )
+
+    def perform_update(self, serializer):
+        task = serializer.save()
+
+        log_activity(
+            user=self.request.user,
+            action='updated',
+            target_type='task',
+            target_id=task.id,
+            target_repr=f"Task: {task.title}",
+            project=task.project
+        )
+
+    def perform_destroy(self, instance):
+        log_activity(
+            user=self.request.user,
+            action='deleted',
+            target_type='task',
+            target_id=instance.id,
+            target_repr=f"Task: {instance.title}",
+            project=instance.project
+        )
+        instance.delete()
 
