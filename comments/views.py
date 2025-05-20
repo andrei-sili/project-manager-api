@@ -8,6 +8,7 @@ from asgiref.sync import async_to_sync
 from comments.models import Comment
 from comments.permisions import IsProjectTeamMember
 from comments.serializers import CommentCreateSerializer, CommentSerializer
+from notify.services import notify_user
 from tasks.models import Task
 
 
@@ -37,23 +38,11 @@ class CommentViewSet(viewsets.ModelViewSet):
         assigned = task.assigned_to
 
         if assigned and assigned != self.request.user:
-            send_mail(
-                subject=f"New Comment on Task: {task.title}",
-                message=f"{self.request.user.first_name} commented on your task '{task.title}' in project '{task.project.name}'.",
-                from_email="no-reply@projectmanager.com",
-                recipient_list=[assigned.email]
-            )
-
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f"user_{assigned.id}",
-                {
-                    "type": "notify",
-                    "data": {
-                        "message": f"New comment on task: {task.title}",
-                        "from": f"{self.request.user.first_name} {self.request.user.last_name}"
-                    }
-                }
+            notify_user(
+                user=assigned,
+                message=f"New comment on task: {task.title}",
+                email_subject="New Comment on Your Task",
+                email_body=f"{self.request.user.first_name} commented on your task '{task.title}' in project '{task.project.name}'."
             )
 
     def list(self, request, *args, **kwargs):

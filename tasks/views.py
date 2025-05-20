@@ -5,6 +5,7 @@ from rest_framework import viewsets, permissions, status, filters
 from rest_framework.exceptions import PermissionDenied
 from channels.layers import get_channel_layer
 
+from notify.services import notify_user
 from projects.models import Project
 from projects.permisions import IsTeamMember
 from tasks.models import Task
@@ -33,6 +34,8 @@ class TaskViewSet(viewsets.ModelViewSet):
             return TaskCreateSerializer
         return TaskSerializer
 
+    from notify.services import notify_user  # sau notifications.services, în funcție de app
+
     def perform_create(self, serializer):
         project_id = self.kwargs.get('project_pk')
         project = Project.objects.get(id=project_id)
@@ -47,25 +50,11 @@ class TaskViewSet(viewsets.ModelViewSet):
         task = serializer.save(created_by=self.request.user, project=project)
 
         if assigned_user and assigned_user != self.request.user:
-            send_mail(
-                subject=f"New Task Assigned: {task.title}",
-                message=f"You have been assigned a new task in project '{project.name}'.",
-                from_email="no-reply@projectmanager.com",
-                recipient_list=[assigned_user.email]
-            )
-
-        if assigned_user:
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                f"user_{assigned_user.id}",
-                {
-                    "type": "notify",
-                    "data": {
-                        "message": f"New task assigned: {task.title}",
-                        "project": project.name,
-                        "due": str(task.due_date) if task.due_date else None
-                    }
-                }
+            notify_user(
+                user=assigned_user,
+                message=f"New task assigned: {task.title}",
+                email_subject="New Task Assigned",
+                email_body=f"You have been assigned a new task in project '{project.name}'."
             )
 
 
