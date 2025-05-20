@@ -1,7 +1,9 @@
+from asgiref.sync import async_to_sync
+from django.core.mail import send_mail
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, permissions, status, filters
 from rest_framework.exceptions import PermissionDenied
-from rest_framework.response import Response
+from channels.layers import get_channel_layer
 
 from projects.models import Project
 from projects.permisions import IsTeamMember
@@ -42,6 +44,28 @@ class TaskViewSet(viewsets.ModelViewSet):
         if assigned_user and not project.team.members.filter(id=assigned_user.id).exists():
             raise PermissionDenied("Assigned user is not part of this team.")
 
-        serializer.save(created_by=self.request.user, project=project)
+        task = serializer.save(created_by=self.request.user, project=project)
+
+        if assigned_user and assigned_user != self.request.user:
+            send_mail(
+                subject=f"New Task Assigned: {task.title}",
+                message=f"You have been assigned a new task in project '{project.name}'.",
+                from_email="no-reply@projectmanager.com",
+                recipient_list=[assigned_user.email]
+            )
+
+        if assigned_user:
+            channel_layer = get_channel_layer()
+            async_to_sync(channel_layer.group_send)(
+                f"user_{assigned_user.id}",
+                {
+                    "type": "notify",
+                    "data": {
+                        "message": f"New task assigned: {task.title}",
+                        "project": project.name,
+                        "due": str(task.due_date) if task.due_date else None
+                    }
+                }
+            )
 
 

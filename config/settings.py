@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'taskfiles',
     'rest_framework_simplejwt',
     'django_filters',
+    'notify',
 ]
 
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -159,3 +160,5 @@ SIMPLE_JWT = {
     'ROTATE_REFRESH_TOKENS': False,
     'BLACKLIST_AFTER_ROTATION': False,
 }
+
+ASGI_APPLICATION = 'project-manager-api.asgi.application'
