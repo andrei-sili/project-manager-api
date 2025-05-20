@@ -4,8 +4,8 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
-from users.models import CustomUser
-from teams.models import Team, TeamMembership
+from apps.users.models import CustomUser
+from apps.teams.models import Team, TeamMembership
 
 
 TeamMembership.objects.all().delete()

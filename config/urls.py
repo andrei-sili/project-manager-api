@@ -22,23 +22,25 @@ from rest_framework_simplejwt.views import (
 )
 from rest_framework_nested import routers
 
-from comments.views import CommentViewSet
-from logs.views import ActivityLogViewSet
-from notify.views import NotificationViewSet
-from projects.views import ProjectViewSet
-from taskfiles.views import TaskFileViewSet
-from tasks.views import TaskViewSet
-from users.views import RequestPasswordResetView, ConfirmPasswordResetView
+from apps.comments.views import CommentViewSet
+from apps.logs.views import ActivityLogViewSet
+
+from apps.notify.views import NotificationViewSet
+from apps.projects.views import ProjectViewSet
+from apps.taskfiles.views import TaskFileViewSet
+from apps.tasks.views import TaskViewSet
+
+from apps.users.views import RequestPasswordResetView, ConfirmPasswordResetView
 
 #  JWT Auth
 auth_urlpatterns = [
-    path('api/login/', TokenObtainPairView.as_view(), name='login'),
+    path('api/token_obtain_pair/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 ]
 
 #  Reset password
 request_confirm_pass_urlpatterns = [
-    path('api/request-reset-password/', RequestPasswordResetView.as_view(), name='request-reset-password'),
+    path('api/token/', RequestPasswordResetView.as_view(), name='request-reset-password'),
     path('api/confirm-reset-password/', ConfirmPasswordResetView.as_view(), name='confirm-reset-password'),
 ]
 
@@ -60,8 +62,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', include(router.urls)),
     path('api/', include(projects_router.urls)),
-    path('api/', include('users.urls')),
-    path('api/', include('teams.urls')),
+    path('api/', include('apps.users.urls')),
+    path('api/', include('apps.teams.urls')),
     path('api/', include(tasks_router.urls)),
 ] + auth_urlpatterns + request_confirm_pass_urlpatterns
 
