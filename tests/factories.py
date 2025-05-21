@@ -23,7 +23,7 @@ class UserFactory(DjangoModelFactory):
     first_name = factory.Faker("first_name")
     last_name = factory.Faker("last_name")
     is_active = True
-    password = factory.PostGenerationMethodCall("set_password", "password123")
+    password = factory.PostGenerationMethodCall("set_password", "password123A!")
 
 
 # -------- TEAMS --------
