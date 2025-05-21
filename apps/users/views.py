@@ -28,13 +28,13 @@ class UserViewSet(viewsets.ViewSet):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
-    @action(detail=False, methods=['patch'], url_path='update-profile', permission_classes=[permissions.IsAuthenticated])
+    @action(detail=False, methods=['patch'], url_path='update-profile',
+            permission_classes=[permissions.IsAuthenticated])
     def update_profile(self, request):
         serializer = UserSerializer(request.user, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=['post'], url_path='change-password',
             permission_classes=[permissions.IsAuthenticated])

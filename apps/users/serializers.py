@@ -19,6 +19,13 @@ class UserSerializer(serializers.ModelSerializer):
 
         read_only_fields = ['id', 'email', 'date_joined']
 
+    def validate(self, attrs):
+        print("VALIDATE EXECUTED")
+        for field in self.Meta.read_only_fields:
+            if field in self.initial_data:
+                raise serializers.ValidationError({field: "This field is read-only."})
+        return super().validate(attrs)
+
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
