@@ -30,6 +30,7 @@ class UserFactory(DjangoModelFactory):
 class TeamFactory(DjangoModelFactory):
     class Meta:
         model = Team
+        skip_postgeneration_save = True
 
     name = factory.Sequence(lambda n: f"Team {n}")
     created_by = factory.SubFactory(UserFactory)

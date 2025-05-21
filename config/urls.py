@@ -29,6 +29,7 @@ from apps.notify.views import NotificationViewSet
 from apps.projects.views import ProjectViewSet
 from apps.taskfiles.views import TaskFileViewSet
 from apps.tasks.views import TaskViewSet
+from apps.teams.views import TeamViewSet
 
 from apps.users.views import RequestPasswordResetView, ConfirmPasswordResetView
 
@@ -56,6 +57,7 @@ tasks_router.register(r'comments', CommentViewSet, basename='task-comments')
 tasks_router.register('files', TaskFileViewSet, basename='task-files')
 router.register('notifications', NotificationViewSet, basename='notifications')
 router.register('logs', ActivityLogViewSet, basename='logs')
+router.register(r'teams', TeamViewSet, basename='teams')
 
 #  Final urlpatterns
 urlpatterns = [
@@ -63,7 +65,6 @@ urlpatterns = [
     path('api/', include(router.urls)),
     path('api/', include(projects_router.urls)),
     path('api/', include('apps.users.urls')),
-    path('api/', include('apps.teams.urls')),
     path('api/', include(tasks_router.urls)),
 ] + auth_urlpatterns + request_confirm_pass_urlpatterns
 
