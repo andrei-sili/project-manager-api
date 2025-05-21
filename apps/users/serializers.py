@@ -1,3 +1,5 @@
+import re
+
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -31,6 +33,13 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             'password',
             'token']
 
+        extra_kwargs = {
+            'email': {'required': True},
+            'first_name': {'required': True},
+            'last_name': {'required': True},
+            'password': {'required': True},
+        }
+
     def create(self, validated_data):
         user = CustomUser.objects.create_user(**validated_data)
         return user
@@ -42,16 +51,16 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             'access': str(refresh.access_token),
         }
 
+    def validate_password(self, value):
+        return validate_password(value)
+
 
 class UserChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
 
     def validate_new_password(self, value):
-        # optional:  validation rules hier
-        if len(value) < 7:
-            raise serializers.ValidationError("Password too short (min 7 characters)")
-        return value
+        return validate_password(value)
 
 
 class RequestPasswordResetSerializer(serializers.Serializer):
@@ -63,6 +72,18 @@ class ConfirmPasswordResetSerializer(serializers.Serializer):
     new_password = serializers.CharField()
 
     def validate_new_password(self, value):
-        if len(value) < 7:
-            raise serializers.ValidationError("Password too short")
-        return value
+        return validate_password(value)
+
+
+def validate_password(value):
+    if len(value) < 8:
+        raise serializers.ValidationError("Password too short (min 7 characters)")
+    if len(value) > 16:
+        raise serializers.ValidationError("Password too long (max 16 characters)")
+    if not re.search(r"[A-Z]", value):
+        raise serializers.ValidationError("Password must contain at least one uppercase letter.")
+    if not re.search(r"\d", value):
+        raise serializers.ValidationError("Password must contain at least one number.")
+    if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", value):
+        raise serializers.ValidationError("Password must contain at least one special character.")
+    return value

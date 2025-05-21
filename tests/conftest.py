@@ -1,20 +1,24 @@
 import pytest
 from rest_framework.test import APIClient
 
+
 @pytest.fixture
 def api_client():
     return APIClient()
+
 
 @pytest.fixture
 def user(db):
     from tests.factories import UserFactory
     return UserFactory()
 
+
 @pytest.fixture
 def auth_client(user):
     client = APIClient()
     client.force_authenticate(user=user)
     return client
+
 
 @pytest.fixture
 def team(db, user):
@@ -24,10 +28,12 @@ def team(db, user):
     TeamMembership.objects.create(team=team, user=user, role='admin', status='accepted')
     return team
 
+
 @pytest.fixture
 def project(team):
     from tests.factories import ProjectFactory
     return ProjectFactory(team=team, created_by=team.created_by)
+
 
 @pytest.fixture
 def task(project):
