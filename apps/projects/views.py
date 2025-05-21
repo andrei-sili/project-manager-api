@@ -1,9 +1,10 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, permissions, filters
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 
 from apps.projects.models import Project
-from apps.projects.permisions import IsTeamMember
+from apps.projects.permisions import IsTeamMember, IsProjectAdmin
 from apps.projects.serializers import ProjectCreateSerializer, ProjectSerializer
 
 
@@ -16,7 +17,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'description']
 
     def get_queryset(self):
-        return Project.objects.filter(team__members=self.request.user)
+        return Project.objects.filter(team__members=self.request.user).order_by('-id')
+
+    def get_permissions(self):
+        if self.action in ['update', 'partial_update', 'destroy']:
+            return [IsProjectAdmin()]
+        return [IsAuthenticated()]
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -28,3 +34,4 @@ class ProjectViewSet(viewsets.ModelViewSet):
         if not team.members.filter(id=self.request.user.id).exists():
             raise PermissionDenied("You are not a member of this team.")
         serializer.save(created_by=self.request.user)
+
