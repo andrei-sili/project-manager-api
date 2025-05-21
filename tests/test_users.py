@@ -165,6 +165,15 @@ def test_update_profile(auth_client):
 
 
 @pytest.mark.django_db
+def test_update_profile_email_readonly(auth_client):
+    url = reverse("user-update-profile")
+    res = auth_client.patch(url, {"email": "hacker@example.com"})
+    assert res.status_code == 400
+    assert "email" in res.data
+
+
+
+@pytest.mark.django_db
 def test_change_password(auth_client, user):
     url = reverse("user-change-password")
     data = {
