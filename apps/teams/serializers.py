@@ -42,8 +42,6 @@ class TeamCreateSerializer(serializers.ModelSerializer):
         fields = ['name']
 
 
-# teams/serializers.py
-
 class InviteMemberSerializer(serializers.Serializer):
     email = serializers.EmailField()
     role = serializers.ChoiceField(choices=TeamMembership.ROLE_CHOICES)

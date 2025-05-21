@@ -5,19 +5,25 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.response import Response
 
+
 from apps.teams.models import Team, TeamMembership
 from apps.teams.permisions import IsTeamAdmin
 from apps.teams.serializers import TeamSerializer, TeamCreateSerializer
 from apps.users.models import CustomUser
+from django.db.models import Q
+
 
 
 class TeamViewSet(viewsets.ModelViewSet):
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
     permission_classes = [permissions.IsAuthenticated]
+    lookup_field = "pk"
 
     def get_queryset(self):
-        return Team.objects.filter(members=self.request.user)
+        return Team.objects.filter(
+            Q(members=self.request.user) | Q(created_by=self.request.user)
+        ).distinct().order_by('-id')
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -36,7 +42,7 @@ class TeamViewSet(viewsets.ModelViewSet):
             status='accepted'
         )
 
-    @action(detail=True, methods=['post'], permission_classes=[IsTeamAdmin])
+    @action(detail=True, methods=['post'], url_path='invite-member', permission_classes=[IsTeamAdmin])
     def invite_member(self, request, pk=None):
         team = self.get_object()
         email = request.data.get('email')
@@ -71,7 +77,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         message = f"Hi,\n\nYou've been invited to join '{team.name}' on Project Manager.\nAccept your invitation: {invite_link}"
         send_mail(subject, message, 'no-reply@yourapp.com', [user.email])
 
-    @action(detail=True, methods=['post'], url_path='accept', permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['post'], url_path='accept-invite', permission_classes=[permissions.IsAuthenticated])
     def accept_invite(self, request, pk=None):
         team = self.get_object()
         try:
@@ -84,7 +90,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         except TeamMembership.DoesNotExist:
             return Response({'error': 'No invitation found'}, status=404)
 
-    @action(detail=True, methods=['post'], url_path='decline', permission_classes=[permissions.IsAuthenticated])
+    @action(detail=True, methods=['post'], url_path='decline-invite', permission_classes=[permissions.IsAuthenticated])
     def decline_invite(self, request, pk=None):
         team = self.get_object()
         try:
@@ -97,7 +103,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         except TeamMembership.DoesNotExist:
             return Response({'error': 'No invitation found'}, status=404)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsTeamAdmin])
+    @action(detail=True, methods=['post'], url_path='remove-member', permission_classes=[IsTeamAdmin])
     def remove_member(self, request, pk=None):
         team = self.get_object()
         user_id = request.data.get('user_id')
@@ -112,7 +118,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         except TeamMembership.DoesNotExist:
             return Response({'error': 'Membership not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    @action(detail=True, methods=['post'], permission_classes=[IsTeamAdmin])
+    @action(detail=True, methods=['post'], url_path='change-role', permission_classes=[IsTeamAdmin])
     def change_role(self, request, pk=None):
         team = self.get_object()
         user_id = request.data.get('user_id')
