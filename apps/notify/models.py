@@ -1,6 +1,7 @@
 from django.db import models
 from apps.users.models import CustomUser
 
+
 class Notification(models.Model):
     TYPE_CHOICES = [
         ('general', 'General'),
@@ -17,4 +18,3 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.type} - {self.message[:30]}"
-
