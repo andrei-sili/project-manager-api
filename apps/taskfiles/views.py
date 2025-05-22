@@ -18,7 +18,7 @@ class TaskFileViewSet(viewsets.ModelViewSet):
         if not task.project.team.members.filter(id=self.request.user.id).exists():
             raise PermissionDenied("You are not a member of this team.")
 
-        return TaskFile.objects.filter(task=task)
+        return TaskFile.objects.filter(task=task).order_by("-uploaded_at")
 
     def perform_create(self, serializer):
         task = get_object_or_404(Task, id=self.kwargs['task_pk'])
