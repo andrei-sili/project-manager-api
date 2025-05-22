@@ -60,7 +60,6 @@ INSTALLED_APPS = [
     'apps.notify',
     'apps.logs',
 
-
 ]
 
 AUTH_USER_MODEL = 'users.CustomUser'
@@ -138,7 +137,6 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
-
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
@@ -172,3 +170,12 @@ SIMPLE_JWT = {
 }
 
 ASGI_APPLICATION = 'project-manager-api.asgi.application'
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+        # for redis
+        #"BACKEND": "channels_redis.core.RedisChannelLayer",
+        #"CONFIG": {"hosts": [("127.0.0.1", 6379)]},
+    }
+}

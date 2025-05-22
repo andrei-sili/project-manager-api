@@ -15,3 +15,5 @@ routing==0.2.0
 sqlparse==0.5.3
 swapper==1.4.0
 tzdata==2025.2
+pytest~=8.3.5
+factory_boy~=3.3.3
