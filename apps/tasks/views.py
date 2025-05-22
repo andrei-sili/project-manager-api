@@ -25,7 +25,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         project_id = self.kwargs.get('project_pk')
-        return Task.objects.filter(project__id=project_id, project__team__members=self.request.user)
+        return Task.objects.filter(project__id=project_id, project__team__members=self.request.user).order_by("-id")
 
     def get_serializer_class(self):
         if self.action == 'create':
