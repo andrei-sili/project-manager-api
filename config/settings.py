@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework_simplejwt',
     'django_filters',
+    'corsheaders',
 
     # local apps
     'apps.users',
@@ -66,6 +67,7 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -179,3 +181,5 @@ CHANNEL_LAYERS = {
         #"CONFIG": {"hosts": [("127.0.0.1", 6379)]},
     }
 }
+
+CORS_ALLOW_ALL_ORIGINS = True
