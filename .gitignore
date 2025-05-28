@@ -198,6 +198,8 @@ cython_debug/
 # next.js
 /.next/
 /out/
+# Next.js
+.next/
 
 # production
 /build
