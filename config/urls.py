@@ -29,7 +29,7 @@ from apps.logs.views import ActivityLogViewSet
 from apps.notify.views import NotificationViewSet
 from apps.projects.views import ProjectViewSet
 from apps.taskfiles.views import TaskFileViewSet
-from apps.tasks.views import TaskViewSet
+from apps.tasks.views import TaskViewSet, MyTaskViewSet
 from apps.teams.views import TeamViewSet
 
 from apps.users.views import RequestPasswordResetView, ConfirmPasswordResetView
@@ -59,6 +59,7 @@ tasks_router.register('files', TaskFileViewSet, basename='task-files')
 router.register('notifications', NotificationViewSet, basename='notifications')
 router.register('logs', ActivityLogViewSet, basename='logs')
 router.register(r'teams', TeamViewSet, basename='teams')
+router.register("my-tasks", MyTaskViewSet, basename="my-tasks")
 
 #  Final urlpatterns
 urlpatterns = [
