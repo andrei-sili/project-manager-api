@@ -55,5 +55,10 @@ export function updateProject(
   return api.put<Project>(`/projects/${id}/`, payload).then((res) => res.data);
 }
 
+export function fetchMyTasks(): Promise<Task[]> {
+  return api
+    .get<Paginated<Task>>("/my-tasks/")
+    .then((res) => res.data.results);
+}
 // 7) Export default api
 export default api;
