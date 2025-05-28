@@ -1,40 +1,55 @@
-'use client'
-
-import { useState } from 'react'
+"use client";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { login } from "@/lib/auth";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/token/', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      })
-
-      if (!res.ok) throw new Error('Invalid credentials')
-      const data = await res.json()
-      localStorage.setItem('access', data.access)
-      localStorage.setItem('refresh', data.refresh)
-      window.location.href = '/dashboard'
-    } catch (err) {
-      setError('Email sau parolă incorectă')
+      await login(email, password);
+      router.replace("/dashboard");
+    } catch {
+      setError("Email or password is incorrect");
     }
-  }
+  };
 
   return (
-    <div className="max-w-md mx-auto mt-32 p-6 bg-zinc-800 rounded">
-      <h1 className="text-2xl mb-4">Login</h1>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-        <input type="email" placeholder="email" value={email} onChange={e => setEmail(e.target.value)} className="p-2 rounded bg-zinc-900 border" />
-        <input type="password" placeholder="password" value={password} onChange={e => setPassword(e.target.value)} className="p-2 rounded bg-zinc-900 border" />
+    <div className="flex h-screen items-center justify-center bg-zinc-900 text-white">
+      <form
+        onSubmit={handleSubmit}
+        className="bg-zinc-800 p-8 rounded shadow-md w-80 space-y-4"
+      >
+        <h1 className="text-2xl font-semibold mb-6 text-center">
+          Sign In to Your Account
+        </h1>
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full p-2 rounded bg-zinc-700 text-white"
+        />
+        <input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          className="w-full p-2 rounded bg-zinc-700 text-white"
+        />
         {error && <p className="text-red-400 text-sm">{error}</p>}
-        <button type="submit" className="bg-blue-600 text-white py-2 rounded">Autentificare</button>
+        <button
+          type="submit"
+          className="w-full bg-blue-600 py-2 rounded hover:bg-blue-700 transition"
+        >
+          Login
+        </button>
       </form>
     </div>
-  )
+  );
 }

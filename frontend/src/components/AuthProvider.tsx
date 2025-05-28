@@ -1,4 +1,5 @@
 // src/components/AuthProvider.tsx
+// src/components/AuthProvider.tsx
 'use client';
 
 import { createContext, useState, useEffect, ReactNode } from 'react';

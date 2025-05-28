@@ -1,11 +1,11 @@
-// src/lib/useAuth.ts
-import { useContext } from 'react';
-import { AuthContext } from '@/components/AuthProvider';
+"use client";
+import { useState, useEffect } from "react";
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+export function useAuth() {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  useEffect(() => {
+    const token = !!localStorage.getItem("access");
+    setIsAuthenticated(token);
+  }, []);
+  return { isAuthenticated };
+}
