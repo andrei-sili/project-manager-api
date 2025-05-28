@@ -1,16 +1,24 @@
+// frontend/src/app/dashboard/tasks/page.tsx
 "use client";
+
 import { useEffect, useState } from "react";
 import { fetchTasks, Task } from "@/lib/api";
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError]     = useState("");
 
   useEffect(() => {
     fetchTasks()
-      .then(setTasks)
-      .catch(() => setError("Failed to load tasks"))
+      .then((data) => {
+        console.log("❯❯ fetched tasks:", data);
+        setTasks(data);
+      })
+      .catch((err) => {
+        console.error("Fetch tasks error:", err);
+        setError("Failed to load tasks");
+      })
       .finally(() => setLoading(false));
   }, []);
 
@@ -22,7 +30,7 @@ export default function TasksPage() {
       <h1 className="text-2xl mb-4">Tasks</h1>
       <ul className="list-disc pl-5 space-y-2">
         {tasks.map((t) => (
-          <li key={t.id}>
+          <li key={t.id} className="flex items-center">
             <input
               type="checkbox"
               checked={t.completed}

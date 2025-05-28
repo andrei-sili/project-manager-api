@@ -6,7 +6,8 @@ export default function DashboardPage() {
   const [projects, setProjects] = useState<any[]>([]);
   useEffect(() => {
     api.get("projects/")
-      .then((res) => setProjects(res.data))
+      .then((res) => setProjects(Array.isArray(res.data) ? res.data : []))
+
       .catch(console.error);
   }, []);
 
