@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, permissions, filters
 from rest_framework.exceptions import PermissionDenied
@@ -85,3 +86,13 @@ class TaskViewSet(viewsets.ModelViewSet):
         )
         instance.delete()
 
+
+class MyTaskViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = TaskSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        return Task.objects.filter(
+            Q(created_by=user) | Q(assigned_to=user)
+        ).order_by("-created_at")
