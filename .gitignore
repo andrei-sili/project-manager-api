@@ -176,8 +176,11 @@ cython_debug/
 .pypirc
 
 
-# frontend
+# frontend #############################################################################
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Node modules
+**/node_modules/
 
 # dependencies
 /node_modules
