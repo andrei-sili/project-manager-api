@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { fetchProjects, Project } from "@/lib/api";
+import NewProjectModal from "@/components/NewProjectModal";
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
@@ -14,12 +15,19 @@ export default function ProjectsPage() {
       .finally(() => setLoading(false));
   }, []);
 
+  const handleCreate = (newProject: Project) => {
+    setProjects((prev) => [newProject, ...prev]);
+  };
+
   if (loading) return <p className="p-6">Loading projects…</p>;
   if (error)   return <p className="p-6 text-red-400">{error}</p>;
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl mb-4">Projects</h1>
+    <div className="p-6 space-y-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl">Projects</h1>
+        <NewProjectModal onCreate={handleCreate} />
+      </div>
       <ul className="list-disc pl-5 space-y-2">
         {projects.map((p) => (
           <li key={p.id}>{p.name}</li>

@@ -34,3 +34,20 @@ export function fetchTeams(): Promise<Team[]> {
 export function fetchTasks(): Promise<Task[]> {
   return api.get<Task[]>("tasks/").then(res => res.data);
 }
+
+// Create a new project
+export function createProject(payload: { name: string }): Promise<Project> {
+  return api
+    .post<Project>("projects/", payload)
+    .then((res) => res.data);
+}
+
+// Update an existing project
+export function updateProject(
+  id: number,
+  payload: { name: string }
+): Promise<Project> {
+  return api
+    .put<Project>(`projects/${id}/`, payload)
+    .then((res) => res.data);
+}
