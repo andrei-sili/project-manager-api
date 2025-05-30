@@ -5,13 +5,11 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import APIException, PermissionDenied
 from rest_framework.response import Response
 
-
 from apps.teams.models import Team, TeamMembership
 from apps.teams.permisions import IsTeamAdmin
 from apps.teams.serializers import TeamSerializer, TeamCreateSerializer
 from apps.users.models import CustomUser
 from django.db.models import Q
-
 
 
 class TeamViewSet(viewsets.ModelViewSet):

@@ -1,43 +1,42 @@
-// frontend/src/app/dashboard/tasks/page.tsx
 "use client";
-
 import { useEffect, useState } from "react";
-import { fetchMyTasks, Task } from "@/lib/api";
+import { Task, fetchMyTasks } from "@/lib/api";
 
-export default function MyTasksPage() {
-  const [tasks,   setTasks]   = useState<Task[]>([]);
+export default function TasksPage() {
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error,   setError]   = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
     fetchMyTasks()
       .then((data) => {
-        console.log("❯❯ my tasks:", data);
         setTasks(data);
       })
       .catch((err) => {
-        console.error("Fetch my-tasks error:", err);
-        setError("Nu am putut încărca task-urile tale");
+        console.error("Failed to fetch tasks", err);
+        setError("Could not load tasks.");
       })
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="p-6">Se încarcă task-urile tale…</p>;
-  if (error)   return <p className="p-6 text-red-400">{error}</p>;
+  if (loading) return <p className="p-6">Loading tasks…</p>;
+  if (error) return <p className="p-6 text-red-500">{error}</p>;
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl mb-4">Task-urile mele</h1>
-      <ul className="list-disc pl-5 space-y-2">
-        {tasks.map((t) => (
-          <li key={t.id} className="flex items-center">
+    <div className="p-6 space-y-4">
+      <h1 className="text-2xl font-semibold">My Tasks</h1>
+      <ul className="space-y-2">
+        {tasks.map((task) => (
+          <li key={task.id} className="flex items-center gap-3">
             <input
               type="checkbox"
-              checked={t.completed}
+              checked={task.completed}
               readOnly
-              className="mr-2"
+              className="w-5 h-5"
             />
-            {t.title}
+            <span className={task.completed ? "line-through text-gray-400" : ""}>
+              {task.title}
+            </span>
           </li>
         ))}
       </ul>
