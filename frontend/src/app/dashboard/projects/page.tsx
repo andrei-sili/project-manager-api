@@ -1,47 +1,44 @@
-// frontend/src/app/dashboard/projects/page.tsx
 "use client";
-
 import { useEffect, useState } from "react";
-import { fetchProjects, Project } from "@/lib/api";
-import NewProjectModal from "@/components/NewProjectModal";
+import Link from "next/link";
+import api from "@/lib/api";
 
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading,  setLoading]  = useState(true);
-  const [error,    setError]    = useState("");
+  const [projects, setProjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchProjects()
-      .then((data) => {
-        console.log("❯❯ fetched projects:", data);
-        setProjects(data);
-      })
-      .catch((err) => {
-        console.error("Fetch projects error:", err);
-        setError("Failed to load projects");
-      })
+    api.get("projects/")
+      .then(res => setProjects(res.data.results || []))
+      .catch(() => setProjects([]))
       .finally(() => setLoading(false));
   }, []);
 
-  if (loading) return <p className="p-6">Loading projects…</p>;
-  if (error)   return <p className="p-6 text-red-400">{error}</p>;
+  if (loading) return <div className="p-6">Loading...</div>;
+  if (!projects.length) return <div className="p-6">No projects found.</div>;
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl">Projects</h1>
-        <NewProjectModal
-          onCreate={(newP) =>
-            setProjects((prev) => [newP, ...prev])
-          }
-        />
-      </div>
-
-      <ul className="list-disc pl-5 space-y-2">
-        {projects.map((p) => (
-          <li key={p.id}>{p.name}</li>
-        ))}
-      </ul>
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+      {projects.map(project => (
+        <div key={project.id} className="bg-[#222533] rounded-xl shadow p-6 flex flex-col">
+          <h2 className="text-xl font-bold mb-2">{project.name}</h2>
+          <div className="text-sm text-gray-400 mb-1">
+            Team: {project.team?.name}
+          </div>
+          <div className="text-xs text-gray-500 mb-2">
+            Created by: {project.created_by} | {new Date(project.created_at).toLocaleDateString()}
+          </div>
+          <div className="text-sm mb-2">
+            Tasks: {project.tasks?.length ?? 0}
+          </div>
+          <Link
+            href={`/dashboard/projects/${project.id}`}
+            className="mt-auto text-purple-400 hover:underline font-semibold"
+          >
+            View Details →
+          </Link>
+        </div>
+      ))}
     </div>
   );
 }
