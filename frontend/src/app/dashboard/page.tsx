@@ -10,7 +10,7 @@ export default function DashboardPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [teams, setTeam] = useState<Team[]>([]);
-  // Simulează time tracking — poți adăuga logică reală când ai date din backend
+
   const [timeToday] = useState("0:00");
 
   useEffect(() => {

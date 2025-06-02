@@ -54,11 +54,11 @@ projects_router = routers.NestedSimpleRouter(router, 'projects', lookup='project
 projects_router.register('tasks', TaskViewSet, basename='project-tasks')
 
 tasks_router = routers.NestedSimpleRouter(projects_router, r'tasks', lookup='task')
-tasks_router.register(r'comments', CommentViewSet, basename='task-comments')
+tasks_router.register('comments', CommentViewSet, basename='task-comments')
 tasks_router.register('files', TaskFileViewSet, basename='task-files')
 router.register('notifications', NotificationViewSet, basename='notifications')
 router.register('logs', ActivityLogViewSet, basename='logs')
-router.register(r'teams', TeamViewSet, basename='teams')
+router.register('teams', TeamViewSet, basename='teams')
 router.register("my-tasks", MyTaskViewSet, basename="my-tasks")
 
 #  Final urlpatterns

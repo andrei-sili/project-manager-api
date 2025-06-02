@@ -32,7 +32,10 @@ class TaskSerializer(serializers.ModelSerializer):
         return None
 
     def get_project(self, obj):
-        return obj.project.name
+        return {
+            "id": obj.project.id,
+            "name": obj.project.name
+        }
 
 
 class TaskCreateSerializer(serializers.ModelSerializer):
