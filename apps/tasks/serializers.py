@@ -40,7 +40,11 @@ class TaskSerializer(serializers.ModelSerializer):
 
 class TaskCreateSerializer(serializers.ModelSerializer):
     project = serializers.PrimaryKeyRelatedField(queryset=Project.objects.all())
-    assigned_to = serializers.PrimaryKeyRelatedField(queryset=CustomUser.objects.all(), required=False)
+    assigned_to = serializers.SlugRelatedField(
+        slug_field='email',
+        queryset=CustomUser.objects.all(),
+        required=False
+    )
 
     class Meta:
         model = Task
@@ -53,6 +57,7 @@ class TaskCreateSerializer(serializers.ModelSerializer):
             'priority',
             'due_date'
         ]
+
 
     def validate_due_date(self, value):
         if value < timezone.now():
