@@ -97,22 +97,23 @@ export default function TasksPage() {
       )}
 
       {editTask && (
-        <TaskModal
-          projects={projects}
-          initial={editTask}
-          onClose={() => setEditTask(null)}
-          onSave={async (data) => {
-            try {
-              const updated = await updateTask(editTask.id, data);
-              setTasks(ts => ts.map(t => t.id === editTask.id ? updated : t));
-              setEditTask(null);
-            } catch (error) {
-              console.error("Update task failed:", error);
-              alert("Error updating task. Check console for details.");
-            }
-          }}
-        />
-      )}
+  <TaskModal
+    projects={projects}
+    initial={editTask}
+    onClose={() => setEditTask(null)}
+    onSave={async (data) => {
+      try {
+        const projectId = typeof editTask.project === "object" ? editTask.project.id : editTask.project;
+        const updated = await updateTask(projectId, editTask.id, data);
+        setTasks(ts => ts.map(t => t.id === editTask.id ? updated : t));
+        setEditTask(null);
+      } catch (error) {
+        console.error("Update task failed:", error);
+        alert("Error updating task. Check console for details.");
+      }
+    }}
+  />
+)}
 
       <div className="space-y-10">
         {projects.map(project => (
@@ -130,6 +131,7 @@ export default function TasksPage() {
                 const handleStart = () => setTimers((ts: any) => ({ ...ts, [task.id]: { ...timer, active: true } }));
                 const handlePause = () => setTimers((ts: any) => ({ ...ts, [task.id]: { ...timer, active: false } }));
                 const handleReset = () => setTimers((ts: any) => ({ ...ts, [task.id]: { ...timer, elapsed: 0 } }));
+                const projectId = typeof task.project === "object" ? task.project.id : task.project;
 
                 return (
                   <div
@@ -163,23 +165,36 @@ export default function TasksPage() {
                       <span className="font-mono text-sm text-blue-300">
                         {Math.floor(timer.elapsed / 60)}:{(timer.elapsed % 60).toString().padStart(2, "0")}
                       </span>
-                      <button onClick={timer.active ? handlePause : handleStart} className="text-green-400 hover:scale-110" title={timer.active ? "Pause" : "Start"}>
-                        {timer.active ? <Pause size={18} /> : <Play size={18} />}
+                      <button onClick={timer.active ? handlePause : handleStart}
+                              className="text-green-400 hover:scale-110" title={timer.active ? "Pause" : "Start"}>
+                        {timer.active ? <Pause size={18}/> : <Play size={18}/>}
                       </button>
                       <button onClick={handleReset} className="text-gray-400" title="Reset">
-                        <RotateCcw size={18} />
+                        <RotateCcw size={18}/>
                       </button>
-                      <button onClick={() => setEditTask(task)} className="text-blue-400 hover:text-blue-200 ml-4" title="Edit">
-                        <Edit2 size={18} />
+                      <button onClick={() => setEditTask(task)} className="text-blue-400 hover:text-blue-200 ml-4"
+                              title="Edit">
+                        <Edit2 size={18}/>
                       </button>
-                      <button onClick={() => { if (confirm("Are you sure?")) deleteTask(task.id).then(() => setTasks(ts => ts.filter(t => t.id !== task.id))) }} className="text-red-400 hover:text-red-200" title="Delete">
-                        <Trash2 size={18} />
+                      <button
+                          onClick={() => {
+                            if (confirm("Are you sure?")) {
+                              const projectId = typeof task.project === "object" ? task.project.id : task.project;
+                              deleteTask(projectId, task.id).then(() =>
+                                  setTasks(ts => ts.filter(t => t.id !== task.id))
+                              );
+                            }
+                          }}
+                          className="text-red-400 hover:text-red-200"
+                          title="Delete"
+                      >
+                        <Trash2 size={18}/>
                       </button>
                     </div>
                   </div>
                 );
               }) : (
-                <div className="text-gray-400 text-sm">No tasks in this project.</div>
+                  <div className="text-gray-400 text-sm">No tasks in this project.</div>
               )}
             </div>
           </div>
@@ -189,7 +204,7 @@ export default function TasksPage() {
   );
 }
 
-function TaskModal({ projects, onClose, onSave, initial }: {
+function TaskModal({projects, onClose, onSave, initial}: {
   projects: Project[];
   onClose: () => void;
   onSave: (data: any) => void;

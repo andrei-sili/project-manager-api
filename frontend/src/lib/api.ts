@@ -1,6 +1,13 @@
 // src/lib/api.ts
 import axios from "axios";
 
+// Redirect helper (pentru client)
+function redirectToLogin() {
+  if (typeof window !== "undefined") {
+    window.location.href = "/login";
+  }
+}
+
 // Axios instance
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -14,6 +21,17 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Global response error interceptor
+api.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.response?.status === 401) {
+      redirectToLogin();
+    }
+    return Promise.reject(error);
+  }
+);
 
 // Types
 export interface TeamMember {
@@ -101,24 +119,21 @@ export function updateProject(id: number, payload: { name: string }): Promise<Pr
 
 // CRUD Tasks
 export function createTask(payload: Partial<Task>): Promise<Task> {
-  const projectId =
-    typeof payload.project === "object"
-      ? payload.project.id
-      : payload.project;
+  const projectId = typeof payload.project === "object"
+    ? payload.project.id
+    : payload.project;
 
   return api.post<Task>(`/projects/${projectId}/tasks/`, payload)
-    .then(res => res.data); // ✅ extragi datele reale aici
-}
-
-
-
-export function updateTask(id: number, payload: Partial<Task>): Promise<Task> {
-  return api.put<Task>(`/tasks/${id}/`, payload)
     .then(res => res.data);
 }
 
-export function deleteTask(id: number): Promise<void> {
-  return api.delete(`/tasks/${id}/`).then(() => {});
+export function updateTask(projectId: number, taskId: number, payload: Partial<Task>): Promise<Task> {
+  return api.put<Task>(`/projects/${projectId}/tasks/${taskId}/`, payload)
+    .then(res => res.data);
+}
+
+export function deleteTask(projectId: number, taskId: number): Promise<void> {
+  return api.delete(`/projects/${projectId}/tasks/${taskId}/`).then(() => {});
 }
 
 export default api;
