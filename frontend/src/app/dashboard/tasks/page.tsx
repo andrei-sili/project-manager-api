@@ -11,7 +11,6 @@ import {
 } from "@/lib/api";
 import { Edit2, Trash2, Play, Pause, RotateCcw, Plus } from "lucide-react";
 
-// Border color for priority
 function priorityBorder(priority: string) {
   switch (priority) {
     case "high": return "border-red-500";
@@ -34,7 +33,6 @@ export default function TasksPage() {
     fetchProjects().then(setProjects);
   }, []);
 
-  // Global timer loop
   useEffect(() => {
     const interval = setInterval(() => {
       setTimers((prev: any) => {
@@ -86,9 +84,14 @@ export default function TasksPage() {
           projects={projects}
           onClose={() => setShowAdd(false)}
           onSave={async (data) => {
-            const newTask = await createTask(data);
-            setTasks(ts => [newTask, ...ts]);
-            setShowAdd(false);
+            try {
+              const newTask = await createTask(data);
+              setTasks(ts => [newTask, ...ts]);
+              setShowAdd(false);
+            } catch (error) {
+              console.error("Create task failed:", error);
+              alert("Error creating task. Check console for details.");
+            }
           }}
         />
       )}
@@ -99,9 +102,14 @@ export default function TasksPage() {
           initial={editTask}
           onClose={() => setEditTask(null)}
           onSave={async (data) => {
-            const updated = await updateTask(editTask.id, data);
-            setTasks(ts => ts.map(t => t.id === editTask.id ? updated : t));
-            setEditTask(null);
+            try {
+              const updated = await updateTask(editTask.id, data);
+              setTasks(ts => ts.map(t => t.id === editTask.id ? updated : t));
+              setEditTask(null);
+            } catch (error) {
+              console.error("Update task failed:", error);
+              alert("Error updating task. Check console for details.");
+            }
           }}
         />
       )}
@@ -119,13 +127,9 @@ export default function TasksPage() {
             <div className="flex flex-wrap gap-6 mt-4">
               {tasksByProject[project.id]?.length ? tasksByProject[project.id].map(task => {
                 const timer = timers[task.id] || { elapsed: 0, active: false };
-
-                const handleStart = () =>
-                  setTimers((ts: any) => ({ ...ts, [task.id]: { ...timer, active: true } }));
-                const handlePause = () =>
-                  setTimers((ts: any) => ({ ...ts, [task.id]: { ...timer, active: false } }));
-                const handleReset = () =>
-                  setTimers((ts: any) => ({ ...ts, [task.id]: { ...timer, elapsed: 0 } }));
+                const handleStart = () => setTimers((ts: any) => ({ ...ts, [task.id]: { ...timer, active: true } }));
+                const handlePause = () => setTimers((ts: any) => ({ ...ts, [task.id]: { ...timer, active: false } }));
+                const handleReset = () => setTimers((ts: any) => ({ ...ts, [task.id]: { ...timer, elapsed: 0 } }));
 
                 return (
                   <div
@@ -185,13 +189,7 @@ export default function TasksPage() {
   );
 }
 
-// TaskModal component (rămâne neschimbat)
-function TaskModal({
-  projects,
-  onClose,
-  onSave,
-  initial,
-}: {
+function TaskModal({ projects, onClose, onSave, initial }: {
   projects: Project[];
   onClose: () => void;
   onSave: (data: any) => void;
@@ -199,29 +197,29 @@ function TaskModal({
 }) {
   const [title, setTitle] = useState(initial?.title || "");
   const [description, setDescription] = useState(initial?.description || "");
-  const initialProjectId =
-    typeof initial?.project === "object" ? initial.project.id : initial?.project || projects[0]?.id || "";
+  const initialProjectId = typeof initial?.project === "object" ? initial.project.id : initial?.project || projects[0]?.id || "";
   const [project, setProject] = useState<number | string>(initialProjectId);
-  const [priority, setPriority] = useState(initial?.priority || "medium");
-  const [status, setStatus] = useState(initial?.status || "todo");
+  const [priority, setPriority] = useState((initial?.priority || "medium").toLowerCase());
+  const [status, setStatus] = useState((initial?.status || "todo").toLowerCase());
   const [assigned_to, setAssignedTo] = useState(initial?.assigned_to || "");
   const [due_date, setDueDate] = useState(initial?.due_date?.slice(0, 10) || "");
 
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    onSave({
+      title,
+      description,
+      project: Number(project),
+      priority: priority.toLowerCase(),
+      status: status.toLowerCase(),
+      assigned_to,
+      due_date,
+    });
+  };
+
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <form className="bg-[#22232b] rounded-lg p-8 w-full max-w-md flex flex-col gap-4"
-        onSubmit={e => {
-          e.preventDefault();
-          onSave({
-            title,
-            description,
-            project: Number(project),
-            priority,
-            status,
-            assigned_to,
-            due_date,
-          });
-        }}>
+      <form className="bg-[#22232b] rounded-lg p-8 w-full max-w-md flex flex-col gap-4" onSubmit={handleSubmit}>
         <h2 className="text-xl font-bold mb-2 text-white">{initial ? "Edit Task" : "Create Task"}</h2>
         <input className="input" value={title} onChange={e => setTitle(e.target.value)} placeholder="Title" required />
         <textarea className="input" value={description} onChange={e => setDescription(e.target.value)} placeholder="Description" />
