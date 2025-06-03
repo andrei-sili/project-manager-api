@@ -6,10 +6,12 @@ from apps.teams.models import Team, TeamMembership
 class TeamMembershipSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField()
     email = serializers.SerializerMethodField()
+    id = serializers.IntegerField(source='user.id')
 
     class Meta:
         model = TeamMembership
         fields = [
+            'id',
             'user',
             'email',
             'role',
@@ -23,10 +25,12 @@ class TeamMembershipSerializer(serializers.ModelSerializer):
 class TeamSerializer(serializers.ModelSerializer):
     members = TeamMembershipSerializer(source='membership_set', many=True)
     created_by = serializers.SerializerMethodField()
+    id = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Team
         fields = [
+            'id',
             'name',
             'created_by',
             'members',

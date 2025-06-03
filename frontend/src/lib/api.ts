@@ -35,6 +35,7 @@ api.interceptors.response.use(
 
 // Types
 export interface TeamMember {
+  id: number;
   user: string;
   email: string;
   role: string;
@@ -42,6 +43,7 @@ export interface TeamMember {
 }
 
 export interface Team {
+  id: number;
   name: string;
   created_by: string;
   members: TeamMember[];
@@ -135,5 +137,38 @@ export function updateTask(projectId: number, taskId: number, payload: Partial<T
 export function deleteTask(projectId: number, taskId: number): Promise<void> {
   return api.delete(`/projects/${projectId}/tasks/${taskId}/`).then(() => {});
 }
+
+// ----------- TEAM API CALLS -----------
+
+export function createTeam(payload: { name: string }): Promise<Team> {
+  return api.post("/teams/", payload).then((res) => res.data);
+}
+
+export function inviteMember(teamId: string, email: string, role = "developer") {
+  return api.post(`/teams/${teamId}/invite-member/`, { email, role });
+}
+
+
+export function acceptInvite(teamId: string) {
+  return api.post(`/teams/${teamId}/accept-invite/`);
+}
+
+export function declineInvite(teamId: string) {
+  return api.post(`/teams/${teamId}/decline-invite/`);
+}
+
+export function removeMember(teamId: string, userId: string) {
+  return api.post(`/teams/${teamId}/remove-member/`, { user_id: userId });
+}
+
+export function changeRole(teamId: string, userId: string, role: string) {
+  return api.post(`/teams/${teamId}/change-role/`, { user_id: userId, role });
+}
+
+export function deleteTeam(teamId: string) {
+  return api.delete(`/teams/${teamId}/`);
+}
+
+
 
 export default api;
