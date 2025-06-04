@@ -1,8 +1,9 @@
-// src/components/NewProjectModal.tsx
+// frontend/src/components/NewProjectModal.tsx
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
+// Modal for creating a new project (with team selection or quick create new team)
 export default function NewProjectModal({
   onClose,
   onProjectAdded,
@@ -14,10 +15,11 @@ export default function NewProjectModal({
   const [description, setDescription] = useState("");
   const [team, setTeam] = useState("");
   const [teams, setTeams] = useState<any[]>([]);
+  const [newTeamName, setNewTeamName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch teams la deschidere modal
+  // Fetch all teams on modal open
   useEffect(() => {
     axios
       .get(`${process.env.NEXT_PUBLIC_API_URL}/teams/`, {
@@ -27,19 +29,33 @@ export default function NewProjectModal({
       .catch(() => setTeams([]));
   }, []);
 
+  // Handles submit for both flows: existing team or create new team
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
     try {
+      let teamId = team;
+      // If user selected "Create new team"
+      if (team === "new") {
+        // Create the new team first
+        const teamRes = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/teams/`,
+          { name: newTeamName },
+          { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+        );
+        teamId = teamRes.data.id;
+      }
+      // Now create the project with the selected/created team
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/projects/`,
-        { name, description, team }, // adăugăm team la payload
+        { name, description, team: teamId },
         { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
       );
       setName("");
       setDescription("");
       setTeam("");
+      setNewTeamName("");
       onProjectAdded();
       onClose();
     } catch (err: any) {
@@ -100,8 +116,23 @@ export default function NewProjectModal({
               {teams.map((t) => (
                 <option key={t.id} value={t.id}>{t.name}</option>
               ))}
+              <option value="new">+ Create new team</option>
             </select>
           </div>
+          {team === "new" && (
+            <div>
+              <label className="block text-gray-400 mb-1">New Team Name</label>
+              <input
+                className="w-full bg-zinc-800 rounded px-3 py-2 text-white"
+                value={newTeamName}
+                onChange={e => setNewTeamName(e.target.value)}
+                required={team === "new"}
+                minLength={2}
+                maxLength={64}
+                placeholder="Team name"
+              />
+            </div>
+          )}
           <button
             type="submit"
             className="w-full mt-3 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
