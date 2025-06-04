@@ -1,7 +1,6 @@
 // src/components/NewProjectModal.tsx
-
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 
 export default function NewProjectModal({
@@ -13,8 +12,20 @@ export default function NewProjectModal({
 }) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
+  const [team, setTeam] = useState("");
+  const [teams, setTeams] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Fetch teams la deschidere modal
+  useEffect(() => {
+    axios
+      .get(`${process.env.NEXT_PUBLIC_API_URL}/teams/`, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` }
+      })
+      .then(res => setTeams(Array.isArray(res.data.results) ? res.data.results : []))
+      .catch(() => setTeams([]));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,15 +34,22 @@ export default function NewProjectModal({
     try {
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/projects/`,
-        { name, description },
+        { name, description, team }, // adăugăm team la payload
         { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
       );
       setName("");
       setDescription("");
+      setTeam("");
       onProjectAdded();
       onClose();
     } catch (err: any) {
-      setError("Failed to create project.");
+      setError(
+        err?.response?.data?.team?.[0] ||
+        err?.response?.data?.name?.[0] ||
+        err?.response?.data?.description?.[0] ||
+        err?.response?.data?.detail ||
+        "Failed to create project."
+      );
     } finally {
       setLoading(false);
     }
@@ -69,6 +87,20 @@ export default function NewProjectModal({
               onChange={e => setDescription(e.target.value)}
               required
             />
+          </div>
+          <div>
+            <label className="block text-gray-400 mb-1">Team</label>
+            <select
+              className="w-full bg-zinc-800 rounded px-3 py-2 text-white"
+              value={team}
+              onChange={e => setTeam(e.target.value)}
+              required
+            >
+              <option value="">Select team...</option>
+              {teams.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
           </div>
           <button
             type="submit"
