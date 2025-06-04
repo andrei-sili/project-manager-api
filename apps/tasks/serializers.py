@@ -43,7 +43,8 @@ class TaskCreateSerializer(serializers.ModelSerializer):
     assigned_to = serializers.SlugRelatedField(
         slug_field='email',
         queryset=CustomUser.objects.all(),
-        required=False
+        required=False,
+        allow_null=True,
     )
 
     class Meta:
