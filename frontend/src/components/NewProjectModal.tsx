@@ -31,45 +31,63 @@ export default function NewProjectModal({
 
   // Handles submit for both flows: existing team or create new team
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    try {
-      let teamId = team;
-      // If user selected "Create new team"
-      if (team === "new") {
-        // Create the new team first
-        const teamRes = await axios.post(
-          `${process.env.NEXT_PUBLIC_API_URL}/teams/`,
-          { name: newTeamName },
-          { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
-        );
-        teamId = teamRes.data.id;
+  e.preventDefault();
+  setLoading(true);
+  setError("");
+  try {
+    let teamId = team;
+
+
+    if (team === "new") {
+      if (!newTeamName.trim()) {
+        setError("New team name is required.");
+        setLoading(false);
+        return;
       }
-      // Now create the project with the selected/created team
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/`,
-        { name, description, team: teamId },
+      const teamRes = await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/teams/`,
+        { name: newTeamName },
         { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
       );
-      setName("");
-      setDescription("");
-      setTeam("");
-      setNewTeamName("");
-      onProjectAdded();
-      onClose();
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.team?.[0] ||
-        err?.response?.data?.name?.[0] ||
-        err?.response?.data?.description?.[0] ||
-        err?.response?.data?.detail ||
-        "Failed to create project."
-      );
-    } finally {
-      setLoading(false);
+      teamId = teamRes.data.id;
+
+      console.log("Created team:", teamRes.data);
     }
-  };
+
+
+    if (!teamId) {
+      setError("Team is required.");
+      setLoading(false);
+      return;
+    }
+
+    await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/`,
+      { name, description, team: teamId },
+      { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+    );
+
+    setName("");
+    setDescription("");
+    setTeam("");
+    setNewTeamName("");
+    onProjectAdded();
+    onClose();
+  } catch (err: any) {
+
+    console.log("Project create error:", err?.response?.data || err);
+    setError(
+      err?.response?.data?.team?.[0] ||
+      err?.response?.data?.name?.[0] ||
+      err?.response?.data?.description?.[0] ||
+      err?.response?.data?.detail ||
+      "Failed to create project."
+    );
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">

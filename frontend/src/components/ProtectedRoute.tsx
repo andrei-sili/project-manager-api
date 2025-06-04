@@ -1,24 +1,27 @@
+// src/components/ProtectedRoute.tsx
 "use client";
-import { ReactNode, useEffect } from "react";
+import React from "react";
+import { useAuth } from "./AuthProvider";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/useAuth";
 
-export default function ProtectedRoute({
-  children,
-}: {
-  children: ReactNode;
-}) {
-  const { isAuthenticated } = useAuth();
+// Checks if user is authenticated, otherwise redirects to /login
+export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    if (isAuthenticated === false) {
+  React.useEffect(() => {
+    if (!loading && !isAuthenticated) {
       router.replace("/login");
     }
-  }, [isAuthenticated, router]);
+  }, [isAuthenticated, loading, router]);
 
-  if (isAuthenticated === null) {
-    return <p className="p-6">Checking authentication…</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen text-lg">
+        <span className="animate-pulse">Loading...</span>
+      </div>
+    );
   }
-  return <>{children}</>;
+
+  return <>{isAuthenticated ? children : null}</>;
 }

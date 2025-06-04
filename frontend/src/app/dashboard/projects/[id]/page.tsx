@@ -129,7 +129,7 @@ export default function ProjectDetailsPage() {
             )}
           </div>
           <button
-              className="mt-5 px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded text-xs font-semibold"
+              className="bg-neutral-800 hover:bg-neutral-700 px-3 py-1 text-white rounded"
               onClick={() => setShowInvite(true)}
           >
             + Invite Member
@@ -154,7 +154,7 @@ export default function ProjectDetailsPage() {
         </button>
 
         <button
-            className="mt-5 px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded text-xs font-semibold"
+            className="bg-neutral-800 hover:bg-neutral-700 px-3 py-1 text-white rounded"
             onClick={() => setShowInvite(true)}
         >
           + Invite Member

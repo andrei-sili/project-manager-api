@@ -35,7 +35,7 @@ api.interceptors.response.use(
 
 // Types
 export interface TeamMember {
-  id: number;
+  id?: number;
   user: string;
   email: string;
   role: string;
@@ -144,9 +144,20 @@ export function createTeam(payload: { name: string }): Promise<Team> {
   return api.post("/teams/", payload).then((res) => res.data);
 }
 
-export function inviteMember(teamId: string, email: string, role = "developer") {
-  return api.post(`/teams/${teamId}/invite-member/`, { email, role });
+
+
+
+export async function inviteMember(teamId: string, email: string, role: string): Promise<Response> {
+  return await fetch(`/api/teams/${teamId}/invite-member/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, role }),
+  });
 }
+
+
 
 
 export function acceptInvite(teamId: string) {

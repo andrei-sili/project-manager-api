@@ -99,7 +99,7 @@ export default function ProfilePage() {
             <button
               className="text-lg px-2 font-bold hover:opacity-70"
               onClick={() => {
-                setSuccess("");
+                setSuccess("Profile updated successfully!");
                 setError("");
               }}
               type="button"
