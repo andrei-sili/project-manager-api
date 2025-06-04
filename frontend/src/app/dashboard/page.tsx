@@ -13,25 +13,31 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      axios.get(`${process.env.NEXT_PUBLIC_API_URL}/projects/`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` }
-      }),
-      axios.get(`${process.env.NEXT_PUBLIC_API_URL}/my-tasks/`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` }
-      }),
-      axios.get(`${process.env.NEXT_PUBLIC_API_URL}/teams/`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` }
-      }),
-    ])
-      .then(([projRes, tasksRes, teamsRes]) => {
-        setProjects(projRes.data);
-        setTasks(tasksRes.data);
-        setTeams(teamsRes.data);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  setLoading(true);
+  Promise.all([
+    axios.get(`${process.env.NEXT_PUBLIC_API_URL}/projects/`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("access")}` }
+    }),
+    axios.get(`${process.env.NEXT_PUBLIC_API_URL}/my-tasks/`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("access")}` }
+    }),
+    axios.get(`${process.env.NEXT_PUBLIC_API_URL}/teams/`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("access")}` }
+    }),
+  ])
+    .then(([projRes, tasksRes, teamsRes]) => {
+
+      setProjects(Array.isArray(projRes.data.results) ? projRes.data.results : []);
+      setTasks(Array.isArray(tasksRes.data.results) ? tasksRes.data.results : []);
+      setTeams(Array.isArray(teamsRes.data.results) ? teamsRes.data.results : []);
+    })
+    .catch((err) => {
+      setProjects([]);
+      setTasks([]);
+      setTeams([]);
+    })
+    .finally(() => setLoading(false));
+}, []);
 
   return (
     <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-7">
