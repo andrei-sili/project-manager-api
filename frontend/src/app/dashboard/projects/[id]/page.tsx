@@ -6,6 +6,9 @@ import axios from "axios";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import EditProjectModal from "@/components/EditProjectModal";
+import InviteMemberModal from "@/components/InviteMemberModal";
+import AddTaskModal from "@/components/AddTaskModal";
+
 
 export default function ProjectDetailsPage() {
   const router = useRouter();
@@ -19,6 +22,9 @@ export default function ProjectDetailsPage() {
   // Modal control
   const [showEdit, setShowEdit] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  const [showInvite, setShowInvite] = useState(false);
+  const [showAddTask, setShowAddTask] = useState(false);
+
 
   useEffect(() => {
     if (!projectId) return;
@@ -103,59 +109,57 @@ export default function ProjectDetailsPage() {
           <div className="text-xs text-gray-400 mb-2">Team Members</div>
           <div className="flex -space-x-3">
             {project.team?.members?.length ? (
-              project.team.members.slice(0, 6).map((m: any, idx: number) => (
-                <div
-                  key={idx}
-                  className="relative w-10 h-10 rounded-full bg-blue-950 border-2 border-zinc-900 flex items-center justify-center text-xl font-bold text-blue-300"
-                  title={m.user || m.email}
-                >
-                  {(m.user || m.email)?.[0]?.toUpperCase() || "U"}
-                </div>
-              ))
+                project.team.members.slice(0, 6).map((m: any, idx: number) => (
+                    <div
+                        key={idx}
+                        className="relative w-10 h-10 rounded-full bg-blue-950 border-2 border-zinc-900 flex items-center justify-center text-xl font-bold text-blue-300"
+                        title={m.user || m.email}
+                    >
+                      {(m.user || m.email)?.[0]?.toUpperCase() || "U"}
+                    </div>
+                ))
             ) : (
-              <span className="text-gray-500 text-sm">No members</span>
+                <span className="text-gray-500 text-sm">No members</span>
             )}
             {project.team?.members?.length > 6 && (
-              <div className="w-10 h-10 rounded-full bg-zinc-800 border-2 border-zinc-900 flex items-center justify-center text-lg font-bold text-gray-400">
-                +{project.team.members.length - 6}
-              </div>
+                <div
+                    className="w-10 h-10 rounded-full bg-zinc-800 border-2 border-zinc-900 flex items-center justify-center text-lg font-bold text-gray-400">
+                  +{project.team.members.length - 6}
+                </div>
             )}
           </div>
           <button
-            className="mt-5 px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded text-xs font-semibold"
-            // onClick={() => setShowInvite(true)}
-            disabled
-            title="Invite member (soon)"
+              className="mt-5 px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded text-xs font-semibold"
+              onClick={() => setShowInvite(true)}
           >
             + Invite Member
           </button>
+
         </div>
       </div>
 
       {/* Edit button active! */}
       <div className="flex gap-2 mb-8">
         <button
-          className="bg-blue-600 hover:bg-blue-700 px-3 py-1 text-white rounded"
-          onClick={() => setShowEdit(true)}
+            className="bg-blue-600 hover:bg-blue-700 px-3 py-1 text-white rounded"
+            onClick={() => setShowEdit(true)}
         >
           Edit
         </button>
         <button
-          className="bg-green-600 hover:bg-green-700 px-3 py-1 text-white rounded"
-          // onClick={() => setShowAddTask(true)}
-          disabled
-          title="Add Task (soon)"
+            className="bg-green-600 hover:bg-green-700 px-3 py-1 text-white rounded"
+            onClick={() => setShowAddTask(true)}
         >
           + Task
         </button>
+
         <button
-          className="bg-neutral-700 hover:bg-neutral-800 px-3 py-1 text-white rounded"
-          // onClick={() => setShowInvite(true)}
-          disabled
-          title="Invite member (soon)"
+            className="mt-5 px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-white rounded text-xs font-semibold"
+            onClick={() => setShowInvite(true)}
         >
-          Invite
+          + Invite Member
         </button>
+
       </div>
 
       {/* Task list */}
@@ -163,19 +167,18 @@ export default function ProjectDetailsPage() {
         <div className="flex justify-between items-center mb-4">
           <div className="text-lg font-semibold text-white">Tasks</div>
           <button
-            className="bg-blue-700 hover:bg-blue-800 px-4 py-2 text-white rounded text-sm font-semibold"
-            // onClick={() => setShowAddTask(true)}
-            disabled
-            title="Add Task (soon)"
+              className="bg-blue-700 hover:bg-blue-800 px-4 py-2 text-white rounded text-sm font-semibold"
+              onClick={() => setShowAddTask(true)}
           >
             + Add Task
           </button>
+
         </div>
         {totalTasks ? (
-          <ul className="divide-y divide-zinc-800">
-            {project.tasks.map((task: any) => (
-              <li
-                key={task.id}
+            <ul className="divide-y divide-zinc-800">
+              {project.tasks.map((task: any) => (
+                  <li
+                      key={task.id}
                 className="py-3 flex justify-between items-center hover:bg-zinc-800 px-3 rounded-xl transition"
               >
                 <div>
@@ -217,6 +220,22 @@ export default function ProjectDetailsPage() {
         onClose={() => setShowEdit(false)}
         onUpdated={() => setRefresh(r => r + 1)}
       />
+      {/* Invite Member Modal */}
+      <InviteMemberModal
+        open={showInvite}
+        onClose={() => setShowInvite(false)}
+        teamId={project.team?.id}
+        onInvited={() => setRefresh(r => r + 1)}
+      />
+      {/* Add Task Modal */}
+      <AddTaskModal
+        open={showAddTask}
+        onClose={() => setShowAddTask(false)}
+        projectId={project.id}
+        teamMembers={project.team?.members || []}
+        onAdded={() => setRefresh(r => r + 1)}
+      />
+
     </div>
   );
 }
