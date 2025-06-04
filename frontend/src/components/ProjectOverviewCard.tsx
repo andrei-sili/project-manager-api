@@ -4,6 +4,8 @@ import Link from "next/link";
 import { FolderPlus } from "lucide-react";
 
 export default function ProjectOverviewCard({ projects, loading }: { projects: any[]; loading?: boolean }) {
+  const safeProjects = Array.isArray(projects) ? projects : [];
+
   if (loading) {
     return (
       <div className="rounded-xl bg-zinc-800 shadow p-6 h-[120px] animate-pulse mb-4" />
@@ -22,11 +24,11 @@ export default function ProjectOverviewCard({ projects, loading }: { projects: a
           View All
         </Link>
       </div>
-      {(!projects || projects.length === 0) ? (
+      {safeProjects.length === 0 ? (
         <div className="text-gray-400 text-sm">No projects yet. <Link href="/dashboard/projects" className="text-blue-400 hover:underline">Create your first project</Link></div>
       ) : (
         <ul className="flex flex-wrap gap-4">
-          {projects.slice(0, 3).map((project) => (
+          {safeProjects.slice(0, 3).map((project) => (
             <li key={project.id} className="bg-zinc-800 rounded-lg px-5 py-3 min-w-[180px] flex-1 shadow">
               <Link href={`/dashboard/projects/${project.id}`}>
                 <div className="font-semibold text-white text-base truncate">{project.name}</div>
@@ -44,3 +46,4 @@ export default function ProjectOverviewCard({ projects, loading }: { projects: a
     </div>
   );
 }
+
