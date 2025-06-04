@@ -3,14 +3,15 @@
 "use client";
 
 export default function TimeTrackingCard({ tasks, loading }: { tasks: any[]; loading?: boolean }) {
+  const safeTasks = Array.isArray(tasks) ? tasks : [];
+
   if (loading) {
     return (
       <div className="rounded-xl bg-zinc-800 shadow p-6 h-[120px] animate-pulse mb-4" />
     );
   }
 
-
-  const totalMinutes = tasks?.reduce(
+  const totalMinutes = safeTasks.reduce(
     (acc: number, t: any) => acc + (typeof t.time_spent === "number" ? t.time_spent : 0),
     0
   );
@@ -25,11 +26,10 @@ export default function TimeTrackingCard({ tasks, loading }: { tasks: any[]; loa
           {hours}h {minutes}m
         </div>
         <div className="text-sm text-gray-400 mb-3">Total time tracked (all tasks)</div>
-        {/* Poți adăuga aici un mic grafic/progresbar */}
       </div>
       <div className="mt-4">
         <span className="text-xs text-gray-500">
-          {tasks?.length || 0} tasks with tracked time
+          {safeTasks.length} tasks with tracked time
         </span>
       </div>
     </div>
