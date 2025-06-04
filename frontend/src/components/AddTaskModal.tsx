@@ -20,17 +20,17 @@ export default function AddTaskModal({ open, onClose, projectId, teamMembers, on
     setLoading(true); setError(""); setSuccess("");
     try {
       await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/tasks/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/`,
         {
           title,
           description,
           due_date: dueDate,
           status: "todo",
-          project: projectId,
-          assignees,
+          assigned_to: assignees[0] || null,
         },
         { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
       );
+
       setSuccess("Task added!");
       setTitle(""); setDescription(""); setDueDate(""); setAssignees([]);
       onAdded && onAdded();
@@ -67,24 +67,25 @@ export default function AddTaskModal({ open, onClose, projectId, teamMembers, on
         </label>
         <label className="text-sm">Assignees
           <select
-            className="mt-1 bg-zinc-800 p-2 rounded w-full"
-            value={assignees}
-            onChange={e=>setAssignees(Array.from(e.target.selectedOptions, (opt:any) => opt.value))}
-            multiple
+              className="mt-1 bg-zinc-800 p-2 rounded w-full"
+              value={assignees[0] || ""}
+              onChange={e => setAssignees([e.target.value])}
           >
+            <option value="">Select member...</option>
             {teamMembers.map((m: any) => (
-              <option key={m.id} value={m.id}>
-                {m.user || m.email || `user#${m.id}`}
-              </option>
+                <option key={m.id} value={m.id}>
+                  {m.user || m.email || `user#${m.id}`}
+                </option>
             ))}
           </select>
+
         </label>
         {error && <div className="text-red-400 text-sm">{error}</div>}
         {success && <div className="text-green-400 text-sm">{success}</div>}
         <button
-          type="submit"
-          className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded mt-2"
-          disabled={loading}
+            type="submit"
+            className="bg-green-600 hover:bg-green-700 text-white font-semibold py-2 rounded mt-2"
+            disabled={loading}
         >
           {loading ? "Saving..." : "Add Task"}
         </button>
