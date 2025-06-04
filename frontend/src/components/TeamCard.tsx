@@ -1,38 +1,55 @@
+// src/components/TeamCard.tsx
+
 "use client";
 import Link from "next/link";
-import { Team } from "@/lib/api";
+import { Users } from "lucide-react";
 
-export default function TeamCard({ teams = [] }: { teams?: Team[] }) {
+export default function TeamCard({ teams, loading }: { teams: any[]; loading?: boolean }) {
+  if (loading) {
+    return (
+      <div className="rounded-xl bg-zinc-800 shadow p-6 h-[120px] animate-pulse mb-4" />
+    );
+  }
+
   return (
-    <div className="bg-[#282c36] rounded-xl shadow p-5 min-h-[120px] hover:ring-2 ring-purple-400 transition">
-      <Link href="/dashboard/teams" className="block hover:underline">
-        <h2 className="text-xl font-bold mb-3">My Team</h2>
-      </Link>
+    <div className="rounded-xl bg-zinc-900 shadow p-6 mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-bold">Teams</h3>
+        <Link
+          href="/dashboard/teams"
+          className="flex items-center gap-2 text-blue-400 hover:underline font-medium"
+        >
+          <Users className="w-5 h-5" />
+          View All
+        </Link>
+      </div>
       {(!teams || teams.length === 0) ? (
-        <p className="text-gray-400">No teams found.</p>
+        <div className="text-gray-400 text-sm">You are not part of any team yet.</div>
       ) : (
-        <ul className="space-y-4">
-          {teams.map((team) => (
-            <li key={team.name}>
-              <div className="font-semibold mb-1">{team.name}</div>
-              <div className="flex -space-x-2">
-                {team.members?.slice(0, 5).map((member, idx) => (
-                  <span
-                    key={member.email + idx}
-                    title={member.user || member.email}
-                    className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-blue-700 text-white font-bold border-2 border-black"
-                  >
-                    {(member.user && member.user.length > 0)
-                      ? member.user[0]
-                      : member.email[0].toUpperCase()}
-                  </span>
-                ))}
-                {team.members?.length > 5 && (
-                  <span className="ml-3 text-xs text-gray-400">
-                    +{team.members.length - 5} more
-                  </span>
-                )}
-              </div>
+        <ul className="flex flex-wrap gap-4">
+          {teams.slice(0, 3).map((team) => (
+            <li key={team.id} className="bg-zinc-800 rounded-lg px-5 py-3 min-w-[180px] flex-1 shadow">
+              <Link href={`/dashboard/teams`}>
+                <div className="font-semibold text-white text-base truncate">{team.name}</div>
+                <div className="mt-2 flex -space-x-2 overflow-hidden">
+                  {team.members &&
+                    team.members.slice(0, 6).map((member: any) => (
+                      <span
+                        key={member.id}
+                        className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-blue-700 text-white text-xs font-bold ring-2 ring-zinc-900"
+                        title={`${member.first_name} ${member.last_name}`}
+                      >
+                        {(member.first_name?.[0] || "") + (member.last_name?.[0] || "")}
+                      </span>
+                    ))}
+                  {team.members && team.members.length > 6 && (
+                    <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-zinc-600 text-white text-xs font-bold ring-2 ring-zinc-900">
+                      +{team.members.length - 6}
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs text-gray-400 mt-1">{team.members?.length || 0} members</div>
+              </Link>
             </li>
           ))}
         </ul>
