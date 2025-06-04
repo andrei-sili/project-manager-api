@@ -2,6 +2,7 @@
 "use client";
 import { useState } from "react";
 import axios from "axios";
+import { useRouter } from "next/navigation";
 
 export default function ChangePasswordPage() {
   const [old_password, setOldPassword] = useState("");
@@ -10,8 +11,8 @@ export default function ChangePasswordPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState("");
   const [error, setError] = useState("");
+  const router = useRouter();
 
-  // Handles password change
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSuccess("");
@@ -31,7 +32,7 @@ export default function ChangePasswordPage() {
         { old_password, new_password },
         { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
       );
-      setSuccess("Password changed!");
+      setSuccess("Password changed successfully!");
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
@@ -44,7 +45,17 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="max-w-xl mx-auto mt-10 bg-zinc-900 rounded-xl shadow p-8">
-      <h2 className="text-2xl font-bold mb-6 text-center">Change Password</h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-bold text-center">Change Password</h2>
+        {/* X button to go back */}
+        <button
+          className="text-gray-400 hover:text-gray-200 text-xl px-2"
+          onClick={() => router.back()}
+          aria-label="Close"
+        >
+          &times;
+        </button>
+      </div>
       <form className="space-y-4" onSubmit={handleSubmit}>
         <div>
           <label className="block text-gray-400 mb-1">Current Password</label>
@@ -83,8 +94,33 @@ export default function ChangePasswordPage() {
         >
           {loading ? "Saving..." : "Change password"}
         </button>
-        {success && <div className="text-green-400 mt-2">{success}</div>}
-        {error && <div className="text-red-400 mt-2">{error}</div>}
+        {/* Feedback messages sticky under button */}
+        {(success || error) && (
+          <div className="mt-4 flex items-center justify-between px-3 py-2 rounded
+            text-sm font-semibold
+            border
+            transition-all
+            "
+            style={{
+              borderColor: success ? "#22c55e" : "#ef4444",
+              color: success ? "#22c55e" : "#ef4444",
+              background: success ? "#052e16" : "#2b0d0d"
+            }}
+          >
+            <span>{success || error}</span>
+            <button
+              className="text-lg px-2 font-bold hover:opacity-70"
+              onClick={() => {
+                setSuccess("");
+                setError("");
+              }}
+              type="button"
+              aria-label="Dismiss"
+            >
+              &times;
+            </button>
+          </div>
+        )}
       </form>
     </div>
   );
