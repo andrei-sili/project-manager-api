@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import axios from "axios";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import EditProjectModal from "@/components/EditProjectModal";
 
 export default function ProjectDetailsPage() {
   const router = useRouter();
@@ -15,10 +16,9 @@ export default function ProjectDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // For future: modals for edit/invite/task
-  // const [showEdit, setShowEdit] = useState(false);
-  // const [showAddTask, setShowAddTask] = useState(false);
-  // const [showInvite, setShowInvite] = useState(false);
+  // Modal control
+  const [showEdit, setShowEdit] = useState(false);
+  const [refresh, setRefresh] = useState(0);
 
   useEffect(() => {
     if (!projectId) return;
@@ -30,7 +30,7 @@ export default function ProjectDetailsPage() {
       .then(res => setProject(res.data))
       .catch(() => setError("Project not found."))
       .finally(() => setLoading(false));
-  }, [projectId]);
+  }, [projectId, refresh]);
 
   if (loading) return <div className="text-gray-400 px-8 py-16">Loading...</div>;
   if (error || !project)
@@ -132,6 +132,32 @@ export default function ProjectDetailsPage() {
         </div>
       </div>
 
+      {/* Edit button active! */}
+      <div className="flex gap-2 mb-8">
+        <button
+          className="bg-blue-600 hover:bg-blue-700 px-3 py-1 text-white rounded"
+          onClick={() => setShowEdit(true)}
+        >
+          Edit
+        </button>
+        <button
+          className="bg-green-600 hover:bg-green-700 px-3 py-1 text-white rounded"
+          // onClick={() => setShowAddTask(true)}
+          disabled
+          title="Add Task (soon)"
+        >
+          + Task
+        </button>
+        <button
+          className="bg-neutral-700 hover:bg-neutral-800 px-3 py-1 text-white rounded"
+          // onClick={() => setShowInvite(true)}
+          disabled
+          title="Invite member (soon)"
+        >
+          Invite
+        </button>
+      </div>
+
       {/* Task list */}
       <div className="bg-zinc-900 rounded-2xl p-6 shadow mb-10">
         <div className="flex justify-between items-center mb-4">
@@ -183,6 +209,14 @@ export default function ProjectDetailsPage() {
         <div className="text-lg font-semibold text-white mb-2">Activity</div>
         <div className="text-gray-400 text-sm">Project activity coming soon...</div>
       </div>
+
+      {/* Edit Project Modal */}
+      <EditProjectModal
+        project={project}
+        open={showEdit}
+        onClose={() => setShowEdit(false)}
+        onUpdated={() => setRefresh(r => r + 1)}
+      />
     </div>
   );
 }
