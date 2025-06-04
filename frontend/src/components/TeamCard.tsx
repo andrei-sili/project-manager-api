@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Users } from "lucide-react";
 
 export default function TeamCard({ teams, loading }: { teams: any[]; loading?: boolean }) {
+  const safeTeams = Array.isArray(teams) ? teams : [];
+
   if (loading) {
     return (
       <div className="rounded-xl bg-zinc-800 shadow p-6 h-[120px] animate-pulse mb-4" />
@@ -23,11 +25,11 @@ export default function TeamCard({ teams, loading }: { teams: any[]; loading?: b
           View All
         </Link>
       </div>
-      {(!teams || teams.length === 0) ? (
+      {safeTeams.length === 0 ? (
         <div className="text-gray-400 text-sm">You are not part of any team yet.</div>
       ) : (
         <ul className="flex flex-wrap gap-4">
-          {teams.slice(0, 3).map((team) => (
+          {safeTeams.slice(0, 3).map((team) => (
             <li key={team.id} className="bg-zinc-800 rounded-lg px-5 py-3 min-w-[180px] flex-1 shadow">
               <Link href={`/dashboard/teams`}>
                 <div className="font-semibold text-white text-base truncate">{team.name}</div>
