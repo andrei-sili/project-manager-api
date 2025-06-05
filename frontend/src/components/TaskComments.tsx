@@ -7,7 +7,7 @@ interface Comment {
   id: number;
   user: string;
   user_email: string;
-  content: string;
+  text: string;
   created_at: string;
   updated_at: string;
 }
@@ -26,7 +26,7 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
 
-  // Fetch comments
+  // Fetch comments from the backend
   const fetchComments = async () => {
     setLoading(true);
     try {
@@ -38,7 +38,7 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
           },
         }
       );
-      setComments(res.data.results || res.data); // results for paginated, fallback for array
+      setComments(res.data.results || res.data); // handle paginated or array response
       setError("");
     } catch {
       setError("Could not load comments.");
@@ -60,7 +60,7 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
     try {
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/`,
-        { content: newComment },
+        { text: newComment, parent: null },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access")}`,
@@ -97,7 +97,7 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
   // Start editing comment
   const startEdit = (comment: Comment) => {
     setEditingId(comment.id);
-    setEditContent(comment.content);
+    setEditContent(comment.text);
   };
 
   // Save edit
@@ -106,7 +106,7 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
     try {
       await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/${commentId}/`,
-        { content: editContent },
+        { text: editContent },
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access")}`,
@@ -127,32 +127,12 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
     setEditContent("");
   };
 
-  // Replace this with your auth context/user
+  // You can replace this with your real auth context
   const currentUserEmail = localStorage.getItem("user_email") || "";
 
   return (
-    <div>
-      <div className="mb-4">
-        <form onSubmit={handleSubmit} className="flex items-center gap-2">
-          <textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Add a comment..."
-            className="w-full rounded-xl p-2 bg-zinc-800 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-blue-500 transition"
-            rows={2}
-            disabled={submitting}
-          />
-          <button
-            type="submit"
-            className="bg-blue-600 hover:bg-blue-700 px-4 py-2 text-white rounded-xl font-bold disabled:opacity-60"
-            disabled={submitting || !newComment.trim()}
-          >
-            {submitting ? "Sending..." : "Send"}
-          </button>
-        </form>
-        {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
-      </div>
-      <div>
+    <div className="w-full flex flex-col max-w-3xl mx-auto mb-8">
+      <div className="flex-1 overflow-y-auto mb-4">
         {loading ? (
           <div className="text-gray-400 py-4">Loading comments...</div>
         ) : comments.length === 0 ? (
@@ -196,7 +176,7 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
                     </div>
                   </div>
                 ) : (
-                  <div className="text-white whitespace-pre-line">{c.content}</div>
+                  <div className="text-white whitespace-pre-line">{c.text}</div>
                 )}
                 {c.user_email === currentUserEmail && editingId !== c.id && (
                   <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition">
@@ -219,6 +199,26 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
           </ul>
         )}
       </div>
+      <form onSubmit={handleSubmit} className="w-full">
+        <textarea
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          placeholder="Add a comment..."
+          className="w-full rounded-xl p-3 bg-zinc-800 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-blue-500 transition mb-2"
+          rows={2}
+          disabled={submitting}
+        />
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 px-6 py-2 text-white rounded-xl font-bold disabled:opacity-60"
+            disabled={submitting || !newComment.trim()}
+          >
+            {submitting ? "Sending..." : "Send"}
+          </button>
+        </div>
+        {error && <div className="text-red-500 text-sm mt-2">{error}</div>}
+      </form>
     </div>
   );
 }
