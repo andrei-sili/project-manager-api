@@ -1,3 +1,4 @@
+// src/components/DashboardLayout.tsx
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 

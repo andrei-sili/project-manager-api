@@ -1,4 +1,4 @@
-// frontend/src/app/dashboard/projects/[projectId]/tasks/[taskId]/page.tsx
+// frontend/src/app/dashboard/projects/[id]/tasks/[taskid]/page.tsx
 
 "use client";
 import { useEffect, useState } from "react";

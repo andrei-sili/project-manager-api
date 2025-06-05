@@ -1,4 +1,4 @@
-// src/app/dashboard/profile/change-password/page.tsx
+// frontend/src/app/dashboard/profile/change-password/page.tsx
 "use client";
 import { useState } from "react";
 import axios from "axios";

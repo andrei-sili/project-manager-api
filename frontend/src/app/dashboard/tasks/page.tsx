@@ -1,3 +1,4 @@
+// frontend/src/app/dashboard/tasks/page.tsx
 "use client";
 import { useEffect, useState } from "react";
 import {
@@ -267,6 +268,7 @@ function TaskModal({projects, onClose, onSave, initial}: {
           padding: 0.5rem;
         }
       `}</style>
+
     </div>
   );
 }

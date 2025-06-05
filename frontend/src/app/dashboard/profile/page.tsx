@@ -1,4 +1,4 @@
-// src/app/dashboard/profile/page.tsx
+// frontend/src/app/dashboard/profile/page.tsx
 "use client";
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
