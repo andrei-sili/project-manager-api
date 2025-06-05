@@ -2,30 +2,30 @@
 
 "use client";
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import axios from "axios";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 /**
- * Task details page: shows all task information, comments, files, and activity.
+ * Task detail page using params from [id] (project) and [taskid] (task).
  */
 export default function TaskDetailPage() {
+  // Use the exact param names that match the folder structure: [id] and [taskid]
   const params = useParams();
-  const router = useRouter();
-  const { projectId, taskId } = params as { projectId: string; taskId: string };
+  const { id, taskid } = params as { id: string; taskid: string };
 
   const [task, setTask] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
-  // Fetch task directly via project and task ID (efficient)
+  // Fetch task details by project id and task id
   useEffect(() => {
-    if (!projectId || !taskId) return;
+    if (!id || !taskid) return;
     setLoading(true);
     axios
       .get(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/`,
+        `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}/tasks/${taskid}/`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("access")}`,
@@ -35,7 +35,7 @@ export default function TaskDetailPage() {
       .then((res) => setTask(res.data))
       .catch(() => setError("Task not found."))
       .finally(() => setLoading(false));
-  }, [projectId, taskId]);
+  }, [id, taskid]);
 
   if (loading)
     return <div className="text-gray-400 px-8 py-16">Loading task details...</div>;
@@ -49,7 +49,7 @@ export default function TaskDetailPage() {
       {/* Back to project button */}
       <div className="flex items-center gap-2 mb-6">
         <Link
-          href={`/dashboard/projects/${projectId}`}
+          href={`/dashboard/projects/${id}`}
           className="text-gray-400 hover:text-blue-400 flex items-center gap-2"
         >
           <ArrowLeft size={20} /> Back to project
