@@ -3,16 +3,12 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 
-// Types match backend: user, email, text, parent, etc
 export interface Comment {
   id: number;
-  user: string;            // Name or username
-  user_email: string;
+  user_name: string;       // name from backend
   text: string;
   created_at: string;
-  updated_at: string;
-  parent: number | null;
-  replies?: Comment[];     // For threading, built in FE
+  replies: Comment[];
 }
 
 interface TaskCommentsProps {
@@ -29,20 +25,26 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
   const [submitting, setSubmitting] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editContent, setEditContent] = useState("");
+  const [nextPage, setNextPage] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
 
-  // Replace with real auth context/user in prod
-  const currentUserEmail = localStorage.getItem("user_email") || "";
+  // Load user from localstorage if available
+  const currentUserName = localStorage.getItem("user_name") || "";
 
-  // 1. Fetch all comments for task (flat list), then nest them
-  const fetchComments = async () => {
+  // 1. Fetch all comments for task, paginated
+  const fetchComments = async (url?: string, append = false) => {
     setLoading(true);
     try {
       const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/`,
+        url || `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/`,
         { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
       );
-      const flat: Comment[] = res.data.results || res.data;
-      setComments(nestComments(flat));
+      const page = res.data;
+      setNextPage(page.next);
+      setHasMore(!!page.next);
+      setComments((prev) =>
+        append ? [...prev, ...(page.results as Comment[])] : (page.results as Comment[])
+      );
       setError("");
     } catch {
       setError("Could not load comments.");
@@ -56,25 +58,10 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
     // eslint-disable-next-line
   }, [projectId, taskId]);
 
-  // 2. Convert flat comment list to threaded tree
-  function nestComments(flat: Comment[]): Comment[] {
-    const idMap: { [id: number]: Comment & { replies: Comment[] } } = {};
-    const roots: Comment[] = [];
-    flat.forEach((c) => (idMap[c.id] = { ...c, replies: [] }));
-    flat.forEach((c) => {
-      if (c.parent && idMap[c.parent]) {
-        idMap[c.parent].replies.push(idMap[c.id]);
-      } else if (!c.parent) {
-        roots.push(idMap[c.id]);
-      }
-    });
-    return roots;
-  }
-
-  // 3. Add or reply comment
+  // 2. Add or reply comment
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
+    if (!newComment.trim() || submitting) return;
     setSubmitting(true);
     try {
       await axios.post(
@@ -92,21 +79,7 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
     }
   };
 
-  // 4. Delete comment
-  const handleDelete = async (commentId: number) => {
-    if (!window.confirm("Delete this comment?")) return;
-    try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/${commentId}/`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
-      );
-      fetchComments();
-    } catch {
-      setError("Failed to delete comment.");
-    }
-  };
-
-  // 5. Edit comment
+  // 3. Edit comment (not shown in backend, so only allow if you want, or remove)
   const startEdit = (comment: Comment) => {
     setEditingId(comment.id);
     setEditContent(comment.text);
@@ -131,17 +104,31 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
     setEditContent("");
   };
 
-  // 6. Render one comment (with replies, recursive)
+  // 4. Delete comment
+  const handleDelete = async (commentId: number) => {
+    if (!window.confirm("Delete this comment?")) return;
+    try {
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/${commentId}/`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      );
+      fetchComments();
+    } catch {
+      setError("Failed to delete comment.");
+    }
+  };
+
+  // 5. Render one comment and its replies
   function CommentThread({ comment, level = 0 }: { comment: Comment; level?: number }) {
     return (
-      <div className={`pl-${level * 5} mb-3`}>
+      <div className={`mb-3 pl-${Math.min(level * 5, 20)}`}>
         <div className="flex items-start gap-3">
           <div className="w-9 h-9 rounded-full bg-blue-900 text-blue-200 flex items-center justify-center font-bold text-lg">
-            {comment.user?.charAt(0).toUpperCase() || "U"}
+            {comment.user_name?.charAt(0).toUpperCase() || "U"}
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-blue-200">{comment.user || comment.user_email || "User"}</span>
+              <span className="font-semibold text-blue-200">{comment.user_name || "User"}</span>
               <span className="ml-2 text-xs text-gray-400">
                 {new Date(comment.created_at).toLocaleString()}
               </span>
@@ -182,22 +169,8 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
               >
                 Reply
               </button>
-              {comment.user_email === currentUserEmail && editingId !== comment.id && (
-                <>
-                  <button
-                    className="text-xs text-green-400 hover:underline"
-                    onClick={() => startEdit(comment)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="text-xs text-red-400 hover:underline"
-                    onClick={() => handleDelete(comment.id)}
-                  >
-                    Delete
-                  </button>
-                </>
-              )}
+              {/* Show Edit/Delete only for current user's own comments if you have that info */}
+              {/* {comment.user_name === currentUserName && editingId !== comment.id && ( ... )} */}
             </div>
             {replyTo === comment.id && (
               <form onSubmit={handleSubmit} className="mt-2">
@@ -248,18 +221,30 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
     <div className="w-full max-w-3xl mx-auto mt-8 mb-10">
       <div className="mb-4 text-xl font-bold text-white">Comments</div>
       {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-      {loading ? (
-        <div className="text-gray-400 py-4">Loading comments...</div>
-      ) : (
-        <div>
-          {comments.length === 0 && (
-            <div className="text-gray-500 py-4">No comments yet.</div>
-          )}
-          {comments.map((comment) => (
-            <CommentThread comment={comment} key={comment.id} />
-          ))}
-        </div>
-      )}
+      <div className="max-h-96 overflow-y-auto pr-2">
+        {loading ? (
+          <div className="text-gray-400 py-4">Loading comments...</div>
+        ) : comments.length === 0 ? (
+          <div className="text-gray-500 py-4">No comments yet.</div>
+        ) : (
+          <div>
+            {comments.map((comment) => (
+              <CommentThread comment={comment} key={comment.id} />
+            ))}
+            {hasMore && (
+              <div className="flex justify-center mt-4">
+                <button
+                  className="bg-zinc-800 border border-zinc-600 px-4 py-2 text-white rounded-lg"
+                  onClick={() => fetchComments(nextPage!, true)}
+                  disabled={loading}
+                >
+                  Load more
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       {/* Form for new comment (not a reply) */}
       {replyTo === null && (
         <form onSubmit={handleSubmit} className="mt-4">
