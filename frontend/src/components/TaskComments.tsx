@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -114,7 +113,7 @@ export default function CommentThread({ projectId, taskId }: { projectId: string
                     className="mt-2 flex flex-col gap-2"
                   >
                     <textarea
-                      className="w-full rounded-xl p-2 bg-zinc-900 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full rounded-xl p-2 bg-zinc-900 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-blue-500 ltr-force"
                       dir="ltr"
                       value={replyContent[reply.id] || ""}
                       onChange={(e) =>
@@ -189,7 +188,7 @@ export default function CommentThread({ projectId, taskId }: { projectId: string
                       className="mt-2 flex flex-col gap-2"
                     >
                       <textarea
-                        className="w-full rounded-xl p-2 bg-zinc-900 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full rounded-xl p-2 bg-zinc-900 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-blue-500 ltr-force"
                         dir="ltr"
                         value={replyContent[comment.id] || ""}
                         onChange={(e) =>
@@ -232,7 +231,7 @@ export default function CommentThread({ projectId, taskId }: { projectId: string
         className="bg-zinc-900 pt-4 pb-4 z-10 flex flex-col gap-2 mt-4 rounded-xl"
       >
         <textarea
-          className="w-full rounded-xl p-3 bg-zinc-800 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-blue-500"
+          className="w-full rounded-xl p-3 bg-zinc-800 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-blue-500 ltr-force"
           dir="ltr"
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
