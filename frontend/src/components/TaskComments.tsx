@@ -1,11 +1,9 @@
-// frontend/src/components/TaskComments.tsx
-
 import { useEffect, useState } from "react";
 import axios from "axios";
 
 export interface Comment {
   id: number;
-  user_name: string;       // name from backend
+  user_name: string;
   text: string;
   created_at: string;
   replies: Comment[];
@@ -21,17 +19,17 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [newComment, setNewComment] = useState("");
-  const [replyTo, setReplyTo] = useState<number | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editContent, setEditContent] = useState("");
+  const [replyTo, setReplyTo] = useState<number | null>(null);
+  const [replyInputs, setReplyInputs] = useState<{ [key: number]: string }>({});
+  const [replySubmitting, setReplySubmitting] = useState<{ [key: number]: boolean }>({});
   const [nextPage, setNextPage] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(false);
 
-  // Load user from localstorage if available
+  // User for edit/delete (if needed)
   const currentUserName = localStorage.getItem("user_name") || "";
 
-  // 1. Fetch all comments for task, paginated
+  // Fetch comments paginated, tree structure
   const fetchComments = async (url?: string, append = false) => {
     setLoading(true);
     try {
@@ -58,7 +56,7 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
     // eslint-disable-next-line
   }, [projectId, taskId]);
 
-  // 2. Add or reply comment
+  // Add comment
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || submitting) return;
@@ -66,11 +64,10 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
     try {
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/`,
-        { text: newComment, parent: replyTo },
+        { text: newComment, parent: null },
         { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
       );
       setNewComment("");
-      setReplyTo(null);
       fetchComments();
     } catch {
       setError("Failed to add comment.");
@@ -79,46 +76,29 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
     }
   };
 
-  // 3. Edit comment (not shown in backend, so only allow if you want, or remove)
-  const startEdit = (comment: Comment) => {
-    setEditingId(comment.id);
-    setEditContent(comment.text);
-  };
-  const handleEditSave = async (commentId: number) => {
-    if (!editContent.trim()) return;
+  // Reply comment
+  const handleReplySubmit = async (commentId: number, e: React.FormEvent) => {
+    e.preventDefault();
+    const value = replyInputs[commentId] || "";
+    if (!value.trim() || replySubmitting[commentId]) return;
+    setReplySubmitting((prev) => ({ ...prev, [commentId]: true }));
     try {
-      await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/${commentId}/`,
-        { text: editContent },
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/`,
+        { text: value, parent: commentId },
         { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
       );
-      setEditingId(null);
-      setEditContent("");
+      setReplyInputs((prev) => ({ ...prev, [commentId]: "" }));
+      setReplyTo(null);
       fetchComments();
     } catch {
-      setError("Failed to update comment.");
-    }
-  };
-  const cancelEdit = () => {
-    setEditingId(null);
-    setEditContent("");
-  };
-
-  // 4. Delete comment
-  const handleDelete = async (commentId: number) => {
-    if (!window.confirm("Delete this comment?")) return;
-    try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/${commentId}/`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
-      );
-      fetchComments();
-    } catch {
-      setError("Failed to delete comment.");
+      setError("Failed to add reply.");
+    } finally {
+      setReplySubmitting((prev) => ({ ...prev, [commentId]: false }));
     }
   };
 
-  // 5. Render one comment and its replies
+  // Render one comment and its replies
   function CommentThread({ comment, level = 0 }: { comment: Comment; level?: number }) {
     return (
       <div className={`mb-3 pl-${Math.min(level * 5, 20)}`}>
@@ -133,69 +113,46 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
                 {new Date(comment.created_at).toLocaleString()}
               </span>
             </div>
-            {editingId === comment.id ? (
-              <div>
-                <textarea
-                  className="w-full rounded p-2 bg-zinc-900 text-white border mt-2"
-                  value={editContent}
-                  onChange={(e) => setEditContent(e.target.value)}
-                  rows={2}
-                />
-                <div className="flex gap-2 mt-2">
-                  <button
-                    onClick={() => handleEditSave(comment.id)}
-                    className="bg-green-700 hover:bg-green-800 px-3 py-1 text-white rounded text-xs"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={cancelEdit}
-                    className="bg-zinc-700 hover:bg-zinc-600 px-3 py-1 text-white rounded text-xs"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            ) : (
-              <div className="text-white whitespace-pre-line">{comment.text}</div>
-            )}
+            <div className="text-white whitespace-pre-line">{comment.text}</div>
             <div className="flex gap-1 mt-1">
               <button
                 className="text-xs text-blue-400 hover:underline"
-                onClick={() => {
-                  setReplyTo(comment.id);
-                  setNewComment("");
-                }}
+                onClick={() => setReplyTo(comment.id)}
               >
                 Reply
               </button>
-              {/* Show Edit/Delete only for current user's own comments if you have that info */}
-              {/* {comment.user_name === currentUserName && editingId !== comment.id && ( ... )} */}
             </div>
             {replyTo === comment.id && (
-              <form onSubmit={handleSubmit} className="mt-2">
+              <form
+                onSubmit={(e) => handleReplySubmit(comment.id, e)}
+                className="mt-2 flex flex-col gap-2"
+              >
                 <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
+                  dir="ltr" // fix: force left-to-right writing for reply
+                  value={replyInputs[comment.id] || ""}
+                  onChange={(e) =>
+                    setReplyInputs((prev) => ({
+                      ...prev,
+                      [comment.id]: e.target.value,
+                    }))
+                  }
                   placeholder="Write a reply..."
                   className="w-full rounded-xl p-2 bg-zinc-800 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-blue-500 transition mb-2"
                   rows={2}
-                  disabled={submitting}
+                  disabled={replySubmitting[comment.id]}
+                  autoFocus
                 />
                 <div className="flex gap-2 justify-end">
                   <button
                     type="submit"
                     className="bg-blue-600 hover:bg-blue-700 px-4 py-1 text-white rounded-xl font-bold disabled:opacity-60"
-                    disabled={submitting || !newComment.trim()}
+                    disabled={replySubmitting[comment.id] || !(replyInputs[comment.id] || "").trim()}
                   >
-                    {submitting ? "Sending..." : "Reply"}
+                    {replySubmitting[comment.id] ? "Sending..." : "Reply"}
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setReplyTo(null);
-                      setNewComment("");
-                    }}
+                    onClick={() => setReplyTo(null)}
                     className="bg-zinc-700 px-3 py-1 rounded-xl text-white text-xs"
                   >
                     Cancel
@@ -221,7 +178,7 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
     <div className="w-full max-w-3xl mx-auto mt-8 mb-10">
       <div className="mb-4 text-xl font-bold text-white">Comments</div>
       {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-      <div className="max-h-96 overflow-y-auto pr-2">
+      <div className="max-h-96 overflow-y-auto pr-2 bg-zinc-900 rounded-xl">
         {loading ? (
           <div className="text-gray-400 py-4">Loading comments...</div>
         ) : comments.length === 0 ? (
@@ -245,28 +202,30 @@ export default function TaskComments({ projectId, taskId }: TaskCommentsProps) {
           </div>
         )}
       </div>
-      {/* Form for new comment (not a reply) */}
-      {replyTo === null && (
-        <form onSubmit={handleSubmit} className="mt-4">
-          <textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="Add a comment..."
-            className="w-full rounded-xl p-3 bg-zinc-800 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-blue-500 transition mb-2"
-            rows={2}
-            disabled={submitting}
-          />
-          <div className="flex justify-end">
-            <button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 px-6 py-2 text-white rounded-xl font-bold disabled:opacity-60"
-              disabled={submitting || !newComment.trim()}
-            >
-              {submitting ? "Sending..." : "Send"}
-            </button>
-          </div>
-        </form>
-      )}
+      {/* Sticky form for new comment */}
+      <form
+        onSubmit={handleSubmit}
+        className="sticky bottom-0 left-0 bg-zinc-900 pt-4 pb-4 z-10 flex flex-col gap-2"
+        style={{ position: "sticky", bottom: 0, left: 0, background: "#18181b" }}
+      >
+        <textarea
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          placeholder="Add a comment..."
+          className="w-full rounded-xl p-3 bg-zinc-800 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-blue-500 transition mb-2"
+          rows={2}
+          disabled={submitting}
+        />
+        <div className="flex justify-end">
+          <button
+            type="submit"
+            className="bg-blue-600 hover:bg-blue-700 px-6 py-2 text-white rounded-xl font-bold disabled:opacity-60"
+            disabled={submitting || !newComment.trim()}
+          >
+            {submitting ? "Sending..." : "Send"}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }
