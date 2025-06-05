@@ -232,11 +232,12 @@ export default function ProjectDetailsPage() {
                         Edit
                       </button>
                       <Link
-                        href={`/dashboard/tasks/${task.id}`}
+                        href={`/dashboard/projects/${project.id}/tasks/${task.id}`}
                         className="text-blue-400 hover:underline ml-2 text-xs font-semibold"
                       >
                         View
                       </Link>
+
                     </div>
                   </li>
                 ))}
