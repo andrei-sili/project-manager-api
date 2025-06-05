@@ -8,7 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import EditProjectModal from "@/components/EditProjectModal";
 import InviteMemberModal from "@/components/InviteMemberModal";
 import AddTaskModal from "@/components/AddTaskModal";
-
+import EditTaskModal from "@/components/EditTaskModal";
 
 export default function ProjectDetailsPage() {
   const router = useRouter();
@@ -24,7 +24,7 @@ export default function ProjectDetailsPage() {
   const [refresh, setRefresh] = useState(0);
   const [showInvite, setShowInvite] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
-
+  const [editTask, setEditTask] = useState<any | null>(null);
 
   useEffect(() => {
     if (!projectId) return;
@@ -163,49 +163,58 @@ export default function ProjectDetailsPage() {
       </div>
 
       {/* Task list */}
-      <div className="bg-zinc-900 rounded-2xl p-6 shadow mb-10">
-        <div className="flex justify-between items-center mb-4">
-          <div className="text-lg font-semibold text-white">Tasks</div>
-          <button
-              className="bg-blue-700 hover:bg-blue-800 px-4 py-2 text-white rounded text-sm font-semibold"
-              onClick={() => setShowAddTask(true)}
-          >
-            + Add Task
-          </button>
+<div className="bg-zinc-900 rounded-2xl p-6 shadow mb-10">
+  <div className="flex justify-between items-center mb-4">
+    <div className="text-lg font-semibold text-white">Tasks</div>
+    <button
+      className="bg-blue-700 hover:bg-blue-800 px-4 py-2 text-white rounded text-sm font-semibold"
+      onClick={() => setShowAddTask(true)}
+    >
+      + Add Task
+    </button>
+  </div>
+  {totalTasks ? (
+    <ul className="divide-y divide-zinc-800">
+      {project.tasks.map((task: any) => (
+        <li
+          key={task.id}
+          className="py-3 flex justify-between items-center hover:bg-zinc-800 px-3 rounded-xl transition"
+        >
+          <div>
+            <div className="font-semibold text-white">{task.title}</div>
+            <div className="text-gray-400 text-sm">{task.description}</div>
+            <div className="text-xs text-gray-500 mt-1">
+              {task.status === "done" ? (
+                <span className="text-green-400 font-semibold">Done</span>
+              ) : (
+                <span className="text-yellow-300 font-semibold">{task.status}</span>
+              )}{" "}
+              {task.due_date && <>| Due: {new Date(task.due_date).toLocaleDateString()}</>}
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              className="bg-blue-800 hover:bg-blue-600 text-white rounded px-3 py-1 text-xs"
+              onClick={() => setEditTask(task)}
+              title="Edit Task"
+            >
+              Edit
+            </button>
+            <Link
+              href={`/dashboard/tasks/${task.id}`}
+              className="text-blue-400 hover:underline ml-2 text-xs font-semibold"
+            >
+              View
+            </Link>
+          </div>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <div className="text-gray-500 py-8 text-center">No tasks yet.</div>
+  )}
+</div>
 
-        </div>
-        {totalTasks ? (
-            <ul className="divide-y divide-zinc-800">
-              {project.tasks.map((task: any) => (
-                  <li
-                      key={task.id}
-                className="py-3 flex justify-between items-center hover:bg-zinc-800 px-3 rounded-xl transition"
-              >
-                <div>
-                  <div className="font-semibold text-white">{task.title}</div>
-                  <div className="text-gray-400 text-sm">{task.description}</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {task.status === "done" ? (
-                      <span className="text-green-400 font-semibold">Done</span>
-                    ) : (
-                      <span className="text-yellow-300 font-semibold">{task.status}</span>
-                    )}{" "}
-                    {task.due_date && <>| Due: {new Date(task.due_date).toLocaleDateString()}</>}
-                  </div>
-                </div>
-                <Link
-                  href={`/dashboard/tasks/${task.id}`}
-                  className="text-blue-400 hover:underline ml-4 text-xs font-semibold"
-                >
-                  View
-                </Link>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <div className="text-gray-500 py-8 text-center">No tasks yet.</div>
-        )}
-      </div>
 
       {/* Activity log - Placeholder */}
       <div className="bg-zinc-900 rounded-2xl p-6 shadow">
@@ -234,6 +243,15 @@ export default function ProjectDetailsPage() {
         projectId={project.id}
         teamMembers={project.team?.members || []}
         onAdded={() => setRefresh(r => r + 1)}
+      />
+      {/* Edit Task Modal */}
+      <EditTaskModal
+        open={!!editTask}
+        task={editTask}
+        teamMembers={project.team?.members || []}
+        projectId={project.id}
+        onClose={() => setEditTask(null)}
+        onSaved={() => setRefresh(r => r + 1)}
       />
 
     </div>
