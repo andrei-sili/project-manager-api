@@ -51,7 +51,7 @@ export default function ProjectDetailsPage() {
     project.due_date ||
     (project.tasks?.map((t: any) => t.due_date).sort().reverse()[0] || null);
 
-  // --- PATCH task status for Kanban ---
+  // PATCH task status for Kanban
   async function handleStatusChange(taskId: number, newStatus: string) {
     try {
       await axios.patch(
@@ -224,20 +224,13 @@ export default function ProjectDetailsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button
-                        className="bg-blue-800 hover:bg-blue-600 text-white rounded px-3 py-1 text-xs"
-                        onClick={() => setEditTask(task)}
-                        title="Edit Task"
-                      >
-                        Edit
-                      </button>
+                      {/* Remove Edit from here! */}
                       <Link
                         href={`/dashboard/projects/${project.id}/tasks/${task.id}`}
                         className="text-blue-400 hover:underline ml-2 text-xs font-semibold"
                       >
                         View
                       </Link>
-
                     </div>
                   </li>
                 ))}
