@@ -14,22 +14,56 @@ function stringToColor(str: string): string {
   return `hsl(${hue},70%,60%)`;
 }
 
-export default function UserProfileCard() {
+interface TeamMember {
+  id: number;
+  user: string;
+  email: string;
+  role: string;
+}
+
+interface Team {
+  id: number;
+  name: string;
+  members: TeamMember[];
+}
+
+interface Project {
+  id: number;
+  name: string;
+  team?: Team;
+}
+
+interface Props {
+  projects: Project[];
+}
+
+export default function UserProfileCard({ projects }: Props) {
   const { user } = useAuth();
   const router = useRouter();
 
   if (!user) return null;
 
-  const letter =
-    user.first_name?.[0]?.toUpperCase() ||
-    user.last_name?.[0]?.toUpperCase() ||
-    user.email?.[0]?.toUpperCase() ||
-    "?";
   const name =
     user.first_name && user.last_name
       ? `${user.first_name} ${user.last_name}`
       : user.email;
-  const role = user.role || "Member";
+  const letter = name[0]?.toUpperCase() || "?";
+
+
+  const projectRoles =
+    projects
+      .map((project) => {
+        if (!project.team?.members) return null;
+        const member = project.team.members.find(
+          (m) => m.email === user.email || m.id === user.id
+        );
+        if (!member) return null;
+        return {
+          project: { id: project.id, name: project.name },
+          role: member.role,
+        };
+      })
+      .filter(Boolean) as { project: { id: number; name: string }; role: string }[];
 
   return (
     <div className="bg-zinc-900 rounded-2xl shadow p-5 flex flex-col items-center gap-3 mb-4">
@@ -42,9 +76,26 @@ export default function UserProfileCard() {
       </div>
       <div className="font-semibold text-lg text-center">{name}</div>
       <div className="text-xs text-gray-400 text-center mb-2">{user.email}</div>
-      <div className="flex items-center gap-2 text-sm font-medium text-blue-400">
-        <User className="w-4 h-4" />
-        <span className="capitalize">{role}</span>
+
+      <div className="w-full flex flex-col gap-1 mb-2">
+        {projectRoles.length === 0 ? (
+          <div className="flex items-center gap-2 text-xs text-gray-500 justify-center">
+            <User className="w-4 h-4" />
+            No project roles
+          </div>
+        ) : (
+          projectRoles.map((pr) => (
+            <div
+              key={pr.project.id}
+              className="flex items-center gap-2 text-xs text-blue-400 justify-center"
+            >
+              <User className="w-4 h-4" />
+              <span className="font-medium">{pr.role}</span>
+              <span className="text-gray-400">at</span>
+              <span className="font-semibold">{pr.project.name}</span>
+            </div>
+          ))
+        )}
       </div>
       <button
         onClick={() => router.push("/dashboard/profile")}
