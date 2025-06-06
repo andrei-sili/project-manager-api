@@ -1,49 +1,70 @@
-// src/components/ProjectOverviewCard.tsx
-"use client";
-import Link from "next/link";
-import { FolderPlus } from "lucide-react";
+// frontend/src/components/ProjectOverviewCard.tsx
 
-export default function ProjectOverviewCard({ projects, loading }: { projects: any[]; loading?: boolean }) {
-  const safeProjects = Array.isArray(projects) ? projects : [];
+import React from "react";
 
-  if (loading) {
-    return (
-      <div className="rounded-xl bg-zinc-800 shadow p-6 h-[120px] animate-pulse mb-4" />
-    );
-  }
+interface Member {
+  id: number;
+  name?: string;
+  email: string;
+  role: string;
+  joined_at?: string;
+}
+
+interface Team {
+  id: number;
+  name: string;
+}
+
+interface Task {
+  id: number;
+  title: string;
+  status: string;
+  priority: string;
+  due_date: string | null;
+  // ...add more fields if needed
+}
+
+interface Project {
+  id: number;
+  name: string;
+  description: string;
+  team?: Team;
+  tasks: Task[];
+  created_by: string;
+  // ...add more fields if needed
+}
+
+interface Props {
+  project: Project;
+  onClick?: () => void;
+}
+
+export default function ProjectOverviewCard({ project, onClick }: Props) {
+  const taskCount = project.tasks?.length || 0;
 
   return (
-    <div className="rounded-xl bg-zinc-900 shadow p-6 mb-4">
-      <div className="flex items-center justify-between mb-3">
-        <h3 className="text-lg font-bold">Projects</h3>
-        <Link
-          href="/dashboard/projects"
-          className="flex items-center gap-2 text-blue-400 hover:underline font-medium"
-        >
-          <FolderPlus className="w-5 h-5" />
-          View All
-        </Link>
+    <div
+      className="rounded-2xl bg-zinc-900 shadow p-5 hover:shadow-lg hover:ring-2 hover:ring-blue-600 transition cursor-pointer flex flex-col gap-2"
+      onClick={onClick}
+      tabIndex={0}
+      role="button"
+      aria-label={`Open project ${project.name}`}
+    >
+      <div className="flex justify-between items-center">
+        <h3 className="text-lg font-bold truncate">{project.name}</h3>
+        <span className="text-xs px-2 py-1 rounded bg-zinc-800 text-gray-300">
+          {taskCount} {taskCount === 1 ? "task" : "tasks"}
+        </span>
       </div>
-      {safeProjects.length === 0 ? (
-        <div className="text-gray-400 text-sm">No projects yet. <Link href="/dashboard/projects" className="text-blue-400 hover:underline">Create your first project</Link></div>
-      ) : (
-        <ul className="flex flex-wrap gap-4">
-          {safeProjects.slice(0, 3).map((project) => (
-            <li key={project.id} className="bg-zinc-800 rounded-lg px-5 py-3 min-w-[180px] flex-1 shadow">
-              <Link href={`/dashboard/projects/${project.id}`}>
-                <div className="font-semibold text-white text-base truncate">{project.name}</div>
-                <div className="text-xs text-gray-400 truncate">{project.description}</div>
-                <div className="mt-2 flex items-center gap-2">
-                  <span className="text-xs text-gray-500">{project.tasks_count || 0} tasks</span>
-                  <span className="text-xs text-gray-500">|</span>
-                  <span className="text-xs text-gray-500">{project.team?.name || "No team"}</span>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      <div className="text-sm text-gray-400 mb-2 truncate">{project.description}</div>
+      <div className="flex justify-between items-center mt-auto">
+        {project.team && (
+          <span className="text-xs font-medium text-blue-400">
+            {project.team.name}
+          </span>
+        )}
+        <span className="text-xs text-gray-500">Created by: {project.created_by}</span>
+      </div>
     </div>
   );
 }
-

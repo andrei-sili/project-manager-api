@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'apps.taskfiles',
     'apps.notify',
     'apps.logs',
+    'timetrack',
 
 ]
 

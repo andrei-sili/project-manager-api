@@ -1,5 +1,6 @@
 // frontend/src/components/KanbanBoard.tsx
 
+import { StatusBadge, PriorityBadge } from "./TaskBadge";
 import React from "react";
 import {
   DragDropContext,
@@ -126,24 +127,17 @@ export default function KanbanBoard({
                             </button>
                           </div>
                           <div className="flex items-center gap-3 mt-2 text-xs">
-                            <span
-                              className={`inline-block rounded px-2 py-1 font-semibold ${
-                                task.priority === "high"
-                                  ? "bg-red-700 text-white"
-                                  : task.priority === "medium"
-                                  ? "bg-yellow-700 text-white"
-                                  : "bg-zinc-700 text-gray-200"
-                              }`}
-                            >
-                              {task.priority.charAt(0).toUpperCase() + task.priority.slice(1)}
+                            <span className="flex gap-2 items-center">
+                              <PriorityBadge priority={task.priority}/>
+                              <StatusBadge status={task.status}/>
                             </span>
                             {task.assigned_to_email && (
-                              <span className="inline-block bg-blue-900 text-blue-100 px-2 rounded">
+                                <span className="inline-block bg-blue-900 text-blue-100 px-2 rounded">
                                 {task.assigned_to_email}
                               </span>
                             )}
                             {task.due_date && (
-                              <span className="inline-block bg-zinc-800 text-gray-300 px-2 rounded">
+                                <span className="inline-block bg-zinc-800 text-gray-300 px-2 rounded">
                                 {new Date(task.due_date).toLocaleDateString()}
                               </span>
                             )}

@@ -1,13 +1,12 @@
-// frontend/src/app/dashboard/projects/[id]/tasks/[taskid]/page.tsx
-
 "use client";
 import { useEffect, useState } from "react";
-import { useRouter, useParams } from "next/navigation";
 import axios from "axios";
+import { useRouter, useParams } from "next/navigation";
 import EditTaskModal from "@/components/EditTaskModal";
 import TaskComments from "@/components/TaskComments";
 import TaskFiles from "@/components/TaskFiles";
 import { StatusBadge, PriorityBadge } from "@/components/TaskBadge";
+import { ArrowLeft, X } from "lucide-react";
 
 export default function TaskDetailPage() {
   const router = useRouter();
@@ -68,78 +67,108 @@ export default function TaskDetailPage() {
     }
   };
 
+  // Close modal and go back to project
+  const handleClose = () => {
+    router.push(`/dashboard/projects/${id}`);
+  };
+
   if (loading)
-    return <div className="text-gray-400 px-8 py-16">Loading task details...</div>;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xl">
+        <div className="bg-zinc-900 rounded-2xl p-10 shadow-xl min-w-[350px] text-gray-200">
+          Loading task...
+        </div>
+      </div>
+    );
   if (error || !task)
-    return <div className="text-red-400 px-8 py-16">{error || "Not found."}</div>;
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xl">
+        <div className="bg-zinc-900 rounded-2xl p-10 shadow-xl min-w-[350px] text-red-400">
+          {error || "Not found."}
+        </div>
+      </div>
+    );
 
   return (
-    <>
-      <div className="max-w-3xl mx-auto mt-10 bg-zinc-900 rounded-2xl shadow-xl p-8">
-        {/* Top bar: task title and action buttons */}
-        <div className="flex justify-between items-center mb-4">
-          <div className="text-xl font-bold text-white">{task.title}</div>
-          <div className="flex gap-2">
-            <button
-              className="px-3 py-1 bg-zinc-700 text-white rounded-xl text-xs hover:bg-blue-700 transition"
-              onClick={() => setShowEdit(true)}
-            >
-              Edit
-            </button>
-            <button
-              className="px-3 py-1 bg-zinc-800 text-red-400 rounded-xl text-xs hover:bg-red-700 transition"
-              onClick={handleDeleteTask}
-            >
-              Delete
-            </button>
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-xl">
+      {/* Modal card */}
+      <div className="bg-zinc-900 rounded-3xl shadow-2xl max-w-3xl w-full p-8 mx-2 relative animate-slideUp border border-zinc-800">
+        {/* X Close */}
+        <button
+          className="absolute right-6 top-6 text-zinc-400 hover:text-white transition"
+          onClick={handleClose}
+          title="Close"
+        >
+          <X size={32} />
+        </button>
+
+        {/* Back button */}
+        <button
+          className="absolute left-6 top-6 text-zinc-400 hover:text-white transition flex items-center gap-1"
+          onClick={handleClose}
+          title="Back to Project"
+        >
+          <ArrowLeft size={22} /> <span className="font-semibold">Back to Project</span>
+        </button>
+
+        {/* Edit / Delete */}
+        <div className="absolute right-6 top-20 flex gap-2">
+          <button
+            className="px-4 py-1 bg-blue-700 hover:bg-blue-800 text-white rounded-xl font-semibold text-sm"
+            onClick={() => setShowEdit(true)}
+          >
+            Edit
+          </button>
+          <button
+            className="px-4 py-1 bg-zinc-800 text-red-400 rounded-xl text-sm hover:bg-red-700 hover:text-white transition"
+            onClick={handleDeleteTask}
+          >
+            Delete
+          </button>
+        </div>
+        {/* Title */}
+        <div className="text-2xl font-bold text-white mb-2 mt-1 pl-12">{task.title}</div>
+        {/* Badges/fields */}
+        <div className="flex flex-wrap gap-3 mb-4 pl-12">
+          <StatusBadge status={task.status} />
+          <PriorityBadge priority={task.priority} />
+          <div className="text-xs text-gray-400 flex items-center">
+            {task.due_date && (
+              <>
+                <span className="font-semibold mr-1">Due:</span>
+                {new Date(task.due_date).toLocaleDateString()}
+              </>
+            )}
           </div>
         </div>
-
-        {/* Task details */}
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <div>
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-gray-400">Status:</span>
-              <StatusBadge status={task.status} />
-            </div>
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-gray-400">Priority:</span>
-              <PriorityBadge priority={task.priority} />
-            </div>
-            <div className="mb-2">
-              <span className="text-gray-400">Due date:</span>{" "}
-              {task.due_date ? (
-                <span>{new Date(task.due_date).toLocaleDateString()}</span>
-              ) : (
-                <span className="text-gray-600">No due date</span>
-              )}
-            </div>
+        <div className="flex flex-wrap gap-8 mb-6 pl-12">
+          <div className="text-sm">
+            <span className="text-gray-400">Assigned to: </span>
+            <span className="font-semibold">
+              {task.assigned_to_name || task.assigned_to || "—"}
+            </span>
           </div>
-          <div>
-            <div className="mb-2">
-              <span className="text-gray-400">Assigned to:</span>{" "}
-              <span>{task.assigned_to_name || task.assigned_to || "—"}</span>
-            </div>
-            <div className="mb-2">
-              <span className="text-gray-400">Project:</span>{" "}
-              <span>{task.project?.name || task.project || "—"}</span>
-            </div>
+          <div className="text-sm">
+            <span className="text-gray-400">Project: </span>
+            <span className="font-semibold">
+              {task.project?.name || task.project || "—"}
+            </span>
           </div>
         </div>
-
-        {/* Task description */}
-        <div className="mb-4">
+        {/* Description */}
+        <div className="mb-6 pl-12">
           <div className="text-gray-400 mb-1">Description:</div>
           <div className="text-white whitespace-pre-line">{task.description}</div>
         </div>
-
-        {/* Files section (compact, inside the card) */}
-        <TaskFiles projectId={id} taskId={taskid} compact />
-
-        {/* Comments section below the card */}
-        <TaskComments projectId={id} taskId={taskid} />
-
-        {/* Edit Task modal */}
+        {/* Files */}
+        <div className="pl-12 mb-6">
+          <TaskFiles projectId={id} taskId={taskid} compact />
+        </div>
+        {/* Comments */}
+        <div className="pl-12">
+          <TaskComments projectId={id} taskId={taskid} />
+        </div>
+        {/* Edit modal */}
         <EditTaskModal
           open={showEdit}
           task={task}
@@ -152,6 +181,12 @@ export default function TaskDetailPage() {
           }}
         />
       </div>
-    </>
+      {/* Click pe fundalul blurat închide modalul */}
+      <div
+        className="fixed inset-0 z-40"
+        onClick={handleClose}
+        style={{ cursor: "pointer" }}
+      ></div>
+    </div>
   );
 }
