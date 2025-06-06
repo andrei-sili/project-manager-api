@@ -4,8 +4,8 @@ import { Paperclip, X } from "lucide-react";
 
 interface TaskFile {
   id: number;
-  file: string;
-  name: string;
+  file: string;        // ex: "task_files/poza.png"
+  file_url: string;    // ex: "http://localhost:8000/media/task_files/poza.png"
   uploaded_by: string;
   uploaded_at: string;
 }
@@ -15,6 +15,10 @@ interface TaskFilesProps {
   taskId: string;
   compact?: boolean;
 }
+
+// Extrage numele fișierului din path
+const getFileName = (f: TaskFile) =>
+  f.file.split('/').pop() || "file";
 
 export default function TaskFiles({ projectId, taskId, compact = false }: TaskFilesProps) {
   const [files, setFiles] = useState<TaskFile[]>([]);
@@ -67,8 +71,12 @@ export default function TaskFiles({ projectId, taskId, compact = false }: TaskFi
       setFileToUpload(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       fetchFiles();
-    } catch {
-      setError("Failed to upload file.");
+    } catch (err: any) {
+      if (err?.response?.data?.file) {
+        setError(err.response.data.file[0]);
+      } else {
+        setError("Failed to upload file.");
+      }
     } finally {
       setUploading(false);
     }
@@ -118,7 +126,6 @@ export default function TaskFiles({ projectId, taskId, compact = false }: TaskFi
             disabled={uploading}
           />
         </label>
-        {/* Filename vizibil + remove */}
         {fileToUpload && (
           <div className="flex items-center gap-1 bg-zinc-900 px-2 py-1 rounded text-xs text-white max-w-[130px] truncate">
             <Paperclip size={12} />
@@ -136,7 +143,6 @@ export default function TaskFiles({ projectId, taskId, compact = false }: TaskFi
             </button>
           </div>
         )}
-        {/* Upload btn */}
         <button
           type="submit"
           className={`bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg text-white text-xs font-semibold disabled:opacity-60`}
@@ -152,31 +158,59 @@ export default function TaskFiles({ projectId, taskId, compact = false }: TaskFi
           <div className="text-gray-500 py-2">No files attached.</div>
         ) : (
           <ul className="space-y-1">
-            {files.map((f) => (
-              <li key={f.id} className="flex items-center justify-between bg-zinc-800 p-2 rounded">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Paperclip size={15} className="text-blue-300 shrink-0" />
-                  <a
-                    href={f.file}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-300 font-semibold hover:underline text-xs truncate"
-                  >
-                    {f.name}
-                  </a>
-                  <span className="ml-2 text-xs text-gray-400 truncate">
-                    by {f.uploaded_by}
-                  </span>
-                </div>
-                <button
-                  className="text-xs bg-zinc-700 hover:bg-red-700 text-white px-2 py-0.5 rounded"
-                  onClick={() => handleDelete(f.id)}
-                  style={{ fontSize: "10px" }}
-                >
-                  Delete
-                </button>
-              </li>
-            ))}
+            {files.map((f: TaskFile) => {
+              const fileName = getFileName(f);
+              const isImage = /\.(png|jpg|jpeg|gif|bmp|webp)$/i.test(fileName);
+              const url = f.file_url;
+              return (
+                <li key={f.id} className="flex items-center justify-between bg-zinc-800 p-2 rounded">
+                  <div className="flex items-center gap-2 min-w-0">
+                    {isImage ? (
+                      <img
+                        src={url}
+                        alt={fileName}
+                        className="w-8 h-8 object-cover rounded shadow border border-zinc-700 cursor-pointer"
+                        style={{ minWidth: 32, minHeight: 32, maxWidth: 32, maxHeight: 32 }}
+                        onClick={() => window.open(url, "_blank")}
+                        title="Preview"
+                      />
+                    ) : (
+                      <Paperclip size={15} className="text-blue-300 shrink-0" />
+                    )}
+                    <a
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-300 font-semibold hover:underline text-xs truncate"
+                      download={fileName}
+                    >
+                      {fileName}
+                    </a>
+                    <span className="ml-2 text-xs text-gray-400 truncate">
+                      by {f.uploaded_by}
+                    </span>
+                  </div>
+                  <div className="flex gap-1">
+                    <a
+                      href={url}
+                      download={fileName}
+                      className="text-xs bg-zinc-700 hover:bg-blue-700 text-white px-2 py-0.5 rounded"
+                      style={{ fontSize: "10px" }}
+                      title="Download"
+                    >
+                      Download
+                    </a>
+                    <button
+                      className="text-xs bg-zinc-700 hover:bg-red-700 text-white px-2 py-0.5 rounded"
+                      onClick={() => handleDelete(f.id)}
+                      style={{ fontSize: "10px" }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
