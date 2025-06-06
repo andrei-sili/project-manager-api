@@ -1,6 +1,7 @@
 // frontend/src/app/dashboard/page.tsx
 
 "use client";
+import UserProfileCard from "@/components/UserProfileCard";
 import ProjectsDashboardCard from "@/components/ProjectsDashboardCard";
 import MyTasksCard from "@/components/MyTasksCard";
 import TeamCard from "@/components/TeamCard";
@@ -55,6 +56,7 @@ export default function DashboardPage() {
           <TeamCard teams={teams} loading={loading}/>
         </div>
         <div className="md:col-span-1">
+          <UserProfileCard />
           <TimeTrackingCard tasks={tasks} loading={loading}/>
         </div>
       </div>
