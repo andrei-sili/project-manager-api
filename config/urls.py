@@ -35,6 +35,7 @@ from apps.teams.views import TeamViewSet
 
 from apps.users.views import RequestPasswordResetView, ConfirmPasswordResetView
 from config import settings
+from apps.taskfiles.views import download_task_file
 
 #  JWT Auth
 auth_urlpatterns = [
@@ -65,13 +66,16 @@ router.register("my-tasks", MyTaskViewSet, basename="my-tasks")
 
 #  Final urlpatterns
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include(router.urls)),
-    path('api/', include(projects_router.urls)),
-    path('api/', include('apps.users.urls')),
-    path('api/', include(tasks_router.urls)),
-] + auth_urlpatterns + request_confirm_pass_urlpatterns
+                  path('admin/', admin.site.urls),
+                  path('api/', include(router.urls)),
+                  path('api/', include(projects_router.urls)),
+                  path('api/', include('apps.users.urls')),
+                  path('api/', include(tasks_router.urls)),
+                  path('api/projects/<int:project_id>/tasks/<int:task_id>/files/<int:file_id>/download/',
+                       download_task_file,
+                       name='download_task_file'
+                       ),
+              ] + auth_urlpatterns + request_confirm_pass_urlpatterns
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
