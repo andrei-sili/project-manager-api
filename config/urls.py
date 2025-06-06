@@ -14,6 +14,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import path, include
@@ -33,6 +34,7 @@ from apps.tasks.views import TaskViewSet, MyTaskViewSet
 from apps.teams.views import TeamViewSet
 
 from apps.users.views import RequestPasswordResetView, ConfirmPasswordResetView
+from config import settings
 
 #  JWT Auth
 auth_urlpatterns = [
@@ -70,4 +72,6 @@ urlpatterns = [
     path('api/', include(tasks_router.urls)),
 ] + auth_urlpatterns + request_confirm_pass_urlpatterns
 
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
