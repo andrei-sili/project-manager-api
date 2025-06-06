@@ -192,18 +192,18 @@ export default function TaskFiles({ projectId, taskId, compact = false }: TaskFi
                   </div>
                   <div className="flex gap-1">
                     <a
-                      href={url}
-                      download={fileName}
-                      className="text-xs bg-zinc-700 hover:bg-blue-700 text-white px-2 py-0.5 rounded"
-                      style={{ fontSize: "10px" }}
-                      title="Download"
+                        href={`${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/files/${f.id}/download/`}
+                        className="text-xs bg-zinc-700 hover:bg-blue-700 text-white px-2 py-0.5 rounded"
+                        style={{fontSize: "10px"}}
+                        title="Download"
                     >
                       Download
                     </a>
+
                     <button
-                      className="text-xs bg-zinc-700 hover:bg-red-700 text-white px-2 py-0.5 rounded"
-                      onClick={() => handleDelete(f.id)}
-                      style={{ fontSize: "10px" }}
+                        className="text-xs bg-zinc-700 hover:bg-red-700 text-white px-2 py-0.5 rounded"
+                        onClick={() => handleDelete(f.id)}
+                        style={{fontSize: "10px"}}
                     >
                       Delete
                     </button>
