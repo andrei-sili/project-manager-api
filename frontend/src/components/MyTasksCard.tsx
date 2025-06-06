@@ -1,24 +1,46 @@
-// src/components/MyTasksCard.tsx
+// frontend/src/components/MyTasksCard.tsx
 
-"use client";
+import React from "react";
 import Link from "next/link";
-import { ListTodo } from "lucide-react";
+import { ListTodo, Clock, ChevronRight } from "lucide-react";
 
-export default function MyTasksCard({ tasks, loading }: { tasks: any[]; loading?: boolean }) {
-  const safeTasks = Array.isArray(tasks) ? tasks : [];
+interface Task {
+  id: number;
+  title: string;
+  status: string;
+  priority: string;
+  due_date?: string | null;
+  project?: { id: number; name: string };
+}
 
-  if (loading) {
-    return (
-      <div className="rounded-xl bg-zinc-800 shadow p-6 h-[120px] animate-pulse mb-4" />
-    );
-  }
+interface Props {
+  tasks: Task[];
+  loading?: boolean;
+}
 
-  const completed = safeTasks.filter((t) => t.status === "done").length;
-  const total = safeTasks.length;
-  const progress = total ? Math.round((completed / total) * 100) : 0;
+const statusColors: Record<string, string> = {
+  "todo": "bg-gray-400",
+  "in progress": "bg-blue-500",
+  "done": "bg-green-500",
+};
+
+const priorityColors: Record<string, string> = {
+  "low": "border-green-500",
+  "medium": "border-yellow-500",
+  "high": "border-red-500",
+};
+
+function formatDate(dateString?: string | null) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`;
+}
+
+export default function MyTasksCard({ tasks, loading }: Props) {
+  const visibleTasks = (tasks || []).slice(0, 4);
 
   return (
-    <div className="rounded-xl bg-zinc-900 shadow p-6 mb-4">
+    <div className="bg-zinc-900 rounded-2xl shadow p-5 mb-4">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-lg font-bold">My Tasks</h3>
         <Link
@@ -29,38 +51,101 @@ export default function MyTasksCard({ tasks, loading }: { tasks: any[]; loading?
           View All
         </Link>
       </div>
-      {safeTasks.length === 0 ? (
-        <div className="text-gray-400 text-sm">You have no assigned tasks.</div>
-      ) : (
-        <>
-          <div className="mb-2 flex items-center gap-3 text-sm">
-            <span className="font-medium text-green-400">{completed}</span>
-            <span className="text-gray-400">done</span>
-            <span className="text-gray-500">/</span>
-            <span className="font-medium text-blue-400">{total}</span>
-            <span className="text-gray-400">total</span>
-          </div>
-          <div className="w-full h-2 bg-zinc-800 rounded-full mb-2 overflow-hidden">
-            <div
-              className="h-full bg-blue-600 rounded-full transition-all"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
-          <ul className="flex flex-wrap gap-4">
-            {safeTasks.slice(0, 4).map((task) => (
-              <li key={task.id} className="bg-zinc-800 rounded px-3 py-2 min-w-[140px] flex-1 shadow">
-                <Link href={`/dashboard/tasks`}>
-                  <div className="font-medium text-white text-base truncate">{task.title}</div>
-                  <div className="text-xs text-gray-400">{task.status === "done" ? "✅ Done" : task.status.replace("_", " ")}</div>
-                  {task.project && (
-                    <div className="mt-1 text-xs text-gray-500">{task.project.name}</div>
-                  )}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
+
+      {/* Task Progress Summary */}
+      <div className="flex items-center gap-2 mb-3 text-sm">
+        <span className="text-green-500 font-semibold">
+          {tasks.filter((t) => t.status === "done").length}
+        </span>
+        done
+        <span className="text-gray-400">/</span>
+        <span className="text-blue-400 font-semibold">{tasks.length}</span>
+        total
+      </div>
+      {/* Bar progress */}
+      <div className="w-full h-1 rounded bg-zinc-800 mb-4">
+        <div
+          className="h-1 rounded bg-blue-500 transition-all"
+          style={{
+            width: `${((tasks.filter((t) => t.status === "done").length || 0) / (tasks.length || 1)) * 100}%`,
+          }}
+        />
+      </div>
+
+      {/* List mini task cards */}
+      <div className="grid grid-cols-2 gap-3">
+        {loading ? (
+          <div className="col-span-2 text-center text-gray-400">Loading tasks...</div>
+        ) : visibleTasks.length === 0 ? (
+          <div className="col-span-2 text-center text-gray-500 text-sm">No tasks found.</div>
+        ) : (
+          visibleTasks.map((task) => (
+            <Link
+              key={task.id}
+              href={`/dashboard/projects/${task.project?.id}/tasks/${task.id}`}
+              className="bg-zinc-800 hover:bg-zinc-700 rounded-xl p-3 flex flex-col gap-1 transition border border-transparent hover:border-blue-600 group focus:outline-none"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-semibold truncate">{task.title}</span>
+                {/* Priority badge */}
+                <span
+                  className={`ml-2 border-2 rounded-full w-3 h-3 block ${
+                    priorityColors[task.priority?.toLowerCase() || "low"] || "border-gray-500"
+                  }`}
+                  title={`Priority: ${task.priority}`}
+                />
+              </div>
+                <div className="flex items-center gap-2 text-xs text-gray-400 mb-1">
+                    {/* Status dot */}
+                    <span
+                        className={`w-2 h-2 rounded-full inline-block ${
+                            statusColors[task.status?.toLowerCase()] || "bg-gray-500"
+                        }`}
+                        title={task.status}
+                    />
+                    <span
+                        className={`capitalize font-semibold ${
+                            task.status?.toLowerCase() === "todo"
+                                ? "text-blue-400"
+                                : task.status?.toLowerCase() === "in_progress" 
+                                    ? "text-yellow-400" 
+                                    : task.status?.toLowerCase() === "done"
+                                        ? "text-green-500"
+                                        : "text-gray-400"
+                        }`}
+                    >
+                          {task.status}
+                        </span>
+
+                    {task.due_date && (
+                        <>
+                            <Clock className="w-3 h-3 ml-2"/>
+                            <span>{formatDate(task.due_date)}</span>
+                        </>
+                    )}
+                </div>
+                {/* Project Name */}
+                <div className="text-xs text-blue-300 truncate">
+                    {task.project?.name}
+                </div>
+                {/* Progres bar - demo logic (100% dacă done, 60% dacă in progress, 0% dacă todo) */}
+                <div className="w-full h-1 rounded bg-zinc-700 mt-1">
+                    <div
+                        className="h-1 rounded bg-blue-500 transition-all"
+                        style={{
+                            width:
+                                task.status === "done"
+                        ? "100%"
+                        : task.status === "in progress"
+                        ? "60%"
+                        : "0%",
+                  }}
+                />
+              </div>
+            </Link>
+          ))
+        )}
+      </div>
     </div>
   );
 }
