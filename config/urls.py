@@ -32,6 +32,7 @@ from apps.projects.views import ProjectViewSet
 from apps.taskfiles.views import TaskFileViewSet
 from apps.tasks.views import TaskViewSet, MyTaskViewSet
 from apps.teams.views import TeamViewSet
+from apps.timetrack.views import TimeEntryViewSet
 
 from apps.users.views import RequestPasswordResetView, ConfirmPasswordResetView
 from config import settings
@@ -63,7 +64,7 @@ router.register('notifications', NotificationViewSet, basename='notifications')
 router.register('logs', ActivityLogViewSet, basename='logs')
 router.register('teams', TeamViewSet, basename='teams')
 router.register("my-tasks", MyTaskViewSet, basename="my-tasks")
-
+router.register(r"time-entries", TimeEntryViewSet, basename="timeentry")
 #  Final urlpatterns
 urlpatterns = [
                   path('admin/', admin.site.urls),
