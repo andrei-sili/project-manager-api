@@ -10,7 +10,7 @@ class Task(models.Model):
     STATUS_DONE = 'done'
     STATUS_CHOICES = [
         (STATUS_TODO, 'TODO'),
-        (STATUS_IN_PROGRESS, 'In_progres'),
+        (STATUS_IN_PROGRESS, 'In_progress'),
         (STATUS_DONE, 'Done')
     ]
     PRIORITY_LOW = 'low'
