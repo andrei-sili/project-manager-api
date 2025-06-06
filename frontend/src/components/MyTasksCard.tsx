@@ -19,8 +19,8 @@ interface Props {
 }
 
 const statusColors: Record<string, string> = {
-  "todo": "bg-gray-400",
-  "in progress": "bg-blue-500",
+  "todo": "bg-blue-400",
+  "in_progress": "bg-yellow-500",
   "done": "bg-green-500",
 };
 
