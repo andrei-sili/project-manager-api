@@ -7,6 +7,7 @@ import axios from "axios";
 import {ArrowLeft} from "lucide-react";
 import Link from "next/link";
 import TaskComments from "@/components/TaskComments";
+import TaskFiles from "@/components/TaskFiles";
 
 /**
  * Task detail page using params from [id] (project) and [taskid] (task).
@@ -113,11 +114,11 @@ export default function TaskDetailPage() {
             <div className="text-gray-400 mb-1">Description:</div>
             <div className="text-white whitespace-pre-line">{task.description}</div>
           </div>
+          <TaskFiles projectId={id} taskId={taskid} compact />
         </div>
 
         {/* Comments below the card, full width */}
         <TaskComments projectId={id} taskId={taskid}/>
-
         {/* You can add here new cards for Files/Activity, as needed */}
       </>
   );
