@@ -3,7 +3,6 @@
 import { useState } from "react";
 import axios from "axios";
 
-// Definește tipul pentru un task (poți adapta dacă ai deja un tip global)
 interface EditTaskModalProps {
   open: boolean;
   task: any;
@@ -21,6 +20,10 @@ export default function EditTaskModal({
   onClose,
   onSaved,
 }: EditTaskModalProps) {
+  // If not open or task is missing, do not render modal at all
+  if (!open || !task) return null;
+
+  // Local state for all fields
   const [title, setTitle] = useState(task?.title || "");
   const [description, setDescription] = useState(task?.description || "");
   const [dueDate, setDueDate] = useState(
@@ -35,9 +38,7 @@ export default function EditTaskModal({
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  if (!open) return null;
-
-  // PATCH
+  // PATCH request to update the task
   const handleSubmit = async (e: any) => {
     e.preventDefault();
     setLoading(true);
@@ -49,7 +50,7 @@ export default function EditTaskModal({
         {
           title,
           description,
-          due_date: dueDate + "T23:59:59",
+          due_date: dueDate ? dueDate + "T23:59:59" : null,
           priority,
           status,
           assigned_to: assigneeEmail || null,
@@ -75,7 +76,7 @@ export default function EditTaskModal({
     }
   };
 
-  // DELETE
+  // DELETE request for task
   const handleDelete = async () => {
     if (!confirm("Are you sure you want to delete this task?")) return;
     setLoading(true);
@@ -114,6 +115,7 @@ export default function EditTaskModal({
             type="button"
             className="text-gray-400 hover:text-red-400 text-xl"
             onClick={onClose}
+            disabled={loading}
           >
             ×
           </button>
