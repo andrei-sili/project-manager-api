@@ -58,6 +58,7 @@ export default function DashboardPage() {
         <div className="md:col-span-1">
           <UserProfileCard projects={projects} />
           <TimeTrackingCard tasks={tasks} loading={loading}/>
+          <TimeTrackingCard tasks={tasks} loading={loading} />
         </div>
       </div>
   );
