@@ -1,7 +1,7 @@
 // frontend/src/app/dashboard/page.tsx
 
 "use client";
-import ProjectOverviewCard from "@/components/ProjectOverviewCard";
+import ProjectsDashboardCard from "@/components/ProjectsDashboardCard";
 import MyTasksCard from "@/components/MyTasksCard";
 import TeamCard from "@/components/TeamCard";
 import TimeTrackingCard from "@/components/TimeTrackingCard";
@@ -48,22 +48,15 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-7">
-      <div className="md:col-span-2 flex flex-col gap-7">
-        {/* Projects Card List */}
-        {projects.map((project) => (
-          <ProjectOverviewCard
-            key={project.id}
-            project={project}
-            onClick={() => openProject(project.id)}
-          />
-        ))}
-        <MyTasksCard tasks={tasks} loading={loading} />
-        <TeamCard teams={teams} loading={loading} />
+      <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-7">
+        <div className="md:col-span-2 flex flex-col gap-7">
+          <ProjectsDashboardCard projects={projects} loading={loading}/>
+          <MyTasksCard tasks={tasks} loading={loading}/>
+          <TeamCard teams={teams} loading={loading}/>
+        </div>
+        <div className="md:col-span-1">
+          <TimeTrackingCard tasks={tasks} loading={loading}/>
+        </div>
       </div>
-      <div className="md:col-span-1">
-        <TimeTrackingCard tasks={tasks} loading={loading} />
-      </div>
-    </div>
   );
 }
