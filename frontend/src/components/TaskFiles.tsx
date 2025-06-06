@@ -4,8 +4,8 @@ import { Paperclip, X } from "lucide-react";
 
 interface TaskFile {
   id: number;
-  file: string;        // ex: "task_files/poza.png"
-  file_url: string;    // ex: "http://localhost:8000/media/task_files/poza.png"
+  file: string;
+  file_url: string;
   uploaded_by: string;
   uploaded_at: string;
 }
@@ -16,7 +16,7 @@ interface TaskFilesProps {
   compact?: boolean;
 }
 
-// Extrage numele fișierului din path
+
 const getFileName = (f: TaskFile) =>
   f.file.split('/').pop() || "file";
 
