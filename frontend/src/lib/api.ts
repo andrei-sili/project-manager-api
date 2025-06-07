@@ -1,7 +1,7 @@
 // src/lib/api.ts
 import axios from "axios";
 
-// Redirect helper (pentru client)
+
 function redirectToLogin() {
   if (typeof window !== "undefined") {
     window.location.href = "/login";
@@ -11,12 +11,16 @@ function redirectToLogin() {
 // Axios instance
 const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 // JWT Interceptor
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("access");
-  if (token && config.headers) {
+  const token = typeof window !== "undefined" && localStorage.getItem("access");
+  if (token) {
+    config.headers = config.headers || {};
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
@@ -148,7 +152,7 @@ export function createTeam(payload: { name: string }): Promise<Team> {
 
 
 export async function inviteMember(teamId: string, email: string, role: string): Promise<Response> {
-  return await fetch(`/api/teams/${teamId}/invite-member/`, {
+  return await fetch(`/teams/${teamId}/invite-member/`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
