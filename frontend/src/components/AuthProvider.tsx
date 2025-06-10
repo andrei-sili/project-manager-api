@@ -1,11 +1,21 @@
-// frontend/src/components/AuthProvider.tsx
+// src/components/AuthProvider.tsx
 
 "use client";
 import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import {
+  isAuthenticated as checkAuth,
+  getAccessToken,
+  getRefreshToken,
+  login as loginApi,
+  logout as logoutApi,
+  refreshToken as refreshAccessToken
+} from "@/lib/auth";
 
-// User type
+/**
+ * User type definition
+ */
 interface User {
   id: number;
   email: string;
@@ -15,6 +25,9 @@ interface User {
   [key: string]: any;
 }
 
+/**
+ * Context type for authentication
+ */
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -26,64 +39,82 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * AuthProvider component - provides authentication context and state to children
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Checks if the user is logged in (access token) and fetches user profile
+  /**
+   * Fetch user profile from backend using access token.
+   * If the token is expired but refresh token exists, tries to refresh the token.
+   */
   const refreshUser = async () => {
-    const access = typeof window !== "undefined" ? localStorage.getItem("access") : null;
-    if (!access) {
-      setUser(null);
-      setLoading(false);
-      return;
+    setLoading(true);
+    let access = getAccessToken();
+
+    // If not authenticated or token expired, try refresh
+    if (!access || !checkAuth()) {
+      try {
+        await refreshAccessToken();
+        access = getAccessToken();
+      } catch {
+        // If cannot refresh, log out and stop
+        setUser(null);
+        setLoading(false);
+        logoutApi();
+        return;
+      }
     }
+
     try {
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/users/me/`,
-        {
-          headers: { Authorization: `Bearer ${access}` }
-        }
+        { headers: { Authorization: `Bearer ${access}` } }
       );
       setUser(res.data);
-    } catch (e) {
+    } catch {
       setUser(null);
-      localStorage.removeItem("access");
-      localStorage.removeItem("refresh");
+      logoutApi();
     } finally {
       setLoading(false);
     }
   };
 
+  // On mount, check authentication and fetch user
   useEffect(() => {
     refreshUser();
+    // eslint-disable-next-line
   }, []);
 
-  // Handles login, stores tokens, fetches user, redirects to dashboard
+  /**
+   * Handles login, stores tokens, fetches user, and redirects.
+   */
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/token_obtain_pair/`,
-        { email, password }
-      );
-      localStorage.setItem("access", res.data.access);
-      localStorage.setItem("refresh", res.data.refresh);
+      await loginApi(email, password);
       await refreshUser();
-      router.push("/dashboard");
+      if (getAccessToken()) {
+        router.push("/dashboard");
+      } else {
+        throw new Error("No access token after login");
+      }
     } catch (e: any) {
-      throw new Error(e?.response?.data?.detail || "Login failed");
+      throw new Error(e?.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
-  // Clears user session
+  /**
+   * Handles logout and redirects to login page.
+   */
   const logout = () => {
     setUser(null);
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
+    logoutApi();
     router.push("/login");
   };
 
@@ -103,7 +134,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// Hook to use Auth
+/**
+ * Custom hook to access authentication context.
+ */
 export function useAuth() {
   const context = useContext(AuthContext);
   if (!context) {
