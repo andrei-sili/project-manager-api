@@ -1,3 +1,5 @@
+// frontend/src/app/dashboard/projects/[id]/tasks/[taskid]/page.tsx
+
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -6,7 +8,7 @@ import EditTaskModal from "@/components/EditTaskModal";
 import TaskComments from "@/components/TaskComments";
 import TaskFiles from "@/components/TaskFiles";
 import { StatusBadge, PriorityBadge } from "@/components/TaskBadge";
-import { ArrowLeft, X } from "lucide-react";
+import { X } from "lucide-react";
 
 export default function TaskDetailPage() {
   const router = useRouter();
@@ -19,6 +21,7 @@ export default function TaskDetailPage() {
   const [showEdit, setShowEdit] = useState(false);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
 
+  // Fetch task data from backend
   const fetchTask = async () => {
     setLoading(true);
     try {
@@ -35,6 +38,7 @@ export default function TaskDetailPage() {
     }
   };
 
+  // Fetch team members for edit modal
   const fetchTeamMembers = async () => {
     try {
       const res = await axios.get(
@@ -74,7 +78,7 @@ export default function TaskDetailPage() {
 
   if (loading)
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xl">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-lg">
         <div className="bg-zinc-900 rounded-2xl p-10 shadow-xl min-w-[350px] text-gray-200">
           Loading task...
         </div>
@@ -82,7 +86,7 @@ export default function TaskDetailPage() {
     );
   if (error || !task)
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xl">
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-lg">
         <div className="bg-zinc-900 rounded-2xl p-10 shadow-xl min-w-[350px] text-red-400">
           {error || "Not found."}
         </div>
@@ -90,7 +94,7 @@ export default function TaskDetailPage() {
     );
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/70 backdrop-blur-xl">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/40 backdrop-blur-lg">
       {/* Modal card */}
       <div className="bg-zinc-900 rounded-3xl shadow-2xl max-w-3xl w-full p-8 mx-2 relative animate-slideUp border border-zinc-800">
         {/* X Close */}
@@ -101,16 +105,6 @@ export default function TaskDetailPage() {
         >
           <X size={32} />
         </button>
-
-        {/* Back button */}
-        <button
-          className="absolute left-6 top-6 text-zinc-400 hover:text-white transition flex items-center gap-1"
-          onClick={handleClose}
-          title="Back to Project"
-        >
-          <ArrowLeft size={22} /> <span className="font-semibold">Back to Project</span>
-        </button>
-
         {/* Edit / Delete */}
         <div className="absolute right-6 top-20 flex gap-2">
           <button
@@ -127,9 +121,9 @@ export default function TaskDetailPage() {
           </button>
         </div>
         {/* Title */}
-        <div className="text-2xl font-bold text-white mb-2 mt-1 pl-12">{task.title}</div>
+        <div className="text-2xl font-bold text-white mb-2 mt-1 pl-2">{task.title}</div>
         {/* Badges/fields */}
-        <div className="flex flex-wrap gap-3 mb-4 pl-12">
+        <div className="flex flex-wrap gap-3 mb-4 pl-2">
           <StatusBadge status={task.status} />
           <PriorityBadge priority={task.priority} />
           <div className="text-xs text-gray-400 flex items-center">
@@ -141,7 +135,7 @@ export default function TaskDetailPage() {
             )}
           </div>
         </div>
-        <div className="flex flex-wrap gap-8 mb-6 pl-12">
+        <div className="flex flex-wrap gap-8 mb-6 pl-2">
           <div className="text-sm">
             <span className="text-gray-400">Assigned to: </span>
             <span className="font-semibold">
@@ -156,16 +150,16 @@ export default function TaskDetailPage() {
           </div>
         </div>
         {/* Description */}
-        <div className="mb-6 pl-12">
+        <div className="mb-6 pl-2">
           <div className="text-gray-400 mb-1">Description:</div>
           <div className="text-white whitespace-pre-line">{task.description}</div>
         </div>
         {/* Files */}
-        <div className="pl-12 mb-6">
+        <div className="pl-2 mb-6">
           <TaskFiles projectId={id} taskId={taskid} compact />
         </div>
         {/* Comments */}
-        <div className="pl-12">
+        <div className="pl-2">
           <TaskComments projectId={id} taskId={taskid} />
         </div>
         {/* Edit modal */}
@@ -181,7 +175,7 @@ export default function TaskDetailPage() {
           }}
         />
       </div>
-      {/* Click pe fundalul blurat închide modalul */}
+      {/* Click on blurred background closes the modal */}
       <div
         className="fixed inset-0 z-40"
         onClick={handleClose}
@@ -190,3 +184,4 @@ export default function TaskDetailPage() {
     </div>
   );
 }
+
