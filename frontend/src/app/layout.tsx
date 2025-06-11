@@ -25,9 +25,9 @@
 
 
 import React from "react";
-import "../globals.css"; // Tailwind styles
-import Sidebar from "../components/Sidebar";
-import { Header } from "../components/Header";
+import "./globals.css"; // Tailwind styles
+import Sidebar from "@/components/Sidebar";
+import { Header } from "@/components/Header";
 
 // ThemeProvider can be expanded for dark/light theme
 export default function RootLayout({
