@@ -1,12 +1,5 @@
-// src/lib/useAuth.tsx
+// frontend/src/lib/useAuth.tsx
 "use client";
-import { useState, useEffect } from "react";
+import { useAuth as useAuthContext } from "../components/AuthProvider";
 
-export function useAuth() {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  useEffect(() => {
-    const token = !!localStorage.getItem("access");
-    setIsAuthenticated(token);
-  }, []);
-  return { isAuthenticated };
-}
+export const useAuth = useAuthContext;
