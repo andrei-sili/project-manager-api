@@ -1,4 +1,5 @@
-// src/app/dashboard/layout.tsx
+// frontend/src/app/dashboard/layout.tsx
+
 "use client";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
@@ -17,3 +18,4 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </ProtectedRoute>
   );
 }
+
