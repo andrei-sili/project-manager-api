@@ -24,12 +24,14 @@
 // }
 
 
-import React from "react";
-import "./globals.css"; // Tailwind styles
-import Sidebar from "@/components/Sidebar";
-import { Header } from "@/components/Header";
+// frontend/src/app/layout.tsx
 
-// ThemeProvider can be expanded for dark/light theme
+import React from "react";
+import "./globals.css";
+import Sidebar from "../components/Sidebar";
+import { Header } from "@/components/Header";
+import UIProvider from "../components/UIProvider";
+
 export default function RootLayout({
   children,
 }: {
@@ -38,20 +40,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-50 dark:bg-zinc-950 min-h-screen flex flex-col">
-        {/* Layout wrapper */}
-        <div className="flex flex-1 h-screen overflow-hidden">
-          {/* Sidebar navigation */}
-          <Sidebar />
-          {/* Main content area */}
-          <div className="flex-1 flex flex-col overflow-auto">
-            {/* Header */}
-            <Header />
-            {/* Page Content */}
-            <main className="flex-1 p-6 overflow-y-auto">
-              {children}
-            </main>
+        {/* UIProvider WRAP  */}
+        <UIProvider>
+          <div className="flex flex-1 h-screen overflow-hidden">
+            <Sidebar />
+            <div className="flex-1 flex flex-col overflow-auto">
+              <Header />
+              <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+            </div>
           </div>
-        </div>
+        </UIProvider>
       </body>
     </html>
   );
