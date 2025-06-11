@@ -3,9 +3,7 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import api from "@/lib/api";
-import { Button } from "@/components/ui/button"; // Poți folosi orice button ai deja
-import { Input } from "@/components/ui/input";   // Poți folosi orice input ai deja
-import { Clock, Trash2, Edit2, Plus } from "lucide-react";
+import { Clock, Trash2, Plus } from "lucide-react";
 
 interface TimeEntry {
   id: number;
@@ -42,27 +40,27 @@ export default function TimeTrackingPage() {
   });
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch all time entries and tasks
   useEffect(() => {
-    setLoading(true);
-    Promise.all([
-      api.get("/time-entries/"),
-      api.get("/my-tasks/"), // Sau "/tasks/" dacă ai nevoie de toate task-urile
-    ])
-      .then(([resEntries, resTasks]) => {
-        setEntries(resEntries.data);
-        setTasks(resTasks.data.results || resTasks.data); // results dacă folosești pagination
-      })
-      .catch(() => setError("Could not fetch time entries or tasks"))
-      .finally(() => setLoading(false));
-  }, []);
+  setLoading(true);
+  Promise.all([
+    api.get("/time-entries/"),
+    api.get("/my-tasks/"),
+  ])
+    .then(([resEntries, resTasks]) => {
+      let data = resEntries.data;
+      if (Array.isArray(data)) setEntries(data);
+      else if (Array.isArray(data.results)) setEntries(data.results);
+      else setEntries([]);
+      setTasks(resTasks.data.results || resTasks.data);
+    })
+    .catch(() => setError("Could not fetch time entries or tasks"))
+    .finally(() => setLoading(false));
+}, []);
 
-  // Handle input changes
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
-  // Add new time entry
   function handleAdd(e: React.FormEvent) {
     e.preventDefault();
     setAdding(true);
@@ -81,7 +79,6 @@ export default function TimeTrackingPage() {
       .finally(() => setAdding(false));
   }
 
-  // Delete time entry
   function handleDelete(id: number) {
     if (!window.confirm("Are you sure you want to delete this time entry?")) return;
     api.delete(`/time-entries/${id}/`).then(() => {
@@ -114,18 +111,18 @@ export default function TimeTrackingPage() {
           </label>
           <label>
             <span className="text-xs text-gray-400 mb-1 block">Date</span>
-            <Input
+            <input
               type="date"
               name="date"
               value={form.date}
               onChange={handleChange}
               required
-              className="w-full"
+              className="w-full rounded p-2 bg-zinc-800 text-white"
             />
           </label>
           <label>
             <span className="text-xs text-gray-400 mb-1 block">Minutes</span>
-            <Input
+            <input
               type="number"
               min={1}
               max={1440}
@@ -133,7 +130,7 @@ export default function TimeTrackingPage() {
               value={form.minutes}
               onChange={handleChange}
               required
-              className="w-full"
+              className="w-full rounded p-2 bg-zinc-800 text-white"
             />
           </label>
         </div>
@@ -148,9 +145,13 @@ export default function TimeTrackingPage() {
           />
         </label>
         {error && <div className="text-red-400">{error}</div>}
-        <Button type="submit" disabled={adding}>
-          <Plus className="w-4 h-4 mr-1" /> {adding ? "Saving..." : "Add Entry"}
-        </Button>
+        <button
+          type="submit"
+          disabled={adding}
+          className="flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded shadow"
+        >
+          <Plus className="w-4 h-4" /> {adding ? "Saving..." : "Add Entry"}
+        </button>
       </form>
       {/* List of Time Entries */}
       <div className="bg-zinc-900 rounded-xl shadow p-4">
