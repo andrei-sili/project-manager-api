@@ -28,9 +28,8 @@
 
 import React from "react";
 import "./globals.css";
-import Sidebar from "../components/Sidebar";
-import { Header } from "@/components/Header";
 import UIProvider from "../components/UIProvider";
+import AuthProvider from "../components/AuthProvider"; // <-- IMPORT!
 
 export default function RootLayout({
   children,
@@ -40,16 +39,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-gray-50 dark:bg-zinc-950 min-h-screen flex flex-col">
-        {/* UIProvider WRAP  */}
-        <UIProvider>
-          <div className="flex flex-1 h-screen overflow-hidden">
-            <Sidebar />
-            <div className="flex-1 flex flex-col overflow-auto">
-              <Header />
-              <main className="flex-1 p-6 overflow-y-auto">{children}</main>
-            </div>
-          </div>
-        </UIProvider>
+        {/* Wrap everything with AuthProvider and UIProvider */}
+        <AuthProvider>
+          <UIProvider>
+            {children}
+          </UIProvider>
+        </AuthProvider>
       </body>
     </html>
   );
