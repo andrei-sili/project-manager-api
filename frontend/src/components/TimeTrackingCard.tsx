@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
 import api from "@/lib/api";
+import { useRouter } from "next/navigation";
 
 interface PerDay {
   date: string;
@@ -33,14 +34,16 @@ const TimeTrackingCard: React.FC<Props> = ({ loading }) => {
   const [summary, setSummary] = useState<TimeSummary | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(!!loading);
 
+  const router = useRouter();
+
   useEffect(() => {
-  setIsLoading(true);
-  api
-    .get("/time-entries/summary/")
-    .then((res) => setSummary(res.data))
-    .catch(() => setSummary(null))
-    .finally(() => setIsLoading(false));
-}, []);
+    setIsLoading(true);
+    api
+      .get("/time-entries/summary/")
+      .then((res) => setSummary(res.data))
+      .catch(() => setSummary(null))
+      .finally(() => setIsLoading(false));
+  }, []);
 
   const progress =
     summary && summary.total_minutes
@@ -95,8 +98,7 @@ const TimeTrackingCard: React.FC<Props> = ({ loading }) => {
       )}
       <button
         className="mt-3 mx-auto px-4 py-1 rounded-full bg-blue-700 hover:bg-blue-800 text-white font-semibold text-sm shadow transition"
-        disabled
-        title="Coming soon"
+        onClick={() => router.push("/dashboard/time-tracking")}
       >
         View details
       </button>
