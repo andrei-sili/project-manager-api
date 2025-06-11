@@ -1,58 +1,30 @@
-// src/app/login/page.tsx
+// frontend/src/app/dashboard/login/page.tsx
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { login, isAuthenticated } from "@/lib/auth";
+import { login } from "@/lib/auth";
 
-/**
- * LoginPage component - Renders a login form with validation, error handling, and loading indicator.
- * All logic is contained here for simplicity. You can split into components if needed later.
- */
 export default function LoginPage() {
-  // State for user input, errors and loading status
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
   const router = useRouter();
-  const passwordRef = useRef<HTMLInputElement>(null);
 
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated && typeof isAuthenticated === "function" && isAuthenticated()) {
-      router.replace("/dashboard");
-    }
-  }, [router]);
-
-  // Handle form submit
+  // Validare simplă + UX
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    // Basic validation
-    if (!email.trim()) {
-      setError("Email is required.");
-      return;
-    }
-    if (!/^[\w-.]+@[\w-]+\.[a-z]{2,}$/i.test(email)) {
-      setError("Please enter a valid email address.");
-      return;
-    }
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
-      if (passwordRef.current) passwordRef.current.focus();
+    if (!email.trim() || !password.trim()) {
+      setError("All fields are required.");
       return;
     }
     setLoading(true);
     try {
       await login(email, password);
       router.replace("/dashboard");
-    } catch (err: any) {
-      setError(
-        err?.message === "Network Error"
-          ? "Network error, please try again."
-          : "Email or password is incorrect."
-      );
+    } catch {
+      setError("Email or password is incorrect");
     } finally {
       setLoading(false);
     }
@@ -61,7 +33,7 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-tr from-zinc-800 to-zinc-900">
       <div className="w-full max-w-md p-8 bg-zinc-900 rounded-2xl shadow-2xl border border-zinc-800">
-        {/* You can put your logo here */}
+        {/* Logo stilizat */}
         <div className="flex justify-center mb-6">
           <svg
             width="44"
@@ -102,7 +74,6 @@ export default function LoginPage() {
               id="password"
               type="password"
               autoComplete="current-password"
-              ref={passwordRef}
               className="w-full px-4 py-2 rounded-lg bg-zinc-800 border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500 text-white transition"
               placeholder="••••••••"
               value={password}
@@ -145,7 +116,6 @@ export default function LoginPage() {
             )}
           </button>
         </form>
-        {/* For future: Add here extra login options, forgot password, etc. */}
         <div className="mt-6 text-center">
           <span className="text-zinc-500 text-sm">Don't have an account?</span>
           {/* <a href="/register" className="ml-1 text-blue-400 hover:underline">Sign up</a> */}
@@ -154,4 +124,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
