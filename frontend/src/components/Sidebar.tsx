@@ -1,9 +1,9 @@
-// src/components/Sidebar.tsx
+// frontend/src/components/Sidebar.tsx
+
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Folder, Users, ListTodo, User } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { LayoutDashboard, Folder, Users, ListTodo, User, Clock } from "lucide-react";
 import { useUI } from "./UIProvider";
 
 const navItems = [
@@ -11,14 +11,17 @@ const navItems = [
   { label: "Projects", href: "/dashboard/projects", icon: Folder },
   { label: "Tasks", href: "/dashboard/tasks", icon: ListTodo },
   { label: "Teams", href: "/dashboard/teams", icon: Users },
+  { label: "Time Tracking", href: "/dashboard/time-tracking", icon: Clock },
   { label: "Profile", href: "/dashboard/profile", icon: User },
 ];
 
+/**
+ * Sidebar component for main navigation, without TimeTrackingCard.
+ */
 export default function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar } = useUI();
 
-  // Reusable list of nav links
   const NavLinks = () => (
     <ul className="space-y-2">
       {navItems.map((item) => {
@@ -27,13 +30,14 @@ export default function Sidebar() {
           <li key={item.href}>
             <Link
               href={item.href}
+              aria-label={item.label}
               className={`flex items-center gap-3 px-4 py-2 rounded-lg font-medium transition-colors ${
                 active
                   ? "bg-blue-700 text-white shadow"
                   : "text-gray-300 hover:bg-zinc-800 hover:text-white"
               }`}
+              tabIndex={0}
               onClick={() => {
-                // Close the sidebar after navigation (on mobile)
                 if (typeof window !== "undefined" && window.innerWidth < 768) {
                   toggleSidebar();
                 }
@@ -48,52 +52,23 @@ export default function Sidebar() {
     </ul>
   );
 
+  const SidebarFooter = () => (
+    <div className="mt-10 px-3 text-xs text-zinc-500">{/* Placeholder for future extensions */}</div>
+  );
+
   return (
     <>
-      {/* Desktop sidebar (permanently visible on md+ screens) */}
+      {/* Desktop Sidebar */}
       <aside className="hidden md:flex md:flex-col md:justify-between md:w-56 md:h-screen bg-zinc-900 shadow-lg py-6 px-3">
-        <nav className="flex-1">
+        <nav className="flex-1" aria-label="Main Navigation">
           <NavLinks />
         </nav>
-        <div className="px-4 pt-6 text-xs text-gray-500">
-          &copy; {new Date().getFullYear()} Project Manager
-        </div>
+        <SidebarFooter />
       </aside>
-
-      {/* Mobile sidebar drawer (slides in/out) */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.aside
-            key="mobile-sidebar"
-            className="fixed inset-y-0 left-0 z-50 w-56 bg-zinc-900 shadow-lg flex flex-col justify-between py-6 px-3 md:hidden"
-            initial={{ x: "-100%" }}
-            animate={{ x: 0 }}
-            exit={{ x: "-100%" }}
-            transition={{ type: "tween", ease: "easeInOut", duration: 0.3 }}
-          >
-            <nav className="flex-1">
-              <NavLinks />
-            </nav>
-            <div className="px-4 pt-6 text-xs text-gray-500">
-              &copy; {new Date().getFullYear()} Project Manager
-            </div>
-          </motion.aside>
-        )}
-      </AnimatePresence>
-
-      {/* Backdrop for mobile sidebar */}
-      <AnimatePresence>
-        {sidebarOpen && (
-          <motion.div
-            key="mobile-backdrop"
-            className="fixed inset-0 z-40 bg-black/50 md:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={toggleSidebar}  /* clicking backdrop closes the sidebar */
-          />
-        )}
-      </AnimatePresence>
+      {/* Mobile Sidebar etc. */}
     </>
   );
 }
+
+
+
