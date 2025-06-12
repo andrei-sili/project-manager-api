@@ -32,14 +32,31 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+/**
+ * Refresh only the access token using the refresh token.
+ * Throws if no valid refresh token exists.
+ */
+export async function refreshToken(): Promise<void> {
+  const refresh = typeof window !== "undefined" ? localStorage.getItem("refresh") : null;
+  if (!refresh) throw new Error("No refresh token available");
+  const res = await axios.post(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/token/refresh/`,
+    { refresh }
+  );
+  localStorage.setItem("access", res.data.access);
+}
+
+/**
+ * Provides auth state and actions to its children.
+ */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  /** Load current user if access token is stored */
-  const refreshUser = async () => {
-    const access = typeof window !== "undefined" && localStorage.getItem("access");
+  /** Load current user profile if access token exists */
+  const refreshUser = async (): Promise<void> => {
+    const access = typeof window !== "undefined" ? localStorage.getItem("access") : null;
     if (!access) {
       setUser(null);
       setLoading(false);
@@ -52,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       );
       setUser(res.data);
     } catch {
+      // Invalid token: clear session
       localStorage.removeItem("access");
       localStorage.removeItem("refresh");
       setUser(null);
@@ -60,8 +78,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  /** Obtain JWT pair from DRF SimpleJWT */
-  const login = async (email: string, password: string) => {
+  /** Perform login and store tokens */
+  const login = async (email: string, password: string): Promise<void> => {
     setLoading(true);
     try {
       const res = await axios.post(
@@ -79,26 +97,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  /** Refresh only the access token */
-  const refreshToken = async () => {
-    const refresh = localStorage.getItem("refresh");
-    if (!refresh) throw new Error("No refresh token");
-    const res = await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/token/refresh/`,
-      { refresh }
-    );
-    localStorage.setItem("access", res.data.access);
-  };
-
-  /** Clear localStorage and redirect to login */
-  const logout = () => {
+  /** Logout and clear storage */
+  const logout = (): void => {
     setUser(null);
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
     router.replace("/login");
   };
 
-  /** On mount, attempt to load user */
+  // On mount, attempt to refresh user
   useEffect(() => {
     refreshUser();
   }, []);
@@ -119,7 +126,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/** Hook to consume auth context */
+/**
+ * Hook to consume auth context.
+ * Must be used inside AuthProvider.
+ */
 export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
   if (!ctx) {
@@ -127,8 +137,5 @@ export function useAuth(): AuthContextType {
   }
   return ctx;
 }
-
-// Also export refreshToken for interceptors
-export { refreshToken };
 
 export default AuthProvider;
