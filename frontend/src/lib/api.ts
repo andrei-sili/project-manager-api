@@ -1,8 +1,11 @@
-// src/lib/api.ts
 // Path: frontend/src/lib/api.ts
-import api from "./api";  // păstrăm instanța axios deja creată
+
+import apiClient from "./axiosClient";
 import { Project, Team, Task } from "./types";
 
+/**
+ * Generic paginated response shape.
+ */
 interface Paginated<T> {
   count: number;
   next: string | null;
@@ -10,45 +13,75 @@ interface Paginated<T> {
   results: T[];
 }
 
-/** Proiecte **/
+/**
+ * Fetch all projects.
+ */
 export const fetchProjects = (): Promise<Project[]> =>
-  api.get<Paginated<Project>>("/projects/").then(res => res.data.results);
+  apiClient
+    .get<Paginated<Project>>("/projects/")
+    .then((res) => res.data.results);
 
+/**
+ * Create a new project.
+ */
 export const createProject = (payload: {
   name: string;
   description: string;
   team: number;
 }): Promise<Project> =>
-  api.post<Project>("/projects/", payload).then(res => res.data);
+  apiClient.post<Project>("/projects/", payload).then((res) => res.data);
 
+/**
+ * Update an existing project.
+ */
 export const updateProject = (
   id: number,
   payload: Partial<Pick<Project, "name" | "description" | "team">>
 ): Promise<Project> =>
-  api.patch<Project>(`/projects/${id}/`, payload).then(res => res.data);
+  apiClient.patch<Project>(`/projects/${id}/`, payload).then((res) => res.data);
 
-/** Echipe **/
+/**
+ * Fetch all teams.
+ */
 export const fetchTeams = (): Promise<Team[]> =>
-  api.get<Paginated<Team>>("/teams/").then(res => res.data.results);
+  apiClient.get<Paginated<Team>>("/teams/").then((res) => res.data.results);
 
-/** Sarcini **/
+/**
+ * Fetch tasks for a specific project.
+ */
 export const fetchProjectTasks = (projectId: number): Promise<Task[]> =>
-  api.get<Paginated<Task>>(`/projects/${projectId}/tasks/`)
-     .then(res => res.data.results);
+  apiClient
+    .get<Paginated<Task>>(`/projects/${projectId}/tasks/`)
+    .then((res) => res.data.results);
 
+/**
+ * Create a new task in a project.
+ */
 export const createTask = (
   projectId: number,
   payload: Omit<Task, "id">
 ): Promise<Task> =>
-  api.post<Task>(`/projects/${projectId}/tasks/`, payload).then(res => res.data);
+  apiClient
+    .post<Task>(`/projects/${projectId}/tasks/`, payload)
+    .then((res) => res.data);
 
+/**
+ * Update an existing task.
+ */
 export const updateTask = (
   projectId: number,
   taskId: number,
-  payload: Partial<Omit<Task, "id" | "project">>
+  payload: Partial<Omit<Task, "id">>
 ): Promise<Task> =>
-  api.patch<Task>(`/projects/${projectId}/tasks/${taskId}/`, payload)
-     .then(res => res.data);
+  apiClient
+    .patch<Task>(`/projects/${projectId}/tasks/${taskId}/`, payload)
+    .then((res) => res.data);
 
-export const deleteTask = (projectId: number, taskId: number): Promise<void> =>
-  api.delete(`/projects/${projectId}/tasks/${taskId}/`).then(() => {});
+/**
+ * Delete a task.
+ */
+export const deleteTask = (
+  projectId: number,
+  taskId: number
+): Promise<void> =>
+  apiClient.delete(`/projects/${projectId}/tasks/${taskId}/`).then(() => {});
