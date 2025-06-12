@@ -1,7 +1,8 @@
 // frontend/src/lib/api.ts
 
 import apiClient from "./axiosClient";
-import { Project, Team, Task } from "./types";
+import {Project, Team, Task, PaginatedResponse} from "./types";
+import {AxiosResponse} from "axios";
 
 /** Generic paginated response shape. */
 interface Paginated<T> {
@@ -12,19 +13,42 @@ interface Paginated<T> {
 }
 
 /** ----- PROJECTS ----- */
-export function fetchProjects(): Promise<Project[]> {
-  return apiClient.get<Paginated<Project>>("/projects/").then(res => res.data.results);
+export async function fetchProjects(token: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/projects/`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch projects");
+  }
+
+  return res.json();
 }
 
-export async function fetchTasks(): Promise<Task[]> {
-  const projects = await fetchProjects();
+
+export async function fetchTasks(token: string): Promise<Task[]> {
+  const projects = await fetchProjects(token);
   const allTasks: Task[] = [];
+
   for (const proj of projects) {
-    const res = await apiClient.get<Paginated<Task>>(`/projects/${proj.id}/tasks/`);
+    const res: AxiosResponse<PaginatedResponse<Task>> = await apiClient.get(
+      `/projects/${proj.id}/tasks/`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
     allTasks.push(...res.data.results);
   }
+
   return allTasks;
 }
+
 
 export function createProject(payload: {
   name: string;

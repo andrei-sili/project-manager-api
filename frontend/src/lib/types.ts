@@ -48,3 +48,9 @@ export interface Project {
   created_at: string;
   tasks: Task[];
 }
+export interface PaginatedResponse<T> {
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
+}
