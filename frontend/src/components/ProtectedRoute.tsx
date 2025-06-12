@@ -1,13 +1,20 @@
 // frontend/src/components/ProtectedRoute.tsx
 
 "use client";
-import { useAuth } from "./AuthProvider";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
 
-// Wrapper for protected pages/routes.
-// Redirects to /login if not authenticated.
-export default function ProtectedRoute({ children }: { children: React.ReactNode }) {
+import React, { ReactNode, useEffect } from "react";
+import { useAuth } from "@/lib/useAuth";
+import { useRouter } from "next/navigation";
+
+interface ProtectedRouteProps {
+  children: ReactNode;
+}
+
+/**
+ * Wrap protected pages to enforce authentication.
+ * Redirects to /login if not authenticated.
+ */
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
   const router = useRouter();
 
@@ -17,7 +24,6 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
     }
   }, [loading, isAuthenticated, router]);
 
-  // While checking auth status, show loading or nothing.
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center text-gray-300">
@@ -27,10 +33,10 @@ export default function ProtectedRoute({ children }: { children: React.ReactNode
   }
 
   if (!isAuthenticated) {
-    // Optionally, can return null here because redirect will happen.
     return null;
   }
 
-  // If authenticated, render the protected content.
   return <>{children}</>;
-}
+};
+
+export default ProtectedRoute;
