@@ -1,16 +1,13 @@
-//  frontend/src/app/layout.tsx
-"use client";
+// Path: frontend/src/app/layout.tsx
 
-import React from "react";
 import "./globals.css";
 import Providers from "@/components/Providers";
 
-/**
- * RootLayout wraps the entire app with:
- *  - AuthProvider (auth context)
- *  - UIProvider   (UI state: sidebar, theme)
- *  - axios interceptors (via useApiInterceptors hook)
- */
+export const metadata = {
+  title: "Project Manager",
+  description: "A modern, extensible project management tool",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -18,8 +15,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-gray-50 dark:bg-zinc-950 min-h-screen flex flex-col">
-        {/* All contexts & interceptors are set up here */}
+      <body className="bg-zinc-950 text-white min-h-screen">
         <Providers>
           {children}
         </Providers>
