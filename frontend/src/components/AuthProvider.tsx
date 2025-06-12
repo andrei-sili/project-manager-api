@@ -1,5 +1,3 @@
-// frontend/src/components/AuthProvider.tsx
-
 // Path: frontend/src/components/AuthProvider.tsx
 "use client";
 
@@ -13,7 +11,8 @@ import React, {
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
-export interface User {
+// --- Types from backend serializers ---
+interface User {
   id: number;
   email: string;
   first_name: string;
@@ -22,7 +21,7 @@ export interface User {
   [key: string]: any;
 }
 
-export interface AuthContextType {
+interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
@@ -33,18 +32,14 @@ export interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-/** Provides auth state and methods to children */
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({
-  children,
-}) => {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  /** Fetch user profile if token exists */
+  /** Load current user if access token is stored */
   const refreshUser = async () => {
-    const access =
-      typeof window !== "undefined" ? localStorage.getItem("access") : null;
+    const access = typeof window !== "undefined" && localStorage.getItem("access");
     if (!access) {
       setUser(null);
       setLoading(false);
@@ -52,26 +47,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
     try {
       const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/me/`,
-        {
-          headers: { Authorization: `Bearer ${access}` },
-        }
+        `${process.env.NEXT_PUBLIC_API_URL}/api/users/me/`,
+        { headers: { Authorization: `Bearer ${access}` } }
       );
       setUser(res.data);
     } catch {
-      setUser(null);
       localStorage.removeItem("access");
       localStorage.removeItem("refresh");
+      setUser(null);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    refreshUser();
-  }, []);
-
-  /** Handle login flow */
+  /** Obtain JWT pair from DRF SimpleJWT */
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
@@ -90,13 +79,29 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
     }
   };
 
-  /** Handle logout flow */
+  /** Refresh only the access token */
+  const refreshToken = async () => {
+    const refresh = localStorage.getItem("refresh");
+    if (!refresh) throw new Error("No refresh token");
+    const res = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/token/refresh/`,
+      { refresh }
+    );
+    localStorage.setItem("access", res.data.access);
+  };
+
+  /** Clear localStorage and redirect to login */
   const logout = () => {
     setUser(null);
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
-    router.push("/login");
+    router.replace("/login");
   };
+
+  /** On mount, attempt to load user */
+  useEffect(() => {
+    refreshUser();
+  }, []);
 
   return (
     <AuthContext.Provider
@@ -112,15 +117,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
-/** Hook to access auth context (must be within AuthProvider) */
+/** Hook to consume auth context */
 export function useAuth(): AuthContextType {
-  const context = useContext(AuthContext);
-  if (!context) {
+  const ctx = useContext(AuthContext);
+  if (!ctx) {
     throw new Error("useAuth must be used within AuthProvider");
   }
-  return context;
+  return ctx;
 }
+
+// Also export refreshToken for interceptors
+export { refreshToken };
 
 export default AuthProvider;
