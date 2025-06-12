@@ -14,10 +14,15 @@ export default function DashboardLayout({
   return (
     <ProtectedRoute>
       <div className="flex h-screen">
+
         <Sidebar />
+
         <div className="flex-1 flex flex-col overflow-hidden">
+
           <Topbar />
-          <main className="flex-1 overflow-auto p-6">
+
+
+          <main className="flex-1 overflow-auto p-6 bg-zinc-950">
             {children}
           </main>
         </div>
