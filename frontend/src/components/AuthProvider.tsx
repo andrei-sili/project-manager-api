@@ -1,12 +1,19 @@
 // frontend/src/components/AuthProvider.tsx
 
+// Path: frontend/src/components/AuthProvider.tsx
 "use client";
-import React, { createContext, useContext, useEffect, useState, ReactNode } from "react";
+
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
-// User type
-interface User {
+export interface User {
   id: number;
   email: string;
   first_name: string;
@@ -15,7 +22,7 @@ interface User {
   [key: string]: any;
 }
 
-interface AuthContextType {
+export interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   loading: boolean;
@@ -26,14 +33,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+/** Provides auth state and methods to children */
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
-  // Checks if the user is logged in (access token) and fetches user profile
+  /** Fetch user profile if token exists */
   const refreshUser = async () => {
-    const access = typeof window !== "undefined" ? localStorage.getItem("access") : null;
+    const access =
+      typeof window !== "undefined" ? localStorage.getItem("access") : null;
     if (!access) {
       setUser(null);
       setLoading(false);
@@ -43,11 +54,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/users/me/`,
         {
-          headers: { Authorization: `Bearer ${access}` }
+          headers: { Authorization: `Bearer ${access}` },
         }
       );
       setUser(res.data);
-    } catch (e) {
+    } catch {
       setUser(null);
       localStorage.removeItem("access");
       localStorage.removeItem("refresh");
@@ -60,7 +71,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshUser();
   }, []);
 
-  // Handles login, stores tokens, fetches user, redirects to dashboard
+  /** Handle login flow */
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
@@ -79,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Clears user session
+  /** Handle logout flow */
   const logout = () => {
     setUser(null);
     localStorage.removeItem("access");
@@ -91,20 +102,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     <AuthContext.Provider
       value={{
         user,
-        isAuthenticated: !!user,
+        isAuthenticated: Boolean(user),
         loading,
         login,
         logout,
-        refreshUser
+        refreshUser,
       }}
     >
       {children}
     </AuthContext.Provider>
   );
-}
+};
 
-// Hook to use Auth
-export function useAuth() {
+/** Hook to access auth context (must be within AuthProvider) */
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error("useAuth must be used within AuthProvider");
