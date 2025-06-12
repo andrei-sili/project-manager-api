@@ -37,30 +37,42 @@
 
 // Path: frontend/src/app/dashboard/projects/page.tsx
 
-import React, { JSX } from "react";
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+// Path: frontend/src/app/dashboard/projects/page.tsx
+"use client";
+
+import React, {JSX, useEffect, useState} from "react";
+import { useAuth } from "@/components/AuthProvider";
 import { fetchProjects } from "@/lib/api";
 import type { Project } from "@/lib/types";
 import ProjectsDashboardCard from "@/components/ProjectsDashboardCard";
+import { useRouter } from "next/navigation";
 
-export default async function ProjectsPage(): Promise<JSX.Element> {
+export default function ProjectsPage(): JSX.Element {
+  const { user } = useAuth();
+  const router = useRouter();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const cookieStore = await cookies();
-  const token = cookieStore.get("access")?.value;
+  useEffect(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("access") : null;
 
+    if (!token) {
+      router.push("/login");
+      return;
+    }
 
-  if (!token) {
-    redirect("/login");
-  }
+    fetchProjects(token)
+      .then(setProjects)
+      .catch(() => {
+        router.push("/login");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, [router]);
 
-  let projects: Project[] = [];
-  try {
-
-    projects = await fetchProjects(token);
-  } catch {
-
-    redirect("/login");
+  if (loading) {
+    return <div className="p-6 text-white">Loading projects…</div>;
   }
 
   return (
