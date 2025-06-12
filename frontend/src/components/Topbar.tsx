@@ -1,4 +1,4 @@
-//  frontend/src/components/Topbar.tsx
+// frontend/src/components/Topbar.tsx
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
@@ -8,8 +8,9 @@ import Link from "next/link";
 interface TopbarProps {}
 
 /**
- * Topbar with user avatar, email and dropdown menu:
- * Profile, Change Password, Logout.
+ * Topbar with greeting on the left,
+ * avatar/email on the right and a dark-themed dropdown:
+ * My Profile, Change Password, Logout.
  */
 const Topbar: React.FC<TopbarProps> = () => {
   const { user, logout } = useAuth();
@@ -19,10 +20,7 @@ const Topbar: React.FC<TopbarProps> = () => {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(e.target as Node)
-      ) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setOpen(false);
       }
     };
@@ -35,46 +33,50 @@ const Topbar: React.FC<TopbarProps> = () => {
     : "U";
 
   return (
-    <header className="flex items-center justify-end bg-zinc-800 px-6 py-4 text-white relative">
+    <header className="flex items-center justify-between bg-zinc-800 px-6 py-4 text-white relative">
+      {/* Left: greeting */}
+      <div className="text-lg font-medium">
+        Hello, {user?.first_name ?? "User"}
+      </div>
+
+      {/* Right: avatar + email */}
       <div className="flex items-center gap-3 cursor-pointer" ref={menuRef}>
-        {/* Avatar */}
         <div
           className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold"
           onClick={() => setOpen((o) => !o)}
         >
           {initials}
         </div>
-        {/* Email */}
         <span onClick={() => setOpen((o) => !o)} className="text-sm">
           {user?.email}
         </span>
-      </div>
 
-      {/* Dropdown */}
-      {open && (
-        <div className="absolute right-6 top-full mt-2 w-48 bg-white text-zinc-900 rounded-lg shadow-lg overflow-hidden z-30">
-          <Link
-            href="/dashboard/profile"
-            className="block px-4 py-2 text-sm hover:bg-zinc-100"
-            onClick={() => setOpen(false)}
-          >
-            My Profile
-          </Link>
-          <Link
-            href="/dashboard/profile/change-password"
-            className="block px-4 py-2 text-sm hover:bg-zinc-100"
-            onClick={() => setOpen(false)}
-          >
-            Change Password
-          </Link>
-          <button
-            onClick={logout}
-            className="w-full text-left px-4 py-2 text-sm hover:bg-zinc-100"
-          >
-            Logout
-          </button>
-        </div>
-      )}
+        {/* Dropdown */}
+        {open && (
+          <div className="absolute right-6 top-full mt-2 w-48 bg-zinc-800 text-white rounded-lg shadow-lg overflow-hidden z-30">
+            <Link
+              href="/dashboard/profile"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-sm hover:bg-zinc-700"
+            >
+              My Profile
+            </Link>
+            <Link
+              href="/dashboard/profile/change-password"
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-sm hover:bg-zinc-700"
+            >
+              Change Password
+            </Link>
+            <button
+              onClick={logout}
+              className="w-full text-left px-4 py-2 text-sm hover:bg-zinc-700"
+            >
+              Logout
+            </button>
+          </div>
+        )}
+      </div>
     </header>
   );
 };
