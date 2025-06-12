@@ -1,6 +1,5 @@
 // Path: frontend/src/components/AuthProvider.tsx
 "use client";
-
 import React, {
   createContext,
   useContext,
@@ -9,9 +8,8 @@ import React, {
   ReactNode,
 } from "react";
 import { useRouter } from "next/navigation";
-import axios from "axios";
+import apiClient from "@/lib/axiosClient";
 
-// --- Types from backend serializers ---
 interface User {
   id: number;
   email: string;
@@ -20,7 +18,6 @@ interface User {
   date_joined?: string;
   [key: string]: any;
 }
-
 interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
@@ -33,43 +30,36 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
- * Refresh only the access token using the refresh token.
- * Throws if no valid refresh token exists.
+ * Refresh access token using refresh-token endpoint.
+ * POST /api/token/refresh/
  */
 export async function refreshToken(): Promise<void> {
-  const refresh = typeof window !== "undefined" ? localStorage.getItem("refresh") : null;
-  if (!refresh) throw new Error("No refresh token available");
-  const res = await axios.post(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/token/refresh/`,
-    { refresh }
-  );
+  const refresh = localStorage.getItem("refresh");
+  if (!refresh) throw new Error("No refresh token");
+  const res = await apiClient.post<{ access: string }>("/token/refresh/", { refresh });
   localStorage.setItem("access", res.data.access);
 }
 
 /**
- * Provides auth state and actions to its children.
+ * Provides auth state & actions via context.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser]       = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
+  const router                = useRouter();
 
-  /** Load current user profile if access token exists */
+  /** Load current user profile if token exists */
   const refreshUser = async (): Promise<void> => {
-    const access = typeof window !== "undefined" ? localStorage.getItem("access") : null;
+    const access = localStorage.getItem("access");
     if (!access) {
       setUser(null);
       setLoading(false);
       return;
     }
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/users/me/`,
-        { headers: { Authorization: `Bearer ${access}` } }
-      );
+      const res = await apiClient.get<User>("/users/me/");
       setUser(res.data);
     } catch {
-      // Invalid token: clear session
       localStorage.removeItem("access");
       localStorage.removeItem("refresh");
       setUser(null);
@@ -78,12 +68,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  /** Perform login and store tokens */
+  /** Perform login against POST /api/token_obtain_pair/ */
   const login = async (email: string, password: string): Promise<void> => {
     setLoading(true);
     try {
-      const res = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/token_obtain_pair/`,
+      const res = await apiClient.post<{ access: string; refresh: string }>(
+        "/token_obtain_pair/",
         { email, password }
       );
       localStorage.setItem("access", res.data.access);
@@ -97,15 +87,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  /** Logout and clear storage */
+  /** Clears session and navigates to /login */
   const logout = (): void => {
-    setUser(null);
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
+    setUser(null);
     router.replace("/login");
   };
 
-  // On mount, attempt to refresh user
   useEffect(() => {
     refreshUser();
   }, []);
@@ -126,15 +115,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-/**
- * Hook to consume auth context.
- * Must be used inside AuthProvider.
- */
+/** Hook to consume auth context */
 export function useAuth(): AuthContextType {
   const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuth must be used within AuthProvider");
-  }
+  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
 }
 

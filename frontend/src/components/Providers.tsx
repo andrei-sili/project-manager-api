@@ -1,26 +1,17 @@
 // frontend/src/components/Providers.tsx
-import React from 'react';
-import AuthProvider from './AuthProvider';
-import UIProvider from './UIProvider';
+"use client";
 
+import React from "react";
+import AuthProvider from "./AuthProvider";
+import UIProvider from "./UIProvider";
+import { useApiInterceptors } from "@/lib/useApi";
 
-type ProvidersProps = {
-  children: React.ReactNode;
-};
-
-/**
- * Wrap all context providers here so that
- * useAuth, useUI, etc. always find their context.
- */
-export default function Providers({ children }: ProvidersProps) {
+export default function Providers({ children }: { children: React.ReactNode }) {
+  useApiInterceptors();
   return (
     <AuthProvider>
       <UIProvider>
-        {/* <ThemeProvider> */}
-          {/* <NotificationProvider> */}
-            {children}
-          {/* </NotificationProvider> */}
-        {/* </ThemeProvider> */}
+        {children}
       </UIProvider>
     </AuthProvider>
   );
