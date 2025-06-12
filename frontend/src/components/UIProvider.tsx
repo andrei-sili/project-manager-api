@@ -1,15 +1,17 @@
 // src/components/UIProvider.tsx
+
 "use client";
+
 import React, { createContext, useContext, useState, ReactNode } from "react";
 
-interface UIContextValue {
+export interface UIContextValue {
   sidebarOpen: boolean;
   toggleSidebar: () => void;
 }
 
 const UIContext = createContext<UIContextValue | undefined>(undefined);
 
-// Custom hook to use the UI context
+/** Hook to read UI context (must be within UIProvider) */
 export function useUI(): UIContextValue {
   const context = useContext(UIContext);
   if (!context) {
@@ -18,8 +20,8 @@ export function useUI(): UIContextValue {
   return context;
 }
 
-// Provider component to wrap the app
-export default function UIProvider({ children }: { children: ReactNode }) {
+/** Wrap your app to provide UI state (e.g. sidebar open/close) */
+const UIProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const toggleSidebar = () => setSidebarOpen((prev) => !prev);
 
@@ -28,4 +30,7 @@ export default function UIProvider({ children }: { children: ReactNode }) {
       {children}
     </UIContext.Provider>
   );
-}
+};
+
+export default UIProvider;
+
