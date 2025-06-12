@@ -1,24 +1,21 @@
 // frontend/src/app/layout.tsx
 
-import React from "react";
-import "./globals.css";
-import UIProvider from "../components/UIProvider";
-import AuthProvider from "../components/AuthProvider"; // <-- IMPORT!
+import React from 'react';
+import './globals.css';
+import { Inter } from 'next/font/google';
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export const metadata = {
+  title: 'Project Manager',
+  description: 'Manage your projects efficiently',
+};
+
+const inter = Inter({ subsets: ['latin'] });
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-gray-50 dark:bg-zinc-950 min-h-screen flex flex-col">
-        {/* Wrap everything with AuthProvider and UIProvider */}
-        <AuthProvider>
-          <UIProvider>
-            {children}
-          </UIProvider>
-        </AuthProvider>
+    <html lang="ro" className={inter.className}>
+      <body>
+        {children}
       </body>
     </html>
   );
