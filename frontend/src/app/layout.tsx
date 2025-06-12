@@ -1,11 +1,10 @@
-// Path: frontend/src/app/layout.tsx
-
+// frontend/src/app/layout.tsx
 import "./globals.css";
 import Providers from "@/components/Providers";
 
 export const metadata = {
   title: "Project Manager",
-  description: "A modern, extensible project management tool",
+  description: "A modern project management tool",
 };
 
 export default function RootLayout({
