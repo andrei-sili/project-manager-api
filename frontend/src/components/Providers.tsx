@@ -1,4 +1,4 @@
-// frontend/src/components/Providers.tsx
+// Path: frontend/src/components/Providers.tsx
 "use client";
 
 import React from "react";
@@ -6,13 +6,19 @@ import AuthProvider from "./AuthProvider";
 import UIProvider from "./UIProvider";
 import { useApiInterceptors } from "@/lib/useApi";
 
-export default function Providers({ children }: { children: React.ReactNode }) {
+type Props = { children: React.ReactNode };
+
+function ApiInterceptorWrapper({ children }: Props) {
   useApiInterceptors();
+  return <>{children}</>;
+}
+
+export default function Providers({ children }: Props) {
   return (
     <AuthProvider>
-      <UIProvider>
-        {children}
-      </UIProvider>
+      <ApiInterceptorWrapper>
+        <UIProvider>{children}</UIProvider>
+      </ApiInterceptorWrapper>
     </AuthProvider>
   );
 }
