@@ -1,109 +1,87 @@
-// frontend/src/components/TimeTrackingCard.tsx
+// Path: frontend/src/components/TimeTrackingCard.tsx
+"use client";
 
 import React, { useEffect, useState } from "react";
 import { Clock } from "lucide-react";
-import api from "@/lib/api";
-import { useRouter } from "next/navigation";
+import { fetchTimeEntries } from "@/lib/api";
 
-interface PerDay {
-  date: string;
-  minutes: number;
+interface Summary {
+  total_hours: number;
+  daily: { date: string; hours: number }[];
 }
 
-interface TimeSummary {
-  total_minutes: number;
-  per_day: PerDay[];
-}
-
-interface Props {
-  loading?: boolean;
-}
-
-function formatTime(minutes: number) {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h && m) return `${h}h ${m}m`;
-  if (h) return `${h}h`;
-  if (m) return `${m}m`;
-  return "0m";
-}
-
-const dailyTarget = 480; // 8h/day
-
-const TimeTrackingCard: React.FC<Props> = ({ loading }) => {
-  const [summary, setSummary] = useState<TimeSummary | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(!!loading);
-
-  const router = useRouter();
+export default function TimeTrackingCard(): React.JSX.Element {
+  const token = typeof window !== "undefined" ? localStorage.getItem("access") : null;
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    setIsLoading(true);
-    api
-      .get("/time-entries/summary/")
-      .then((res) => setSummary(res.data))
-      .catch(() => setSummary(null))
-      .finally(() => setIsLoading(false));
-  }, []);
+    if (!token) return;
 
-  const progress =
-    summary && summary.total_minutes
-      ? Math.min(100, ((summary.total_minutes / dailyTarget) * 100) || 0)
-      : 0;
+    setIsLoading(true);
+    fetchTimeEntries(token)
+      .then((entries) => {
+        const total_hours = entries.reduce(
+          (sum: number, e: { duration?: number }) => sum + (e.duration ?? 0),
+          0
+        );
+        const daily = entries.map((e: { date: string; duration?: number }) => ({
+          date: e.date,
+          hours: e.duration ?? 0,
+        }));
+        setSummary({ total_hours, daily });
+      })
+      .catch(() => {
+        setSummary(null);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [token]);
 
   return (
-    <div className="bg-zinc-900 rounded-2xl shadow p-5 flex flex-col gap-3 mb-4 min-w-[250px]">
-      <div className="flex items-center gap-2 text-lg font-bold text-blue-400">
-        <Clock className="w-5 h-5" />
-        Time Tracked
+    <div className="bg-gray-800 rounded-xl p-5 flex flex-col justify-between">
+      <div className="flex items-center text-white mb-4">
+        <Clock className="mr-2" />
+        <h2 className="text-lg font-medium">Time Tracked</h2>
       </div>
+
       {isLoading ? (
-        <div className="text-gray-400 text-center my-4">Loading...</div>
+        <p className="text-gray-400">Loading…</p>
       ) : summary ? (
         <>
-          <div className="text-3xl font-extrabold text-white text-center">
-            {formatTime(summary.total_minutes)}
+          <div className="text-3xl font-bold text-white mb-2">
+            {summary.total_hours}h
           </div>
-          <div className="text-xs text-gray-400 text-center mb-2">
+          <p className="text-sm text-gray-400 mb-4">
             This week (target: 8h/day)
-          </div>
-          <div className="w-full h-2 rounded bg-zinc-800">
+          </p>
+          <div className="h-1 bg-gray-700 rounded-full mb-3">
             <div
-              className="h-2 rounded bg-blue-500 transition-all"
-              style={{ width: `${progress}%` }}
+              className="h-full bg-blue-500 rounded-full"
+              style={{ width: `${(summary.total_hours / (8 * 7)) * 100}%` }}
             />
           </div>
-          {/* Mini-graph with last 7 days */}
-          <div className="flex justify-between items-end gap-1 mt-3">
-            {summary.per_day.map((d) => (
-              <div key={d.date} className="flex flex-col items-center w-6">
-                <div
-                  className={`rounded-t bg-blue-500`}
-                  style={{
-                    height: `${Math.min((d.minutes / dailyTarget) * 40, 40)}px`,
-                    width: "100%",
-                    minHeight: "4px",
-                    opacity: d.minutes > 0 ? 1 : 0.4,
-                  }}
-                  title={`${d.minutes} min`}
-                />
-                <span className="text-[10px] text-gray-500 mt-1">
-                  {d.date.slice(5)} {/* MM-DD */}
-                </span>
+          <div className="grid grid-cols-7 gap-1 text-xs text-gray-400">
+            {summary.daily.map((d) => (
+              <div key={d.date} className="text-center">
+                {new Date(d.date).getDate()}
               </div>
             ))}
           </div>
         </>
       ) : (
-        <div className="text-gray-400 text-center">No time tracked yet.</div>
+        <p className="text-gray-500">No data available</p>
       )}
+
       <button
-        className="mt-3 mx-auto px-4 py-1 rounded-full bg-blue-700 hover:bg-blue-800 text-white font-semibold text-sm shadow transition"
-        onClick={() => router.push("/dashboard/time-tracking")}
+        onClick={() => {
+          // Future feature: navigate to time tracking details
+        }}
+        className="mt-4 bg-blue-600 text-white px-4 py-2 rounded-lg"
       >
         View details
       </button>
     </div>
   );
-};
-
-export default TimeTrackingCard;
+}

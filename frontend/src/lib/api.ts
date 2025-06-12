@@ -91,5 +91,29 @@ export function deleteTask(projectId: number, taskId: number): Promise<void> {
   return apiClient.delete(`/projects/${projectId}/tasks/${taskId}/`).then(() => {});
 }
 
+
+export async function fetchTimeEntries(token: string) {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/time-entries/summary/`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${token}`,
+      "Content-Type": "application/json"
+    }
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to fetch time summary");
+  }
+
+  const data = await res.json();
+
+  return data.per_day.map((entry: { date: string; minutes: number }) => ({
+    date: entry.date,
+    duration: Math.round(entry.minutes / 60),
+  }));
+}
+
 // Default export for legacy imports
 export default apiClient;
+
+
