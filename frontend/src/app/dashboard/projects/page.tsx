@@ -1,51 +1,13 @@
-// // Path: frontend/src/app/dashboard/projects/page.tsx
-//
-// import React, {JSX} from "react";
-// import { cookies } from "next/headers";
-// import { fetchProjects } from "@/lib/api";
-// import ProjectsDashboardCard from "@/components/ProjectsDashboardCard";
-//
-// /**
-//  * Server Component:
-//  * Fetches projects on the server and renders a grid of cards.
-//  */
-// export default async function ProjectsPage(): Promise<JSX.Element> {
-//   // 1. Await the cookie store and read the access token
-//   const cookieStore = await cookies();
-//   const access = cookieStore.get("access")?.value ?? "";
-//
-//   // 2. Fetch projects using our API helper
-//   const projects = await fetchProjects();
-//
-//   return (
-//     <section className="p-6">
-//       <header className="flex items-center justify-between mb-6">
-//         <h1 className="text-2xl font-semibold text-white">Projects</h1>
-//         <span className="text-sm text-gray-400">
-//           {projects.length} total
-//         </span>
-//       </header>
-//
-//       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-//         {projects.map((project) => (
-//           <ProjectsDashboardCard key={project.id} project={project} />
-//         ))}
-//       </div>
-//     </section>
-//   );
-// }
+// frontend/src/app/dashboard/projects/page.tsx
 
-// Path: frontend/src/app/dashboard/projects/page.tsx
-
-// Path: frontend/src/app/dashboard/projects/page.tsx
 "use client";
 
-import React, {JSX, useEffect, useState} from "react";
+import React, { JSX, useEffect, useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { fetchProjects } from "@/lib/api";
 import type { Project } from "@/lib/types";
-import ProjectsDashboardCard from "@/components/ProjectsDashboardCard";
 import { useRouter } from "next/navigation";
+import ProjectOverviewCard from "@/components/ProjectOverviewCard";
 
 export default function ProjectsPage(): JSX.Element {
   const { user } = useAuth();
@@ -62,7 +24,20 @@ export default function ProjectsPage(): JSX.Element {
     }
 
     fetchProjects(token)
-      .then(setProjects)
+      .then((res) => {
+
+        const list = Array.isArray(res.results) ? res.results : Array.isArray(res) ? res : [];
+
+        const projects = list.map((project: any) => ({
+          ...project,
+          task_count: typeof project.task_count === "number"
+            ? project.task_count
+            : Array.isArray(project.tasks)
+            ? project.tasks.length
+            : 0,
+        }));
+        setProjects(projects);
+      })
       .catch(() => {
         router.push("/login");
       })
@@ -83,7 +58,7 @@ export default function ProjectsPage(): JSX.Element {
       </header>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.map((project) => (
-          <ProjectsDashboardCard key={project.id} project={project} />
+          <ProjectOverviewCard key={project.id} project={project} />
         ))}
       </div>
     </section>

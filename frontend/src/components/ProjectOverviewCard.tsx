@@ -1,38 +1,7 @@
 // frontend/src/components/ProjectOverviewCard.tsx
 
 import React from "react";
-
-interface Member {
-  id: number;
-  name?: string;
-  email: string;
-  role: string;
-  joined_at?: string;
-}
-
-interface Team {
-  id: number;
-  name: string;
-}
-
-interface Task {
-  id: number;
-  title: string;
-  status: string;
-  priority: string;
-  due_date: string | null;
-  // ...add more fields if needed
-}
-
-interface Project {
-  id: number;
-  name: string;
-  description: string;
-  team?: Team;
-  tasks: Task[];
-  created_by: string;
-  // ...add more fields if needed
-}
+import type { Project } from "@/lib/types";
 
 interface Props {
   project: Project;
@@ -40,7 +9,8 @@ interface Props {
 }
 
 export default function ProjectOverviewCard({ project, onClick }: Props) {
-  const taskCount = project.tasks?.length || 0;
+  // Prefer task_count dacă există, altfel fallback la tasks?.length sau 0
+  const taskCount = project.task_count ?? project.tasks?.length ?? 0;
 
   return (
     <div
@@ -63,7 +33,14 @@ export default function ProjectOverviewCard({ project, onClick }: Props) {
             {project.team.name}
           </span>
         )}
-        <span className="text-xs text-gray-500">Created by: {project.created_by}</span>
+        <span className="text-xs text-gray-500">
+          Created by:{" "}
+          {typeof project.created_by === "object"
+            ? `${project.created_by.first_name ?? ""} ${project.created_by.last_name ?? ""}`.trim() ||
+              project.created_by.name ||
+              "N/A"
+            : project.created_by || "N/A"}
+        </span>
       </div>
     </div>
   );
