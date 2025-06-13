@@ -1,3 +1,5 @@
+// frontend/src/components/TaskComments.tsx
+
 import { useEffect, useState } from "react";
 import axios from "axios";
 
@@ -10,7 +12,17 @@ type CommentType = {
   replies: CommentType[];
 };
 
-export default function CommentThread({ projectId, taskId }: { projectId: string; taskId: string }) {
+type TaskCommentsProps = {
+  projectId: string;
+  taskId: string;
+  onCommentsUpdated?: () => void; // Optional refresh callback for parent
+};
+
+export default function CommentThread({
+  projectId,
+  taskId,
+  onCommentsUpdated,
+}: TaskCommentsProps) {
   const [comments, setComments] = useState<CommentType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -54,6 +66,7 @@ export default function CommentThread({ projectId, taskId }: { projectId: string
       );
       setNewComment("");
       fetchComments();
+      if (onCommentsUpdated) onCommentsUpdated(); // Call refresh if provided
     } catch {
       setError("Failed to add comment.");
     } finally {
@@ -76,6 +89,7 @@ export default function CommentThread({ projectId, taskId }: { projectId: string
       setReplyContent((prev) => ({ ...prev, [parentId]: "" }));
       setReplyingTo(null);
       fetchComments();
+      if (onCommentsUpdated) onCommentsUpdated(); // Call refresh if provided
     } catch {
       setError("Failed to reply.");
     } finally {

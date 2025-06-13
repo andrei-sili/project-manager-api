@@ -1,3 +1,5 @@
+// frontend/src/components/TaskFiles.tsx
+
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Paperclip, X } from "lucide-react";
@@ -14,13 +16,18 @@ interface TaskFilesProps {
   projectId: string;
   taskId: string;
   compact?: boolean;
+  onFilesUpdated?: () => void; // Optional refresh callback for parent
 }
-
 
 const getFileName = (f: TaskFile) =>
   f.file.split('/').pop() || "file";
 
-export default function TaskFiles({ projectId, taskId, compact = false }: TaskFilesProps) {
+export default function TaskFiles({
+  projectId,
+  taskId,
+  compact = false,
+  onFilesUpdated,
+}: TaskFilesProps) {
   const [files, setFiles] = useState<TaskFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -71,6 +78,7 @@ export default function TaskFiles({ projectId, taskId, compact = false }: TaskFi
       setFileToUpload(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       fetchFiles();
+      if (onFilesUpdated) onFilesUpdated(); // Call refresh if provided
     } catch (err: any) {
       if (err?.response?.data?.file) {
         setError(err.response.data.file[0]);
@@ -94,6 +102,7 @@ export default function TaskFiles({ projectId, taskId, compact = false }: TaskFi
         }
       );
       fetchFiles();
+      if (onFilesUpdated) onFilesUpdated(); // Call refresh if provided
     } catch {
       setError("Failed to delete file.");
     }
