@@ -1,53 +1,75 @@
-// Path: frontend/src/components/ProjectsDashboardCard.tsx
-"use client";
+// frontend/src/components/ProjectsDashboardCard.tsx
 
 import React from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { FolderOpen } from "lucide-react";
+import { FolderKanban } from "lucide-react";
 import { Project } from "@/lib/types";
 
-interface ProjectsDashboardCardProps {
-  project: Project;
+interface Props {
+  projects: Project[];
+  loading?: boolean;
+  total: number;
 }
 
-/**
- * Card component to display a single project in the dashboard.
- * Clicking on the card navigates to the project detail page.
- */
-const ProjectsDashboardCard: React.FC<ProjectsDashboardCardProps> = ({
-  project,
-}) => {
-  const router = useRouter();
-
-  const handleClick = () => {
-    router.push(`/dashboard/projects/${project.id}`);
-  };
+export default function ProjectsDashboardCard({ projects, loading }: Props) {
+  const visibleProjects = projects.slice(0, 4);
 
   return (
-    <div
-      className="bg-zinc-800 rounded-lg p-4 cursor-pointer hover:bg-zinc-700 transition"
-      onClick={handleClick}
-    >
-      <div className="flex items-center mb-3">
-        <FolderOpen size={20} className="text-blue-400 mr-2" />
-        <h2 className="text-lg font-semibold text-white">{project.name}</h2>
-      </div>
-      <p className="text-sm text-gray-400 mb-4 truncate">
-        {project.description}
-      </p>
-      <div className="flex justify-between items-center text-xs text-gray-500">
-        <span>{project.tasks.length} tasks</span>
+    <div className="bg-zinc-900 rounded-2xl shadow p-5 mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <h3 className="text-lg font-bold">Projects</h3>
         <Link
-          href={`/dashboard/projects/${project.id}`}
-          onClick={(e) => e.stopPropagation()}
-          className="text-blue-400 hover:underline"
+          href="/dashboard/projects"
+          className="flex items-center gap-2 text-blue-400 hover:underline font-medium"
         >
-          View Details
+          <FolderKanban className="w-5 h-5" />
+          View All
         </Link>
+      </div>
+
+      <div className="text-sm text-gray-400 mb-3">
+        {loading ? "Loading…" : `${projects.length} total`}
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        {loading ? (
+          <div className="col-span-2 text-center text-gray-400">
+            Loading projects...
+          </div>
+        ) : visibleProjects.length === 0 ? (
+          <div className="col-span-2 text-center text-gray-500 text-sm">
+            No projects found.
+          </div>
+        ) : (
+          visibleProjects.map((project) => (
+            <Link
+              key={project.id}
+              href={`/dashboard/projects/${project.id}`}
+              className="bg-zinc-800 hover:bg-zinc-700 rounded-xl p-4 border border-transparent hover:border-blue-600 transition group"
+            >
+              <div className="font-semibold text-white mb-1 truncate">
+                {project.name}
+              </div>
+              <div className="text-sm text-gray-400 mb-1 truncate">
+                {project.description || "No description"}
+              </div>
+              <div className="flex items-center justify-between text-xs text-gray-500">
+                <span>{project.team?.name || "No team"}</span>
+                <span>
+                  {project.task_count} {project.task_count === 1 ? "task" : "tasks"}
+                </span>
+              </div>
+              <div className="text-right text-[11px] text-gray-600 mt-1">
+                {/* Show full name if created_by is object, fallback to string if needed */}
+                Created by:
+                {project.created_by && typeof project.created_by === "object"
+                  ? `${project.created_by.first_name} ${project.created_by.last_name}`
+                  : project.created_by?.name || project.created_by || "N/A"}
+              </div>
+            </Link>
+          ))
+        )}
       </div>
     </div>
   );
-};
-
-export default ProjectsDashboardCard;
+}
