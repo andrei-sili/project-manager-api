@@ -156,11 +156,11 @@ export default function TaskDetailPage() {
         </div>
         {/* Files */}
         <div className="pl-2 mb-6">
-          <TaskFiles projectId={id} taskId={taskid} compact />
+          <TaskFiles projectId={id.toString()} taskId={taskid.toString()} compact />
         </div>
         {/* Comments */}
         <div className="pl-2">
-          <TaskComments projectId={id} taskId={taskid} />
+          <TaskComments projectId={id.toString()} taskId={taskid.toString()} />
         </div>
         {/* Edit modal */}
         <EditTaskModal
@@ -184,4 +184,3 @@ export default function TaskDetailPage() {
     </div>
   );
 }
-

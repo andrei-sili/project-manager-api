@@ -10,7 +10,7 @@ export default function TasksPage() {
   const [loading, setLoading] = useState(true);
   const [selectedTask, setSelectedTask] = useState<any | null>(null);
   const [teamMembers, setTeamMembers] = useState<any[]>([]);
-  const [projectId, setProjectId] = useState<number | null>(null);
+  const [projectId, setProjectId] = useState<string>("");
 
   useEffect(() => {
     setLoading(true);
@@ -30,7 +30,7 @@ export default function TasksPage() {
           headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
         })
         .then((res) => setTeamMembers(res.data.team?.members || []));
-      setProjectId(selectedTask.project.id);
+      setProjectId(selectedTask.project.id.toString());
     }
   }, [selectedTask]);
 
@@ -79,7 +79,7 @@ export default function TasksPage() {
         <TaskModal
           open={!!selectedTask}
           task={selectedTask}
-          projectId={projectId ?? ""}
+          projectId={projectId}
           teamMembers={teamMembers}
           onClose={() => setSelectedTask(null)}
           onTaskUpdated={() => {
