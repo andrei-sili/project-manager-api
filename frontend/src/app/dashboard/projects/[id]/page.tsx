@@ -199,20 +199,21 @@ export default function ProjectDetailsPage() {
         {/* Task Modal - MODERN */}
         {selectedTask && (
           <TaskModal
-            open={!!selectedTask}
-            task={selectedTask}
-            projectId={projectId.toString()}
-            teamMembers={project.team?.members || []}
-            onClose={() => setSelectedTask(null)}
-            onDelete={handleDeleteTask}
-            onTaskUpdated={() => {
-              setSelectedTask(null);
-              setRefresh(r => r + 1);
-            }}
-          />
+          open={!!selectedTask}
+          task={selectedTask}
+          projectId={projectId ? projectId.toString() : ""}
+          teamMembers={project.team?.members || []}
+          onClose={() => setSelectedTask(null)}
+          onDelete={handleDeleteTask}
+          onTaskUpdated={() => {
+            setSelectedTask(null);
+            setRefresh(r => r + 1);
+          }}
+        />
+
         )}
 
-        {/* ... restul codului (activity, modals edit/add/invite) ... */}
+        {/*  (activity, modals edit/add/invite) ... */}
       </div>
     </>
   );
