@@ -1,4 +1,5 @@
 // frontend/src/app/dashboard/projects/[id]/page.tsx
+
 "use client";
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
@@ -9,6 +10,7 @@ import EditProjectModal from "@/components/EditProjectModal";
 import InviteMemberModal from "@/components/InviteMemberModal";
 import AddTaskModal from "@/components/AddTaskModal";
 import EditTaskModal from "@/components/EditTaskModal";
+import TaskModal from "@/components/TaskModal";
 import KanbanBoard from "@/components/KanbanBoard";
 
 export default function ProjectDetailsPage() {
@@ -24,6 +26,7 @@ export default function ProjectDetailsPage() {
   const [showInvite, setShowInvite] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
   const [editTask, setEditTask] = useState<any | null>(null);
+  const [selectedTask, setSelectedTask] = useState<any | null>(null);
   const [view, setView] = useState<"list" | "kanban">("list");
 
   useEffect(() => {
@@ -37,6 +40,22 @@ export default function ProjectDetailsPage() {
       .catch(() => setError("Project not found."))
       .finally(() => setLoading(false));
   }, [projectId, refresh]);
+
+  // Logic for deleting a task (calls backend then refreshes project)
+  const handleDeleteTask = async () => {
+    if (!selectedTask) return;
+    if (!window.confirm("Are you sure you want to delete this task?")) return;
+    try {
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${selectedTask.id}/`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      );
+      setSelectedTask(null);
+      setRefresh(r => r + 1);
+    } catch {
+      alert("Could not delete task!");
+    }
+  };
 
   if (loading) return <div className="text-gray-400 px-8 py-16">Loading...</div>;
   if (error || !project)
@@ -99,75 +118,7 @@ export default function ProjectDetailsPage() {
 
         {/* Project info / stats */}
         <div className="grid md:grid-cols-3 gap-5 mb-10">
-          <div className="bg-zinc-900 p-6 rounded-2xl shadow flex flex-col justify-between border-l-4 border-blue-600">
-            <div>
-              <div className="text-sm text-gray-400 mb-2">Description</div>
-              <div className="font-semibold text-lg text-white">{project.description}</div>
-            </div>
-            <div className="mt-4 flex gap-3">
-              <span className="bg-blue-900/40 rounded px-3 py-1 text-blue-300 text-xs font-semibold">
-                {project.team?.name || "No Team"}
-              </span>
-              {project.tags?.map((tag: string) => (
-                <span key={tag} className="bg-zinc-700 rounded px-2 py-0.5 text-xs">{tag}</span>
-              ))}
-            </div>
-          </div>
-          <div className="flex flex-col gap-3">
-            <div className="bg-pink-900/80 rounded-2xl p-4 text-white flex items-center justify-between shadow">
-              <div>
-                <div className="text-xs text-pink-200 mb-1">Deadline</div>
-                <div className="font-semibold text-lg">
-                  {deadline ? new Date(deadline).toLocaleDateString() : "—"}
-                </div>
-              </div>
-            </div>
-            <div className="bg-blue-950 rounded-2xl p-4 text-white flex items-center justify-between shadow">
-              <div>
-                <div className="text-xs text-blue-200 mb-1">Budget</div>
-                <div className="font-semibold text-lg">{budget} €</div>
-              </div>
-            </div>
-            <div className="bg-green-950 rounded-2xl p-4 text-white flex items-center justify-between shadow">
-              <div>
-                <div className="text-xs text-green-200 mb-1">Progress</div>
-                <div className="font-bold text-xl">{progress}%</div>
-              </div>
-              <div className="flex flex-col text-xs text-green-400 items-end">
-                <span>{doneTasks} / {totalTasks} tasks</span>
-              </div>
-            </div>
-          </div>
-          <div className="bg-zinc-900 rounded-2xl p-6 shadow flex flex-col">
-            <div className="text-xs text-gray-400 mb-2">Team Members</div>
-            <div className="flex -space-x-3">
-              {project.team?.members?.length ? (
-                project.team.members.slice(0, 6).map((m: any, idx: number) => (
-                  <div
-                    key={idx}
-                    className="relative w-10 h-10 rounded-full bg-blue-950 border-2 border-zinc-900 flex items-center justify-center text-xl font-bold text-blue-300"
-                    title={m.user || m.email}
-                  >
-                    {(m.user || m.email)?.[0]?.toUpperCase() || "U"}
-                  </div>
-                ))
-              ) : (
-                <span className="text-gray-500 text-sm">No members</span>
-              )}
-              {project.team?.members?.length > 6 && (
-                <div
-                  className="w-10 h-10 rounded-full bg-zinc-800 border-2 border-zinc-900 flex items-center justify-center text-lg font-bold text-gray-400">
-                  +{project.team.members.length - 6}
-                </div>
-              )}
-            </div>
-            <button
-              className="bg-neutral-800 hover:bg-neutral-700 px-3 py-1 text-white rounded"
-              onClick={() => setShowInvite(true)}
-            >
-              + Invite Member
-            </button>
-          </div>
+          {/* ...stat blocks... */}
         </div>
 
         {/* Edit, Add, Invite buttons */}
@@ -209,7 +160,8 @@ export default function ProjectDetailsPage() {
                 {project.tasks.map((task: any) => (
                   <li
                     key={task.id}
-                    className="py-3 flex justify-between items-center hover:bg-zinc-800 px-3 rounded-xl transition"
+                    className="py-3 flex justify-between items-center hover:bg-zinc-800 px-3 rounded-xl transition cursor-pointer"
+                    onClick={() => setSelectedTask(task)}
                   >
                     <div>
                       <div className="font-semibold text-white">{task.title}</div>
@@ -224,13 +176,8 @@ export default function ProjectDetailsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      {/* Remove Edit from here! */}
-                      <Link
-                        href={`/dashboard/projects/${project.id}/tasks/${task.id}`}
-                        className="text-blue-400 hover:underline ml-2 text-xs font-semibold"
-                      >
-                        View
-                      </Link>
+                      <span className="text-xs text-blue-400">{task.priority}</span>
+                      <span className="text-xs text-gray-400">{task.assigned_to_name || task.assigned_to || "—"}</span>
                     </div>
                   </li>
                 ))}
@@ -243,46 +190,29 @@ export default function ProjectDetailsPage() {
           <KanbanBoard
             tasks={project.tasks}
             teamMembers={project.team?.members || []}
-            onTaskEdit={task => setEditTask(task)}
+            onTaskEdit={task => setSelectedTask(task)}
             onStatusChange={handleStatusChange}
             onAddTask={() => setShowAddTask(true)}
           />
         )}
 
-        {/* Activity log - Placeholder */}
-        <div className="bg-zinc-900 rounded-2xl p-6 shadow">
-          <div className="text-lg font-semibold text-white mb-2">Activity</div>
-          <div className="text-gray-400 text-sm">Project activity coming soon...</div>
-        </div>
+        {/* Task Modal - MODERN */}
+        {selectedTask && (
+          <TaskModal
+            open={!!selectedTask}
+            task={selectedTask}
+            projectId={projectId.toString()}
+            teamMembers={project.team?.members || []}
+            onClose={() => setSelectedTask(null)}
+            onDelete={handleDeleteTask}
+            onTaskUpdated={() => {
+              setSelectedTask(null);
+              setRefresh(r => r + 1);
+            }}
+          />
+        )}
 
-        {/* --- MODALS --- */}
-        <EditProjectModal
-          project={project}
-          open={showEdit}
-          onClose={() => setShowEdit(false)}
-          onUpdated={() => setRefresh(r => r + 1)}
-        />
-        <InviteMemberModal
-          open={showInvite}
-          onClose={() => setShowInvite(false)}
-          teamId={project.team?.id}
-          onInvited={() => setRefresh(r => r + 1)}
-        />
-        <AddTaskModal
-          open={showAddTask}
-          onClose={() => setShowAddTask(false)}
-          projectId={project.id}
-          teamMembers={project.team?.members || []}
-          onAdded={() => setRefresh(r => r + 1)}
-        />
-        <EditTaskModal
-          open={!!editTask}
-          task={editTask}
-          teamMembers={project.team?.members || []}
-          projectId={project.id}
-          onClose={() => setEditTask(null)}
-          onSaved={() => setRefresh(r => r + 1)}
-        />
+        {/* ... restul codului (activity, modals edit/add/invite) ... */}
       </div>
     </>
   );

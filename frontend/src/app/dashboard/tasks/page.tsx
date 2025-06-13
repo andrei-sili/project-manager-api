@@ -1,4 +1,5 @@
 // frontend/src/app/dashboard/tasks/page.tsx
+
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -33,6 +34,28 @@ export default function TasksPage() {
       setProjectId(selectedTask.project.id.toString());
     }
   }, [selectedTask]);
+
+  // Delete logic for modal (optional)
+  const handleDeleteTask = async () => {
+    if (!selectedTask) return;
+    if (!window.confirm("Are you sure you want to delete this task?")) return;
+    try {
+      await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${selectedTask.id}/`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      );
+      setSelectedTask(null);
+      setLoading(true);
+      axios
+        .get(`${process.env.NEXT_PUBLIC_API_URL}/my-tasks/`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
+        })
+        .then((res) => setTasks(res.data.results || res.data))
+        .finally(() => setLoading(false));
+    } catch {
+      alert("Could not delete task!");
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto py-10 px-3">
@@ -82,9 +105,9 @@ export default function TasksPage() {
           projectId={projectId}
           teamMembers={teamMembers}
           onClose={() => setSelectedTask(null)}
+          onDelete={handleDeleteTask}
           onTaskUpdated={() => {
             setSelectedTask(null);
-            // Re-fetch tasks on update
             setLoading(true);
             axios
               .get(`${process.env.NEXT_PUBLIC_API_URL}/my-tasks/`, {
