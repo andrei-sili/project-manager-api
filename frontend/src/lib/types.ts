@@ -1,56 +1,38 @@
-// Path: frontend/src/lib/types.ts
+// frontend/src/lib/types.ts
 
-/**
- * Reflects apps.teams.serializers.TeamSerializer
- */
-export interface TeamMember {
-  id: number;
-  user: string;
-  email: string;
-  role: string;
-  joined_at: string;
-}
-
-/**
- * Reflects apps.teams.serializers.TeamSerializer
- */
-export interface Team {
-  id: number;
-  name: string;
-  members: TeamMember[];
-}
-
-/**
- * Reflects apps.tasks.serializers.TaskSerializer
- */
-export interface Task {
+export type Task = {
   id: number;
   title: string;
   description: string;
-  status: string;
-  priority: string;
-  due_date: string | null;
-}
+  status: "todo" | "in_progress" | "done";
+  due_date: string;
+  priority: "low" | "medium" | "high";
+  project: Project;
+};
 
-/**
- * Reflects apps.projects.serializers.ProjectSerializer
- * - team: nested TeamSerializer
- * - created_by: string from SerializerMethodField
- * - tasks: array of TaskSerializer
- * :contentReference[oaicite:0]{index=0}
- */
-export interface Project {
+export type Member = {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+};
+
+export type Team = {
+  id: number;
+  name: string;
+  members: Member[];
+};
+
+export type Project = {
   id: number;
   name: string;
   description: string;
-  team: Team;
-  created_by: string;
-  created_at: string;
-  tasks: Task[];
-}
-export interface PaginatedResponse<T> {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: T[];
-}
+  team: Team | null;
+  task_count: number;
+  created_by: {
+    id: number;
+    name: string;
+    email: string;
+  };
+  tasks?: Task[];
+};
