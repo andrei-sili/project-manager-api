@@ -3,11 +3,12 @@ from rest_framework import serializers
 from apps.projects.models import Project
 from apps.tasks.serializers import TaskSerializer
 from apps.teams.serializers import TeamSerializer
+from apps.users.serializers import UserSerializer
 
 
 class ProjectSerializer(serializers.ModelSerializer):
     team = TeamSerializer()
-    created_by = serializers.SerializerMethodField()
+    created_by = UserSerializer(read_only=True)
     tasks = TaskSerializer(many=True, read_only=True)
 
     class Meta:
@@ -21,9 +22,6 @@ class ProjectSerializer(serializers.ModelSerializer):
             'created_at',
             'tasks',
         ]
-
-    def get_created_by(self, obj):
-        return f"{obj.created_by.first_name} {obj.created_by.last_name}"
 
 
 class ProjectCreateSerializer(serializers.ModelSerializer):
