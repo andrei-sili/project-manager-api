@@ -1,6 +1,6 @@
 // frontend/src/components/TaskModal.tsx
 
-import React, { useState } from "react";
+import React from "react";
 import { StatusBadge, PriorityBadge } from "@/components/TaskBadge";
 import TaskFiles from "@/components/TaskFiles";
 import TaskComments from "@/components/TaskComments";
@@ -27,149 +27,146 @@ export default function TaskModal({
   onDelete,
   onTaskUpdated,
 }: TaskModalProps) {
-  const [showDelete, setShowDelete] = useState(false);
-
   if (!open || !task) return null;
+  const effectiveProjectId = projectId || task?.project?.id?.toString() || "";
+  // Assigned user badge with initials and color
+  const assignedUser =
+    task.assigned_to && typeof task.assigned_to === "object"
+      ? {
+          name: [task.assigned_to.first_name, task.assigned_to.last_name]
+            .filter(Boolean)
+            .join(" ") || task.assigned_to.name || "—",
+          email: task.assigned_to.email,
+        }
+      : { name: task.assigned_to || "—", email: "" };
 
-  // Safely get fields
-  const assignedTo =
-  task.assigned_to && typeof task.assigned_to === "object"
-    ? `${task.assigned_to.first_name ?? ""} ${task.assigned_to.last_name ?? ""}`.trim() ||
-      task.assigned_to.name ||
-      "—"
-    : task.assigned_to || "—";
+  function getInitials(name: string) {
+    if (!name) return "?";
+    return name
+      .split(" ")
+      .filter(Boolean)
+      .map((n) => n[0]?.toUpperCase())
+      .join("")
+      .slice(0, 2);
+  }
 
+  function getAvatarColor(str: string = "") {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    const colors = [
+      "bg-blue-700", "bg-emerald-600", "bg-fuchsia-600",
+      "bg-orange-500", "bg-indigo-700", "bg-teal-600"
+    ];
+    return colors[Math.abs(hash) % colors.length];
+  }
+  const avatarClass = getAvatarColor(assignedUser.email || assignedUser.name);
 
-  const projectName =
-    task.project?.name || (typeof task.project === "string" ? task.project : "") || "—";
+  // Project badge (always string)
+  const projectBadge = task.project?.name || (typeof task.project === "string" ? task.project : "") || "—";
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/60 backdrop-blur-lg">
-      {/* Modal Card */}
-      <div className="relative bg-zinc-900 border-2 border-blue-600 rounded-3xl shadow-2xl w-full max-w-4xl mx-3 p-10 flex flex-col gap-8 animate-fade-in">
-        {/* X Close */}
-        <button
-          className="absolute right-8 top-8 text-zinc-400 hover:text-white transition"
-          onClick={onClose}
-          title="Close"
-        >
-          <X size={34} />
-        </button>
-
-        {/* Top Row: Title + Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h2 className="text-3xl font-extrabold text-white tracking-tight break-words">
-            {task.title}
-          </h2>
-          <div className="flex gap-3">
-            {onEdit && (
+    <div className="fixed inset-0 z-[999] flex items-center justify-center">
+      {/* Blur overlay */}
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onClose} />
+      {/* Main Modal Card */}
+      <div
+        className="relative z-10 w-full max-w-2xl mx-auto rounded-[2.5rem] shadow-2xl border border-blue-800 bg-gradient-to-br from-zinc-950 to-zinc-900 flex flex-col min-h-[650px] max-h-[90vh] h-[90vh]"
+      >
+        {/* Header */}
+        <div className="flex flex-col gap-2 px-10 pt-9 pb-2">
+          <div className="flex justify-between items-center">
+            <h2 className="text-3xl font-bold text-white tracking-tight break-words">{task.title}</h2>
+            <div className="flex gap-1 items-center">
+              {/* Edit button */}
+              {onEdit && (
+                <button
+                  onClick={onEdit}
+                  className="bg-zinc-700 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-semibold transition"
+                >
+                  <Edit2 size={18} /> Edit
+                </button>
+              )}
+              {/* Delete button */}
+              {onDelete && (
+                <button
+                  onClick={onDelete}
+                  className="bg-zinc-800 text-red-400 hover:bg-red-600 hover:text-white px-4 py-2 rounded-xl flex items-center gap-2 font-semibold transition"
+                >
+                  <Trash2 size={18} /> Delete
+                </button>
+              )}
+              {/* Close button */}
               <button
-                onClick={onEdit}
-                className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-bold px-6 py-2 rounded-xl text-base shadow transition"
+                className="ml-2 text-zinc-400 hover:text-white transition"
+                onClick={onClose}
+                title="Close"
               >
-                <Edit2 size={20} /> Edit
+                <X size={30} />
               </button>
-            )}
-            {onDelete && (
-              <button
-                onClick={() => setShowDelete(true)}
-                className="flex items-center gap-2 bg-zinc-800 text-red-400 hover:bg-red-600 hover:text-white px-6 py-2 rounded-xl text-base font-bold shadow transition"
-              >
-                <Trash2 size={20} /> Delete
-              </button>
-            )}
+            </div>
           </div>
-        </div>
-
-        {/* Badge Row */}
-        <div className="flex flex-wrap gap-3 items-center mb-1">
-          <StatusBadge status={task.status} />
-          <PriorityBadge priority={task.priority} />
-          {task.due_date && (
-            <span className="bg-zinc-800 text-gray-200 px-3 py-1 rounded text-xs font-bold border border-zinc-700">
-              {new Date(task.due_date).toLocaleDateString()}
+          {/* Badge Row */}
+          <div className="flex flex-wrap gap-3 items-center mt-2">
+            <StatusBadge status={task.status} />
+            <PriorityBadge priority={task.priority} />
+            {task.due_date && (
+              <span className="inline-block bg-zinc-800 text-gray-200 px-4 py-1 rounded-xl text-sm font-bold border border-zinc-700">
+                {new Date(task.due_date).toLocaleDateString()}
+              </span>
+            )}
+            {/* Assigned avatar */}
+            <span className={`flex items-center gap-2 px-4 py-1 rounded-xl text-sm font-bold ${avatarClass} text-white`}>
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-black/10 mr-1 font-mono font-bold shadow">
+                {getInitials(assignedUser.name)}
+              </span>
+              {assignedUser.name}
             </span>
-          )}
-          <span className="bg-blue-900 text-blue-100 px-3 py-1 rounded text-xs font-bold border border-blue-700">
-            {assignedTo}
-          </span>
-          <span className="bg-green-900 text-green-200 px-3 py-1 rounded text-xs font-bold border border-green-700">
-            {projectName}
-          </span>
-        </div>
-
-        {/* Description */}
-        <div>
-          <div className="font-semibold text-gray-400 mb-1">Description</div>
-          <div className="bg-zinc-800 text-white rounded-xl px-4 py-3 text-base leading-relaxed min-h-[38px]">
-            {task.description || <span className="text-gray-500">No description…</span>}
+            {/* Project badge */}
+            <span className="inline-block bg-green-900 text-green-200 px-4 py-1 rounded-xl text-sm font-bold border border-green-700">
+              {projectBadge}
+            </span>
           </div>
         </div>
-
-        {/* Files */}
-        <div>
-          <div className="font-semibold text-gray-400 mb-1">Files</div>
-          <TaskFiles
-            projectId={projectId}
-            taskId={task.id.toString()}
-            compact
-            onFilesUpdated={onTaskUpdated}
-          />
-        </div>
-
-        {/* Comments */}
-        <div>
-          <div className="font-semibold text-gray-400 mb-1">Comments</div>
-          <TaskComments
-            projectId={projectId}
-            taskId={task.id.toString()}
-            onCommentsUpdated={onTaskUpdated}
-          />
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto custom-scroll px-10 py-4">
+          {/* Description */}
+          <section className="mb-5">
+            <div className="font-semibold text-gray-400 mb-1">Description</div>
+            <div className="bg-zinc-800 text-white rounded-xl px-4 py-3 text-base leading-relaxed min-h-[38px] shadow">
+              {task.description || <span className="text-gray-500">No description…</span>}
+            </div>
+          </section>
+          {/* Files */}
+          <section className="mb-6">
+            <TaskFiles
+              projectId={effectiveProjectId}
+              taskId={task.id?.toString() ?? ""}
+              compact
+              onFilesUpdated={onTaskUpdated}
+            />
+          </section>
+          {/* Comments */}
+          <section>
+            <TaskComments
+              projectId={effectiveProjectId}
+              taskId={task.id?.toString() ?? ""}
+              onCommentsUpdated={onTaskUpdated}
+            />
+          </section>
         </div>
       </div>
-      {/* Optional Delete Confirm Modal */}
-      {showDelete && (
-        <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70">
-          <div className="bg-zinc-900 rounded-2xl p-8 border-2 border-red-600 shadow-xl max-w-md mx-2 flex flex-col items-center">
-            <div className="text-xl font-bold text-red-500 mb-4">
-              Delete task?
-            </div>
-            <div className="text-gray-300 mb-8 text-center">
-              Are you sure you want to delete this task? This action cannot be undone!
-            </div>
-            <div className="flex gap-4">
-              <button
-                className="bg-zinc-800 text-gray-200 px-6 py-2 rounded-xl hover:bg-zinc-700"
-                onClick={() => setShowDelete(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="bg-red-600 text-white px-6 py-2 rounded-xl font-bold hover:bg-red-700"
-                onClick={() => {
-                  setShowDelete(false);
-                  if (onDelete) onDelete();
-                }}
-              >
-                Yes, Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      {/* Blur click overlay, closes only if you click outside card */}
-      <div
-        className="fixed inset-0 z-40"
-        onClick={(e) => {
-          // Only close if click on this overlay, not children
-          if ((e.target as HTMLDivElement).classList.contains("z-40")) onClose();
-        }}
-        style={{ cursor: "pointer" }}
-      />
-      {/* Animate in */}
+      {/* Custom scroll styling */}
       <style jsx global>{`
-        .animate-fade-in { animation: fadeIn 0.2s cubic-bezier(0.4,0,0.2,1); }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(24px); } to { opacity: 1; transform: none; } }
+        .custom-scroll::-webkit-scrollbar {
+          width: 7px;
+          background: #26283b;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+          background: #334155;
+          border-radius: 6px;
+        }
+        .animate-fade-in { animation: fadeIn 0.19s cubic-bezier(0.4,0,0.2,1); }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(25px); } to { opacity: 1; transform: none; } }
       `}</style>
     </div>
   );
