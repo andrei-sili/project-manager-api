@@ -95,13 +95,15 @@ export default function TaskDetailPage() {
 
   return (
     <TaskModal
-      open={!!task}
-      task={task}
-      projectId={id.toString()}
-      teamMembers={teamMembers}
-      onClose={handleClose}
-      onDelete={handleDeleteTask}
-      onTaskUpdated={handleTaskUpdated}
-    />
+  open={!!task}
+  task={task}
+  projectId={id.toString()}
+  teamMembers={teamMembers}
+  onClose={handleClose}
+  onDelete={handleDeleteTask}
+  onEdit={() => router.push(`/dashboard/projects/${id}/tasks/${taskid}/edit`)}
+  onTaskUpdated={handleTaskUpdated}
+/>
+
   );
 }
