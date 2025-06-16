@@ -205,11 +205,13 @@ export default function ProjectDetailsPage() {
           teamMembers={project.team?.members || []}
           onClose={() => setSelectedTask(null)}
           onDelete={handleDeleteTask}
+          onEdit={() => router.push(`/dashboard/projects/${projectId}/tasks/${selectedTask.id}/edit`)}
           onTaskUpdated={() => {
             setSelectedTask(null);
             setRefresh(r => r + 1);
           }}
         />
+
 
         )}
 
