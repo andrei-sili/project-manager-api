@@ -3,20 +3,15 @@
 import React from "react";
 import Link from "next/link";
 import { ListTodo, Clock, ChevronRight } from "lucide-react";
+import { Task } from "@/lib/types";
 
-interface Task {
-  id: number;
-  title: string;
-  status: string;
-  priority: string;
-  due_date?: string | null;
-  project?: { id: number; name: string };
-}
 
 interface Props {
   tasks: Task[];
+  onTaskClick?: (task: Task) => void;
   loading?: boolean;
 }
+
 
 const statusColors: Record<string, string> = {
   "todo": "bg-blue-400",
@@ -36,7 +31,7 @@ function formatDate(dateString?: string | null) {
   return `${date.getDate()}.${date.getMonth() + 1}.${date.getFullYear()}`;
 }
 
-export default function MyTasksCard({ tasks, loading }: Props) {
+export default function MyTasksCard({ tasks, loading, onTaskClick }: Props) {
   const visibleTasks = (tasks || []).slice(0, 4);
 
   return (
@@ -100,11 +95,9 @@ export default function MyTasksCard({ tasks, loading }: Props) {
                   <div className="col-span-2 text-center text-gray-500 text-sm">No tasks found.</div>
               ) : (
                   visibleTasks.map((task) => (
-                      <Link
-                          key={task.id}
-                          href={`/dashboard/projects/${task.project?.id}/tasks/${task.id}`}
+                      <div key={task.id} onClick={() => onTaskClick?.(task)}
                           className="bg-zinc-800 hover:bg-zinc-700 rounded-xl p-3 flex flex-col gap-1 transition border border-transparent hover:border-blue-600 group focus:outline-none"
-                      >
+                       role="button" tabIndex={0}>
                           <div className="flex items-center justify-between mb-1">
                               <span className="font-semibold truncate">{task.title}</span>
                               {/* Priority badge */}
@@ -119,7 +112,7 @@ export default function MyTasksCard({ tasks, loading }: Props) {
                               {/* Status dot */}
                               <span
                                   className={`w-2 h-2 rounded-full inline-block ${
-                                      statusColors[task.status?.toLowerCase()] || "bg-gray-500"
+                                      statusColors[task.status?.toLowerCase() ?? "todo"] || "bg-gray-500"
                                   }`}
                                   title={task.status}
                               />
@@ -169,7 +162,7 @@ export default function MyTasksCard({ tasks, loading }: Props) {
                               />
                           </div>
 
-                      </Link>
+                      </div>
                   ))
               )}
           </div>
