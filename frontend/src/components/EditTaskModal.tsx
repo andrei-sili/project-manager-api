@@ -150,7 +150,7 @@ export default function EditTaskModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70">
       <form
         className="bg-zinc-900 border border-blue-700 p-6 rounded-2xl shadow-xl w-full max-w-md flex flex-col gap-4 animate-fade-in relative"
         onSubmit={handleSubmit}
