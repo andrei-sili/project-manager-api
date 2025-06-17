@@ -3,6 +3,7 @@
 import apiClient from "./axiosClient";
 import {Project, Team, Task, PaginatedResponse} from "./types";
 import {AxiosResponse} from "axios";
+import axiosClient from "./axiosClient";
 
 /** Generic paginated response shape. */
 interface Paginated<T> {
@@ -135,6 +136,57 @@ export async function fetchTimeEntries(token: string) {
     date: entry.date,
     duration: Math.round(entry.minutes / 60),
   }));
+}
+
+
+
+// --- Time Entry Type ---
+export interface TimeEntry {
+  id: number;
+  user: number | { id: number; email: string; first_name?: string; last_name?: string };
+  task: number;
+  minutes: number;
+  date: string; // ISO date string "YYYY-MM-DD"
+  note?: string;
+  created_at?: string;
+}
+
+// --- Get all time entries for a specific task ---
+export async function getTimeEntriesForTask(taskId: number): Promise<TimeEntry[]> {
+  const res = await axiosClient.get<{ results?: TimeEntry[] }>(`/time-entries/?task=${taskId}`);
+  return res.data.results ?? (res.data as any[]);
+}
+
+// --- Create a new time entry ---
+export async function createTimeEntry(entry: { task: number; minutes: number; date: string; note?: string; }): Promise<TimeEntry> {
+  const res = await axiosClient.post<TimeEntry>("/time-entries/", entry);
+  return res.data;
+}
+
+// --- Edit an existing time entry ---
+export async function editTimeEntry(
+  entryId: number,
+  data: Partial<Pick<TimeEntry, "minutes" | "note" | "date">>
+): Promise<TimeEntry> {
+  const res = await axiosClient.patch<TimeEntry>(`/time-entries/${entryId}/`, data);
+  return res.data;
+}
+
+// --- Delete a time entry by ID ---
+export async function deleteTimeEntry(entryId: number): Promise<void> {
+  await axiosClient.delete(`/time-entries/${entryId}/`);
+}
+
+// --- Get summary for time tracked (this week, today, total, etc) ---
+export async function getTimeSummary(): Promise<any> {
+  const res = await axiosClient.get("/time-entries/summary/");
+  return res.data;
+}
+
+// --- Get all time entries for current user (for stats) ---
+export async function getAllTimeEntries(): Promise<TimeEntry[]> {
+  const res = await axiosClient.get<{ results?: TimeEntry[] }>("/time-entries/");
+  return res.data.results ?? (res.data as any[]);
 }
 
 // Default export for legacy imports
