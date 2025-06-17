@@ -22,7 +22,7 @@ interface Props {
 }
 
 function stringToColor(str: string): string {
-  // Simple hash to pastel background (deterministic)
+  // Simple hash to pastel background
   let hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -49,7 +49,7 @@ function Avatar({ member }: { member: Member }) {
 
 export default function TeamCard({ teams, loading }: Props) {
   const maxAvatars = 3;
-  const visibleTeams = teams.slice(0, 3); // afișăm max 3 pe dashboard
+  const visibleTeams = teams.slice(0, 3);
 
   return (
     <div className="bg-zinc-900 rounded-2xl shadow p-5">
