@@ -12,25 +12,26 @@ export type User = {
 // Team Member
 export type TeamMember = {
   id: number;
-  user: string;   // sometimes only user name/email is returned!
-  email?: string;
+  name?: string;
+  first_name?: string;
+  last_name?: string;
+  email: string;
   role: string;
-  joined_at: string;
 };
 
 // Team
 export type Team = {
   id: number;
   name: string;
-  created_by: string | User; // sometimes string (name), sometimes full User
+  created_by: string | User;
   members: TeamMember[];
 };
 
 // Task File
 export type TaskFile = {
   id: number;
-  file: string;       // file url
-  file_url: string;   // same as file, redundant
+  file: string;
+  file_url: string;
   uploaded_by: string | User;
   uploaded_at: string;
 };
@@ -67,23 +68,17 @@ export type Project = {
   name: string;
   description: string;
   team: Team | null;
-  created_by: string | User;
+  created_by: string | {
+    id?: number;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    name?: string;
+  };
   created_at: string;
   tasks?: Task[];
-  // task_count is optional, can be added on frontend as tasks?.length
+  task_count?: number;
 };
-
-// TimeEntry
-export type TimeEntry = {
-  id: number;
-  user: string | User;
-  task: number;
-  date: string;
-  minutes: number;
-  note: string;
-  created_at: string;
-};
-
 // Paginated API response
 export type PaginatedResponse<T> = {
   count: number;
@@ -91,4 +86,18 @@ export type PaginatedResponse<T> = {
   previous: string | null;
   results: T[];
 };
+
+export interface TaskShort {
+  id: number;
+  title: string;
+}
+export interface TimeEntry {
+  id: number;
+  user: any;
+  task: TaskShort | number;
+  minutes: number;
+  date: string;
+  note?: string;
+  created_at?: string;
+}
 
