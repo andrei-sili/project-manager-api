@@ -1,196 +1,181 @@
 // frontend/src/app/dashboard/time-tracking/page.tsx
 
 "use client";
-import React, { useState, useEffect } from "react";
-import api from "@/lib/api";
-import { Clock, Trash2, Plus } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { getAllTimeEntries, getTimeSummary, TimeEntry } from "@/lib/api";
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
+import { Edit2, Trash2, Loader2 } from "lucide-react";
 
-interface TimeEntry {
-  id: number;
-  date: string;
-  minutes: number;
-  note: string;
-  task: number;
-}
+const COLORS = ["#2563eb", "#10b981", "#f59e42", "#a21caf", "#f43f5e", "#fbbf24", "#4b5563"];
 
-interface TaskOption {
-  id: number;
-  title: string;
-}
-
-function formatTime(minutes: number) {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
+function formatMinutes(min: number) {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
   if (h && m) return `${h}h ${m}m`;
   if (h) return `${h}h`;
-  if (m) return `${m}m`;
-  return "0m";
+  return `${m}m`;
 }
 
 export default function TimeTrackingPage() {
   const [entries, setEntries] = useState<TimeEntry[]>([]);
-  const [tasks, setTasks] = useState<TaskOption[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [adding, setAdding] = useState(false);
-  const [form, setForm] = useState({
-    date: "",
-    minutes: "",
-    note: "",
-    task: "",
-  });
-  const [error, setError] = useState<string | null>(null);
+  const [summary, setSummary] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  // For editing
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editMinutes, setEditMinutes] = useState<string>("");
+  const [editNote, setEditNote] = useState<string>("");
 
   useEffect(() => {
-  setLoading(true);
-  Promise.all([
-    api.get("/time-entries/"),
-    api.get("/my-tasks/"),
-  ])
-    .then(([resEntries, resTasks]) => {
-      let data = resEntries.data;
-      if (Array.isArray(data)) setEntries(data);
-      else if (Array.isArray(data.results)) setEntries(data.results);
-      else setEntries([]);
-      setTasks(resTasks.data.results || resTasks.data);
-    })
-    .catch(() => setError("Could not fetch time entries or tasks"))
-    .finally(() => setLoading(false));
-}, []);
-
-  function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
-
-  function handleAdd(e: React.FormEvent) {
-    e.preventDefault();
-    setAdding(true);
-    setError(null);
-    api
-      .post("/time-entries/", {
-        ...form,
-        minutes: parseInt(form.minutes, 10),
-        task: parseInt(form.task, 10),
+    setLoading(true);
+    Promise.all([
+      getAllTimeEntries(),
+      getTimeSummary(),
+    ])
+      .then(([entries, summary]) => {
+        setEntries(entries);
+        setSummary(summary);
       })
-      .then((res) => {
-        setEntries([res.data, ...entries]);
-        setForm({ date: "", minutes: "", note: "", task: "" });
-      })
-      .catch(() => setError("Could not add time entry"))
-      .finally(() => setAdding(false));
-  }
+      .finally(() => setLoading(false));
+  }, []);
 
-  function handleDelete(id: number) {
-    if (!window.confirm("Are you sure you want to delete this time entry?")) return;
-    api.delete(`/time-entries/${id}/`).then(() => {
-      setEntries(entries.filter((e) => e.id !== id));
-    });
-  }
+  // Pie chart data: minutes per task
+  const pieData = React.useMemo(() => {
+    const byTask: { [task: string]: number } = {};
+    for (const entry of entries) {
+      const taskName = `Task #${entry.task}`;
+
+      byTask[taskName] = (byTask[taskName] || 0) + entry.minutes;
+    }
+    return Object.entries(byTask).map(([name, value]) => ({
+      name,
+      value,
+    }));
+  }, [entries]);
+
+  // Bar chart data: per day
+  const barData =
+    summary && summary.days
+      ? Object.entries(summary.days).map(([date, min]) => ({
+          date: date.slice(5),
+          minutes: min as number,
+        }))
+      : [];
 
   return (
-    <div className="max-w-2xl mx-auto py-8">
-      <h1 className="text-3xl font-bold flex items-center gap-2 mb-6 text-blue-400">
-        <Clock className="w-7 h-7" /> Time Tracking
+    <div className="max-w-5xl mx-auto px-3 py-8">
+      <h1 className="text-3xl font-bold mb-4 text-blue-400 flex items-center gap-3">
+        <span role="img" aria-label="clock">🕒</span>
+        Time Tracking
       </h1>
-      {/* Add New Entry */}
-      <form className="flex flex-col gap-3 bg-zinc-900 rounded-xl shadow p-4 mb-6" onSubmit={handleAdd}>
-        <div className="flex flex-col md:flex-row gap-3">
-          <label className="flex-1">
-            <span className="text-xs text-gray-400 mb-1 block">Task</span>
-            <select
-              name="task"
-              value={form.task}
-              onChange={handleChange}
-              className="w-full rounded p-2 bg-zinc-800 text-white"
-              required
-            >
-              <option value="">Select task</option>
-              {tasks.map((task) => (
-                <option value={task.id} key={task.id}>{task.title || `Task #${task.id}`}</option>
-              ))}
-            </select>
-          </label>
-          <label>
-            <span className="text-xs text-gray-400 mb-1 block">Date</span>
-            <input
-              type="date"
-              name="date"
-              value={form.date}
-              onChange={handleChange}
-              required
-              className="w-full rounded p-2 bg-zinc-800 text-white"
-            />
-          </label>
-          <label>
-            <span className="text-xs text-gray-400 mb-1 block">Minutes</span>
-            <input
-              type="number"
-              min={1}
-              max={1440}
-              name="minutes"
-              value={form.minutes}
-              onChange={handleChange}
-              required
-              className="w-full rounded p-2 bg-zinc-800 text-white"
-            />
-          </label>
+
+      <div className="grid md:grid-cols-2 gap-7 mb-8">
+        {/* Weekly Bar Chart */}
+        <div className="bg-zinc-900 rounded-2xl p-6 shadow border border-zinc-800">
+          <h2 className="text-lg text-white font-semibold mb-3">Time Logged Per Day (last 7 days)</h2>
+          <div className="h-56">
+            {loading ? (
+              <div className="flex items-center justify-center h-full"><Loader2 className="animate-spin text-zinc-400" size={24}/></div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={barData}>
+                  <CartesianGrid vertical={false} strokeDasharray="2 3" />
+                  <XAxis dataKey="date" fontSize={13} tickLine={false} axisLine={false} />
+                  <YAxis hide />
+                  <Tooltip
+                    labelFormatter={v => `Day: ${v}`}
+                    formatter={v => [`${formatMinutes(Number(v))} tracked`, ""]}
+                    wrapperClassName="!bg-zinc-900 !text-white !rounded !px-2 !py-1"
+                  />
+                  <Bar dataKey="minutes" radius={[8, 8, 0, 0]} fill="#2563eb" />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </div>
         </div>
-        <label>
-          <span className="text-xs text-gray-400 mb-1 block">Note</span>
-          <textarea
-            name="note"
-            value={form.note}
-            onChange={handleChange}
-            rows={2}
-            className="w-full rounded p-2 bg-zinc-800 text-white resize-none"
-          />
-        </label>
-        {error && <div className="text-red-400">{error}</div>}
-        <button
-          type="submit"
-          disabled={adding}
-          className="flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 px-4 rounded shadow"
-        >
-          <Plus className="w-4 h-4" /> {adding ? "Saving..." : "Add Entry"}
-        </button>
-      </form>
-      {/* List of Time Entries */}
-      <div className="bg-zinc-900 rounded-xl shadow p-4">
-        <h2 className="text-xl font-bold text-white mb-3">Logged Time</h2>
+        {/* Pie Chart */}
+        <div className="bg-zinc-900 rounded-2xl p-6 shadow border border-zinc-800">
+          <h2 className="text-lg text-white font-semibold mb-3">Total Time by Task</h2>
+          <div className="h-56 flex items-center justify-center">
+            {loading ? (
+              <Loader2 className="animate-spin text-zinc-400" size={24}/>
+            ) : pieData.length === 0 ? (
+              <div className="text-gray-400">No time logged yet.</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={pieData}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={70}
+                    fill="#2563eb"
+                    label={({ name, value }) => `${name}: ${formatMinutes(Number(value))}`}
+                  >
+                    {pieData.map((_, idx) => (
+                      <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Legend />
+                  <Tooltip
+                    formatter={v => `${formatMinutes(Number(v))} tracked`}
+                    wrapperClassName="!bg-zinc-900 !text-white !rounded !px-2 !py-1"
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Summary */}
+      <div className="flex gap-6 flex-wrap mb-7 text-base">
+        <div className="bg-zinc-900 rounded-xl px-5 py-3 border border-zinc-800 text-blue-300 font-bold">
+          Today: <span className="text-white">{formatMinutes(summary?.today_minutes ?? 0)}</span>
+        </div>
+        <div className="bg-zinc-900 rounded-xl px-5 py-3 border border-zinc-800 text-blue-300 font-bold">
+          This week: <span className="text-white">{formatMinutes(summary?.week_total_minutes ?? 0)}</span>
+        </div>
+        <div className="bg-zinc-900 rounded-xl px-5 py-3 border border-zinc-800 text-blue-300 font-bold">
+          Total tracked: <span className="text-white">{formatMinutes(summary?.total_minutes ?? 0)}</span>
+        </div>
+      </div>
+
+      {/* Time Entries Table */}
+      <div className="bg-zinc-900 rounded-2xl shadow border border-zinc-800 p-6">
+        <h2 className="text-lg font-semibold text-white mb-4">Logged Time Entries</h2>
         {loading ? (
-          <div className="text-gray-400">Loading...</div>
+          <div className="flex items-center justify-center py-8"><Loader2 className="animate-spin text-zinc-400" size={24}/></div>
         ) : entries.length === 0 ? (
           <div className="text-gray-400">No time entries yet.</div>
         ) : (
-          <table className="w-full text-sm text-gray-200">
-            <thead>
-              <tr className="border-b border-zinc-700">
-                <th className="py-2 text-left">Date</th>
-                <th className="py-2 text-left">Task</th>
-                <th className="py-2 text-left">Time</th>
-                <th className="py-2 text-left">Note</th>
-                <th className="py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {entries.map((entry) => (
-                <tr key={entry.id} className="border-b border-zinc-800 hover:bg-zinc-800/60">
-                  <td className="py-1">{entry.date}</td>
-                  <td className="py-1">{tasks.find(t => t.id === entry.task)?.title || `Task #${entry.task}`}</td>
-                  <td className="py-1">{formatTime(entry.minutes)}</td>
-                  <td className="py-1">{entry.note}</td>
-                  <td className="py-1">
-                    <button
-                      className="text-red-400 hover:text-red-600"
-                      onClick={() => handleDelete(entry.id)}
-                      title="Delete"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </td>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-sm">
+              <thead>
+                <tr className="text-gray-400 border-b border-zinc-700">
+                  <th className="px-3 py-2 text-left">Date</th>
+                  <th className="px-3 py-2 text-left">Task</th>
+                  <th className="px-3 py-2 text-left">Minutes</th>
+                  <th className="px-3 py-2 text-left">Note</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {entries.map(entry => (
+                    <tr key={entry.id} className="border-b border-zinc-800 hover:bg-zinc-800/50">
+                      <td className="px-3 py-2">{entry.date}</td>
+                      <td className="px-3 py-2">
+                        {`Task #${entry.task}`}
+                      </td>
+
+                      <td className="px-3 py-2">{entry.minutes}</td>
+                      <td className="px-3 py-2">{entry.note || ""}</td>
+                    </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>
