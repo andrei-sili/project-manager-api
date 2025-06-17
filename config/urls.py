@@ -64,7 +64,7 @@ router.register('notifications', NotificationViewSet, basename='notifications')
 router.register('logs', ActivityLogViewSet, basename='logs')
 router.register('teams', TeamViewSet, basename='teams')
 router.register("my-tasks", MyTaskViewSet, basename="my-tasks")
-router.register(r"time-entries", TimeEntryViewSet, basename="timeentry")
+router.register("time-entries", TimeEntryViewSet, basename="timeentry")
 #  Final urlpatterns
 urlpatterns = [
                   path('admin/', admin.site.urls),
