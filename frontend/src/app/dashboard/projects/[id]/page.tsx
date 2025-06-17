@@ -1,6 +1,5 @@
-// frontend/src/app/dashboard/projects/[id]/page.tsx
-
 "use client";
+
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import axios from "axios";
@@ -9,14 +8,16 @@ import { ArrowLeft } from "lucide-react";
 import EditProjectModal from "@/components/EditProjectModal";
 import InviteMemberModal from "@/components/InviteMemberModal";
 import AddTaskModal from "@/components/AddTaskModal";
-import EditTaskModal from "@/components/EditTaskModal";
 import TaskModal from "@/components/TaskModal";
 import KanbanBoard from "@/components/KanbanBoard";
+import EditTaskModal from "@/components/EditTaskModal";
 
 export default function ProjectDetailsPage() {
   const router = useRouter();
   const params = useParams();
   const projectId = params.id;
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTask, setEditTask] = useState<any | null>(null);
 
   const [project, setProject] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -25,9 +26,16 @@ export default function ProjectDetailsPage() {
   const [refresh, setRefresh] = useState(0);
   const [showInvite, setShowInvite] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
-  const [editTask, setEditTask] = useState<any | null>(null);
   const [selectedTask, setSelectedTask] = useState<any | null>(null);
   const [view, setView] = useState<"list" | "kanban">("list");
+
+  function projectIdToNumber(id: any): number {
+  if (typeof id === "string") return parseInt(id);
+  if (Array.isArray(id)) return parseInt(id[0]);
+  if (typeof id === "number") return id;
+  return 0;
+}
+
 
   useEffect(() => {
     if (!projectId) return;
@@ -41,7 +49,6 @@ export default function ProjectDetailsPage() {
       .finally(() => setLoading(false));
   }, [projectId, refresh]);
 
-  // Logic for deleting a task (calls backend then refreshes project)
   const handleDeleteTask = async () => {
     if (!selectedTask) return;
     if (!window.confirm("Are you sure you want to delete this task?")) return;
@@ -61,24 +68,19 @@ export default function ProjectDetailsPage() {
   if (error || !project)
     return <div className="text-red-400 px-8 py-16">{error || "Not found."}</div>;
 
-  // Simple progress
   const totalTasks = project.tasks?.length || 0;
   const doneTasks = project.tasks?.filter((t: any) => t.status === "done").length || 0;
   const progress = totalTasks ? Math.round((doneTasks / totalTasks) * 100) : 0;
   const budget = project.budget || 0;
   const deadline =
-    project.due_date ||
-    (project.tasks?.map((t: any) => t.due_date).sort().reverse()[0] || null);
+    project.due_date || (project.tasks?.map((t: any) => t.due_date).sort().reverse()[0] || null);
 
-  // PATCH task status for Kanban
   async function handleStatusChange(taskId: number, newStatus: string) {
     try {
       await axios.patch(
         `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/`,
         { status: newStatus },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("access")}` }
-        }
+        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
       );
       setRefresh(r => r + 1);
     } catch (e) {
@@ -88,7 +90,6 @@ export default function ProjectDetailsPage() {
 
   return (
     <>
-      {/* Tabs for List/Kanban */}
       <div className="flex gap-4 mb-6">
         <button
           onClick={() => setView("list")}
@@ -105,7 +106,6 @@ export default function ProjectDetailsPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
-        {/* Header + Back */}
         <div className="flex items-center gap-4 mb-8">
           <button
             onClick={() => router.push("/dashboard/projects")}
@@ -116,12 +116,8 @@ export default function ProjectDetailsPage() {
           <span className="text-2xl font-bold ml-4">{project.name}</span>
         </div>
 
-        {/* Project info / stats */}
-        <div className="grid md:grid-cols-3 gap-5 mb-10">
-          {/* ...stat blocks... */}
-        </div>
+        <div className="grid md:grid-cols-3 gap-5 mb-10"></div>
 
-        {/* Edit, Add, Invite buttons */}
         <div className="flex gap-2 mb-8">
           <button
             className="bg-blue-600 hover:bg-blue-700 px-3 py-1 text-white rounded"
@@ -143,7 +139,6 @@ export default function ProjectDetailsPage() {
           </button>
         </div>
 
-        {/* --- VIEWS: List or Kanban --- */}
         {view === "list" ? (
           <div className="bg-zinc-900 rounded-2xl p-6 shadow mb-10">
             <div className="flex justify-between items-center mb-4">
@@ -171,8 +166,7 @@ export default function ProjectDetailsPage() {
                           <span className="text-green-400 font-semibold">Done</span>
                         ) : (
                           <span className="text-yellow-300 font-semibold">{task.status}</span>
-                        )}{" "}
-                        {task.due_date && <>| Due: {new Date(task.due_date).toLocaleDateString()}</>}
+                        )} {task.due_date && <>| Due: {new Date(task.due_date).toLocaleDateString()}</>}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -196,26 +190,36 @@ export default function ProjectDetailsPage() {
           />
         )}
 
-        {/* Task Modal - MODERN */}
+        {/* Task Modal */}
         {selectedTask && (
           <TaskModal
-          open={!!selectedTask}
-          task={selectedTask}
-          projectId={projectId ? projectId.toString() : ""}
+            open={!!selectedTask}
+            task={selectedTask}
+            projectId={projectId ? projectId.toString() : ""}
+            teamMembers={project.team?.members || []}
+            onClose={() => setSelectedTask(null)}
+            onDelete={handleDeleteTask}
+            onTaskUpdated={() => setRefresh(r => r + 1)}
+            onEditClick={() => setEditTask(selectedTask)}
+          />
+        )}
+
+        {/* EditTaskModal */}
+       {editTask && (
+        <EditTaskModal
+          open={true}
+          task={editTask}
+          projectId={projectIdToNumber(projectId)} // aici!
           teamMembers={project.team?.members || []}
-          onClose={() => setSelectedTask(null)}
-          onDelete={handleDeleteTask}
-          onEdit={() => router.push(`/dashboard/projects/${projectId}/tasks/${selectedTask.id}/edit`)}
-          onTaskUpdated={() => {
+          onClose={() => setEditTask(null)}
+          onSaved={() => {
+            setEditTask(null);
             setSelectedTask(null);
             setRefresh(r => r + 1);
           }}
         />
+      )}
 
-
-        )}
-
-        {/*  (activity, modals edit/add/invite) ... */}
       </div>
     </>
   );
