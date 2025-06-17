@@ -15,7 +15,6 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="bg-zinc-950 text-white min-h-screen">
-        {/* Doar context providers aici */}
         <Providers>
           {children}
         </Providers>
