@@ -5,6 +5,7 @@
     "framer-motion": "^12.16.0",
     "lucide-react": "^0.511.0",
     "nextjs-toploader": "^3.8.16",
-    "react-hot-toast": "^2.5.2"
+    "react-hot-toast": "^2.5.2",
+    "recharts": "^2.15.3"
   }
 }
