@@ -1,66 +1,69 @@
-// frontend/src/app/dashboard/projects/page.tsx
-
 "use client";
-
-import React, { JSX, useEffect, useState } from "react";
-import { useAuth } from "@/components/AuthProvider";
-import { fetchProjects } from "@/lib/api";
-import type { Project } from "@/lib/types";
-import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Plus, Loader2 } from "lucide-react";
+import NewProjectModal from "@/components/NewProjectModal";
 import ProjectOverviewCard from "@/components/ProjectOverviewCard";
+import { Project } from "@/lib/types";
+import axios from "axios";
 
-export default function ProjectsPage(): JSX.Element {
-  const { user } = useAuth();
-  const router = useRouter();
+export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showAdd, setShowAdd] = useState(false);
+
+  // Fetch projects
+  const fetchProjects = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/projects/`,
+        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      );
+      // handle paginated or plain list
+      setProjects(Array.isArray(res.data.results) ? res.data.results : res.data);
+    } catch {
+      setProjects([]);
+    }
+    setLoading(false);
+  };
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("access") : null;
-
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-
-    fetchProjects(token)
-      .then((res) => {
-
-        const list = Array.isArray(res.results) ? res.results : Array.isArray(res) ? res : [];
-
-        const projects = list.map((project: any) => ({
-          ...project,
-          task_count: typeof project.task_count === "number"
-            ? project.task_count
-            : Array.isArray(project.tasks)
-            ? project.tasks.length
-            : 0,
-        }));
-        setProjects(projects);
-      })
-      .catch(() => {
-        router.push("/login");
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, [router]);
-
-  if (loading) {
-    return <div className="p-6 text-white">Loading projects…</div>;
-  }
+    fetchProjects();
+  }, []);
 
   return (
-    <section className="p-6">
-      <header className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold text-white">Projects</h1>
-        <span className="text-sm text-gray-400">{projects.length} total</span>
-      </header>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {projects.map((project) => (
-          <ProjectOverviewCard key={project.id} project={project} />
-        ))}
+    <div className="max-w-3xl mx-auto px-4 py-10">
+      <div className="flex items-center justify-between mb-7">
+        <h1 className="text-3xl font-bold text-blue-400">Projects</h1>
+        <button
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-semibold shadow transition"
+          onClick={() => setShowAdd(true)}
+        >
+          <Plus className="w-5 h-5" />
+          Add Project
+        </button>
       </div>
-    </section>
+
+      {/* Add Project Modal */}
+      {showAdd && (
+        <NewProjectModal
+          onClose={() => setShowAdd(false)}
+          onProjectAdded={fetchProjects}
+        />
+      )}
+
+      {/* Projects List */}
+      {loading ? (
+        <div className="flex justify-center py-20"><Loader2 className="animate-spin" size={32}/></div>
+      ) : projects.length === 0 ? (
+        <div className="text-gray-400 text-center mt-16">No projects yet. Click <b>Add Project</b> to start.</div>
+      ) : (
+        <div className="flex flex-col gap-5">
+          {projects.map((project) => (
+            <ProjectOverviewCard key={project.id} project={project} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
