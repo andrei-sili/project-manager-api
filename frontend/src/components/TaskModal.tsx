@@ -1,12 +1,12 @@
 // frontend/src/components/TaskModal.tsx
 
 import React, { useState, useEffect, useRef } from "react";
-import { X, Edit2, Trash2, Play, Pause, PlusCircle, Save } from "lucide-react";
+import { X, Edit2, Trash2, Play, Pause, PlusCircle, Save, AlertTriangle } from "lucide-react";
 import { StatusBadge, PriorityBadge } from "@/components/TaskBadge";
 import TaskFiles from "@/components/TaskFiles";
 import TaskComments from "@/components/TaskComments";
+import { useTimerStore } from "@/lib/timerStore";
 
-// Import time tracking API helpers
 import {
   getTimeEntriesForTask,
   createTimeEntry,
@@ -26,6 +26,12 @@ type TaskModalProps = {
   onEditClick?: () => void;
 };
 
+function formatTime(sec: number) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
 export default function TaskModal({
   open,
   task,
@@ -36,17 +42,13 @@ export default function TaskModal({
   onTaskUpdated,
   onEditClick,
 }: TaskModalProps) {
-  // --- Early exit if not open ---
   if (!open || !task) return null;
 
-  // --- Logic for assigned user avatar ---
+  // Assigned user (avatar logic)
   const assignedUser =
     task.assigned_to && typeof task.assigned_to === "object"
       ? {
-          name:
-            [task.assigned_to.first_name, task.assigned_to.last_name]
-              .filter(Boolean)
-              .join(" ") || task.assigned_to.name || "—",
+          name: [task.assigned_to.first_name, task.assigned_to.last_name].filter(Boolean).join(" ") || task.assigned_to.name || "—",
           email: task.assigned_to.email,
         }
       : { name: task.assigned_to || "—", email: "" };
@@ -82,26 +84,45 @@ export default function TaskModal({
     task.project?.name ||
     (typeof task.project === "string" ? task.project : "") ||
     "—";
-
   const effectiveProjectId = projectId || task?.project?.id?.toString() || "";
 
   // --- Time Tracking Section ---
-
-  // Time entries state
   const [timeEntries, setTimeEntries] = useState<any[]>([]);
   const [isLoadingEntries, setIsLoadingEntries] = useState(false);
-  const [timerRunning, setTimerRunning] = useState(false);
-  const [timerStart, setTimerStart] = useState<number | null>(null);
-  const [timerValue, setTimerValue] = useState(0); // seconds
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
   const [manualMinutes, setManualMinutes] = useState("");
   const [timeEntryError, setTimeEntryError] = useState<string | null>(null);
-
-  // For edit mode (manual)
   const [editEntryId, setEditEntryId] = useState<number | null>(null);
   const [editEntryMinutes, setEditEntryMinutes] = useState<string>("");
 
-  // Fetch all time entries for the current task
+  // Timer store (global)
+  const {
+    timer,
+    startTimer,
+    stopTimer,
+    resetTimer,
+    getElapsed,
+  } = useTimerStore();
+
+  const taskId = task.id?.toString();
+
+  // Check if another timer is active
+  const isThisTaskActive = timer.running && timer.taskId === taskId;
+  const isOtherTaskActive = timer.running && timer.taskId && timer.taskId !== taskId;
+  const otherTaskId = timer.taskId && timer.taskId !== taskId ? timer.taskId : null;
+
+  // Local timer for UI update
+  const [localElapsed, setLocalElapsed] = useState(getElapsed());
+  useEffect(() => {
+    if (isThisTaskActive) {
+      const intv = setInterval(() => setLocalElapsed(getElapsed()), 1000);
+      return () => clearInterval(intv);
+    } else {
+      setLocalElapsed(getElapsed());
+    }
+    // eslint-disable-next-line
+  }, [isThisTaskActive, timer.running, timer.taskId]);
+
+  // Fetch time entries for this task
   useEffect(() => {
     if (!task?.id) return;
     setIsLoadingEntries(true);
@@ -109,39 +130,28 @@ export default function TaskModal({
       .then((data) => setTimeEntries(data))
       .catch(() => setTimeEntries([]))
       .finally(() => setIsLoadingEntries(false));
-    // Reset timer state
-    setTimerRunning(false);
-    setTimerValue(0);
-    setTimerStart(null);
     setManualMinutes("");
     setEditEntryId(null);
     setEditEntryMinutes("");
     setTimeEntryError(null);
   }, [task]);
 
-  // Timer live update effect
-  useEffect(() => {
-    if (timerRunning) {
-      timerRef.current = setInterval(() => {
-        setTimerValue((prev) => prev + 1);
-      }, 1000);
-      return () => clearInterval(timerRef.current!);
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current);
-    }
-  }, [timerRunning]);
-
-  // Start timer handler
+  // --- Timer Handlers ---
   function handleStartTimer() {
-    setTimerRunning(true);
-    setTimerStart(Date.now() - timerValue * 1000);
+    if (isOtherTaskActive) {
+      // Stop other timer before starting new one
+      stopTimer();
+      resetTimer();
+    }
+    startTimer(taskId);
     setTimeEntryError(null);
   }
 
-  // Stop timer and save time entry
   async function handleStopTimer() {
-    setTimerRunning(false);
-    const minutes = Math.round(timerValue / 60);
+    stopTimer();
+    // Save time entry if there is elapsed time
+    const elapsedSec = useTimerStore.getState().getElapsed();
+    const minutes = Math.round(elapsedSec / 60);
     if (minutes > 0) {
       try {
         await createTimeEntry({
@@ -150,17 +160,16 @@ export default function TaskModal({
           date: new Date().toISOString().slice(0, 10),
           note: "Tracked with timer",
         });
-        // Refresh entries
         getTimeEntriesForTask(task.id).then(setTimeEntries);
-      } catch (err: any) {
+      } catch (err) {
         setTimeEntryError("Failed to save time entry.");
       }
     }
-    setTimerValue(0);
-    setTimerStart(null);
+    resetTimer();
+    setLocalElapsed(0);
   }
 
-  // Add manual time entry
+  // Manual add
   async function handleAddManualTime() {
     const minutes = parseInt(manualMinutes, 10);
     if (!minutes || minutes <= 0) {
@@ -182,7 +191,7 @@ export default function TaskModal({
     }
   }
 
-  // Edit existing entry
+  // Edit entry
   async function handleEditEntry(entryId: number) {
     const minutes = parseInt(editEntryMinutes, 10);
     if (!minutes || minutes <= 0) {
@@ -215,16 +224,11 @@ export default function TaskModal({
   // --- UI ---
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center">
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-md"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onClose} />
       <div className="relative z-10 w-full max-w-2xl mx-auto rounded-[2.5rem] shadow-2xl border border-blue-800 bg-gradient-to-br from-zinc-950 to-zinc-900 flex flex-col min-h-[650px] max-h-[90vh] h-[90vh]">
         <div className="flex flex-col gap-2 px-10 pt-9 pb-2">
           <div className="flex justify-between items-center">
-            <h2 className="text-3xl font-bold text-white tracking-tight break-words">
-              {task.title}
-            </h2>
+            <h2 className="text-3xl font-bold text-white tracking-tight break-words">{task.title}</h2>
             <div className="flex gap-1 items-center">
               {onEditClick && (
                 <button
@@ -242,16 +246,11 @@ export default function TaskModal({
                   <Trash2 size={18} /> Delete
                 </button>
               )}
-              <button
-                className="ml-2 text-zinc-400 hover:text-white transition"
-                onClick={onClose}
-                title="Close"
-              >
+              <button className="ml-2 text-zinc-400 hover:text-white transition" onClick={onClose} title="Close">
                 <X size={30} />
               </button>
             </div>
           </div>
-
           <div className="flex flex-wrap gap-3 items-center mt-2">
             <StatusBadge status={task.status} />
             <PriorityBadge priority={task.priority} />
@@ -260,9 +259,7 @@ export default function TaskModal({
                 {new Date(task.due_date).toLocaleDateString()}
               </span>
             )}
-            <span
-              className={`flex items-center gap-2 px-4 py-1 rounded-xl text-sm font-bold ${avatarClass} text-white`}
-            >
+            <span className={`flex items-center gap-2 px-4 py-1 rounded-xl text-sm font-bold ${avatarClass} text-white`}>
               <span className="inline-flex items-center justify-center w-7 h-7 rounded-full bg-black/10 mr-1 font-mono font-bold shadow">
                 {getInitials(assignedUser.name)}
               </span>
@@ -278,20 +275,32 @@ export default function TaskModal({
           <section className="mb-5">
             <div className="font-semibold text-gray-400 mb-1">Description</div>
             <div className="bg-zinc-800 text-white rounded-xl px-4 py-3 text-base leading-relaxed min-h-[38px] shadow">
-              {task.description || (
-                <span className="text-gray-500">No description…</span>
-              )}
+              {task.description || (<span className="text-gray-500">No description…</span>)}
             </div>
           </section>
 
           {/* --- Time Tracking Section --- */}
           <section className="mb-6">
             <div className="font-semibold text-gray-400 mb-1">Time Tracking</div>
+
+            {isOtherTaskActive && (
+              <div className="flex items-center gap-2 text-yellow-400 bg-yellow-900/30 border border-yellow-800 rounded-lg p-2 mb-2">
+                <AlertTriangle size={18} />
+                <span>
+                  Timer is already running on another task (Task ID: <b>{otherTaskId}</b>).
+                  <button
+                    className="ml-2 px-2 py-1 rounded bg-yellow-700 hover:bg-yellow-800 text-white font-bold text-xs"
+                    onClick={() => { stopTimer(); resetTimer(); }}
+                  >
+                    Stop other timer
+                  </button>
+                </span>
+              </div>
+            )}
+
             <div className="flex items-center gap-4 mb-3 flex-wrap">
-              <span className="text-2xl font-bold text-white">
-                {Math.floor(timerValue / 60)}:{(timerValue % 60).toString().padStart(2, "0")}
-              </span>
-              {timerRunning ? (
+              <span className="text-2xl font-bold text-white">{formatTime(isThisTaskActive ? localElapsed : 0)}</span>
+              {isThisTaskActive ? (
                 <button
                   className="bg-yellow-600 hover:bg-yellow-700 px-4 py-2 rounded text-white flex items-center gap-2"
                   onClick={handleStopTimer}
@@ -303,9 +312,10 @@ export default function TaskModal({
                 <button
                   className="bg-green-700 hover:bg-green-800 px-4 py-2 rounded text-white flex items-center gap-2"
                   onClick={handleStartTimer}
+                  disabled={!!isOtherTaskActive}
                 >
                   <Play size={18} />
-                  Start
+                  Start timer
                 </button>
               )}
               <input
