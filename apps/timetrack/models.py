@@ -16,7 +16,7 @@ class TimeEntry(models.Model):
 
     class Meta:
         ordering = ["-date", "-created_at"]
-        unique_together = ("user", "task", "date")
+       # unique_together = ("user", "task", "date")
 
     def __str__(self):
         return f"{self.user} - {self.task} ({self.minutes} min on {self.date})"
