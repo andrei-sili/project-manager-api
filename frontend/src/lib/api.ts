@@ -158,10 +158,11 @@ export async function getTimeEntriesForTask(taskId: number): Promise<TimeEntry[]
 }
 
 // --- Create a new time entry ---
-export async function createTimeEntry(entry: { task: number; minutes: number; date: string; note?: string; }): Promise<TimeEntry> {
-  const res = await axiosClient.post<TimeEntry>("/time-entries/", entry);
+export async function createTimeEntry(entry: { task_id: number; minutes: number; date: string; note?: string; }): Promise<TimeEntry> {
+  const res: AxiosResponse<TimeEntry, any> = await axiosClient.post<TimeEntry>('/time-entries/', entry);
   return res.data;
 }
+
 
 // --- Edit an existing time entry ---
 export async function editTimeEntry(
