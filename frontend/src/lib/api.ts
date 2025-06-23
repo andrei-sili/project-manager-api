@@ -4,6 +4,7 @@ import apiClient from "./axiosClient";
 import {Project, Team, Task, PaginatedResponse} from "./types";
 import {AxiosResponse} from "axios";
 import axiosClient from "./axiosClient";
+import type { TimeEntry } from "@/lib/types.ts";
 
 /** Generic paginated response shape. */
 interface Paginated<T> {
@@ -136,19 +137,6 @@ export async function fetchTimeEntries(token: string) {
     date: entry.date,
     duration: Math.round(entry.minutes / 60),
   }));
-}
-
-
-
-// --- Time Entry Type ---
-export interface TimeEntry {
-  id: number;
-  user: number | { id: number; email: string; first_name?: string; last_name?: string };
-  task: number;
-  minutes: number;
-  date: string; // ISO date string "YYYY-MM-DD"
-  note?: string;
-  created_at?: string;
 }
 
 // --- Get all time entries for a specific task ---
