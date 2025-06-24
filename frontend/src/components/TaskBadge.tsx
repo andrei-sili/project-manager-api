@@ -3,7 +3,7 @@ import React from "react";
 import { Task } from "@/lib/types";
 
 export function statusBadgeColor(status: string) {
-  switch (status) {
+  switch ((status ?? "").toLowerCase()) {
     case "done": return "bg-green-600 text-white";
     case "in_progress": return "bg-yellow-500 text-black";
     case "todo": return "bg-gray-600 text-white";
@@ -11,7 +11,7 @@ export function statusBadgeColor(status: string) {
   }
 }
 export function priorityBadgeColor(priority: string) {
-  switch (priority) {
+  switch ((priority ?? "").toLowerCase()) {
     case "high": return "bg-red-700 text-white";
     case "medium": return "bg-gray-400 text-black";
     case "low": return "bg-green-700 text-white";
@@ -20,12 +20,12 @@ export function priorityBadgeColor(priority: string) {
 }
 export const StatusBadge = ({ status }: { status: string }) => (
   <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${statusBadgeColor(status)}`}>
-    {status.replace("_", " ").toUpperCase()}
+    {(status ?? "").replace("_", " ").toUpperCase()}
   </span>
 );
 export const PriorityBadge = ({ priority }: { priority: string }) => (
   <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${priorityBadgeColor(priority)}`}>
-    {priority?.toUpperCase()}
+    {(priority ?? "").toUpperCase()}
   </span>
 );
 interface TaskBadgeProps {
