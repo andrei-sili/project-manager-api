@@ -63,3 +63,27 @@ class TaskCreateSerializer(serializers.ModelSerializer):
         if value < timezone.now():
             raise serializers.ValidationError("Due date cannot be in the past.")
         return value
+
+
+class TaskUpdateSerializer(serializers.ModelSerializer):
+    assigned_to = serializers.PrimaryKeyRelatedField(
+        queryset=CustomUser.objects.all(),
+        required=False,
+        allow_null=True
+    )
+
+    class Meta:
+        model = Task
+        fields = [
+            'title',
+            'description',
+            'status',
+            'priority',
+            'due_date',
+            'assigned_to',
+        ]
+
+    def validate_due_date(self, value):
+        if value and value < timezone.now():
+            raise serializers.ValidationError("Due date cannot be in the past.")
+        return value
