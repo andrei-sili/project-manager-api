@@ -1,18 +1,13 @@
 // frontend/src/components/TaskModal.tsx
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Edit2, Trash2, Play, Pause, PlusCircle, Save, AlertTriangle } from "lucide-react";
 import { StatusBadge, PriorityBadge } from "@/components/TaskBadge";
+import { useTimerStore } from "@/lib/timerStore";
+import { getTimeEntriesForTask, createTimeEntry, editTimeEntry, deleteTimeEntry } from "@/lib/api";
 import TaskFiles from "@/components/TaskFiles";
 import TaskComments from "@/components/TaskComments";
-import { useTimerStore } from "@/lib/timerStore";
 
-import {
-  getTimeEntriesForTask,
-  createTimeEntry,
-  editTimeEntry,
-  deleteTimeEntry,
-} from "@/lib/api";
 
 // --- TaskModal Props ---
 type TaskModalProps = {
@@ -155,7 +150,7 @@ export default function TaskModal({
     if (minutes > 0) {
       try {
         await createTimeEntry({
-          task: task.id,
+          task_id: task.id,
           minutes,
           date: new Date().toISOString().slice(0, 10),
           note: "Tracked with timer",
@@ -178,7 +173,7 @@ export default function TaskModal({
     }
     try {
       await createTimeEntry({
-        task: task.id,
+        task_id: task.id,
         minutes,
         date: new Date().toISOString().slice(0, 10),
         note: "Manual entry",
