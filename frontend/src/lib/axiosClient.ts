@@ -1,25 +1,20 @@
 // frontend/scr/lib/axiosClient.ts
+
 import axios from "axios";
 
-/**
- * Axios instance configured with baseURL and JSON headers.
- * Intercepts 401 to redirect to /login.
- */
 const apiClient = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL,
-  headers: { "Content-Type": "application/json" },
 });
 
-apiClient.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      if (typeof window !== "undefined") {
-        window.location.href = "/login";
-      }
+// Attach token from localStorage for every request
+apiClient.interceptors.request.use((config) => {
+  if (typeof window !== "undefined") {
+    const token = localStorage.getItem("access");
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-    return Promise.reject(error);
   }
-);
+  return config;
+});
 
 export default apiClient;
