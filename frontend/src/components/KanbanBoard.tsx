@@ -6,10 +6,8 @@ import {
   Droppable,
   Draggable,
   DropResult,
-  DroppableProvided,
-  DroppableStateSnapshot,
 } from "@hello-pangea/dnd";
-import { Task, TeamMember, TaskStatus } from "@/lib/types";
+import { User, Task, TeamMember, TaskStatus } from "@/lib/types";
 
 export interface KanbanBoardProps {
   tasks: Task[];
@@ -48,13 +46,21 @@ export default function KanbanBoard({
     }
   };
 
+  function getAssignee(task: Task) {
+    if (typeof task.assigned_to === "object") {
+      const user = task.assigned_to;
+      return [user?.first_name, user?.last_name].filter(Boolean).join(" ") || user?.email || "";
+    }
+    return "";
+  }
+
   return (
     <div className="w-full overflow-x-auto pb-8">
       <div className="flex gap-6 min-w-[900px]">
         <DragDropContext onDragEnd={onDragEnd}>
           {statusColumns.map((col) => (
             <Droppable droppableId={col.key} key={col.key}>
-              {(provided: DroppableProvided, snapshot: DroppableStateSnapshot) => (
+              {(provided, snapshot) => (
                 <div
                   ref={provided.innerRef}
                   {...provided.droppableProps}
@@ -120,7 +126,7 @@ export default function KanbanBoard({
                             </span>
                             {task.assigned_to && (
                               <span className="inline-block bg-blue-900 text-blue-100 px-2 rounded">
-                                {task.assigned_to.email}
+                                {getAssignee(task)}
                               </span>
                             )}
                             {task.due_date && (
