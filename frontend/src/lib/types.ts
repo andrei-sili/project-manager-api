@@ -11,7 +11,12 @@ export interface User {
 // Team member (association)
 export interface TeamMember {
   id: number;
-  user: User;
+  user: {
+    id: number;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
   role: string;
   joined_at: string;
 }
@@ -20,9 +25,11 @@ export interface TeamMember {
 export interface Team {
   id: number;
   name: string;
-  created_by: User;
+  created_by: string;
   members: TeamMember[];
+  is_admin: boolean;
 }
+
 
 // Task status and priority
 export type TaskStatus = "todo" | "in_progress" | "done";
@@ -62,7 +69,7 @@ export interface TimeEntry {
   user: User;
   task: Task;
   minutes: number;
-  date: string; // ISO date
+  date: string;
   note?: string;
   created_at?: string;
 }
