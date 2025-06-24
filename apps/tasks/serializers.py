@@ -6,8 +6,14 @@ from apps.tasks.models import Task
 from apps.users.models import CustomUser
 
 
+class UserShortSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('id', 'first_name', 'last_name', 'email')
+
+
 class TaskSerializer(serializers.ModelSerializer):
-    assigned_to = serializers.SerializerMethodField()
+    assigned_to = UserShortSerializer()
     created_by = serializers.StringRelatedField()
     project = serializers.SerializerMethodField()
 
@@ -25,11 +31,6 @@ class TaskSerializer(serializers.ModelSerializer):
             'project',
             'created_at',
         ]
-
-    def get_assigned_to(self, obj):
-        if obj.assigned_to:
-            return f"{obj.assigned_to.first_name} {obj.assigned_to.last_name}"
-        return None
 
     def get_project(self, obj):
         return {
