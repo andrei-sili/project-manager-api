@@ -30,6 +30,7 @@ class TeamMembershipSerializer(serializers.ModelSerializer):
 class TeamSerializer(serializers.ModelSerializer):
     members = TeamMembershipSerializer(source='membership_set', many=True)
     created_by = serializers.SerializerMethodField()
+    is_admin = serializers.SerializerMethodField()
     id = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -39,10 +40,15 @@ class TeamSerializer(serializers.ModelSerializer):
             'name',
             'created_by',
             'members',
+            'is_admin',
         ]
 
     def get_created_by(self, obj):
         return f"{obj.created_by.first_name} {obj.created_by.last_name}"
+
+    def get_is_admin(self, obj):
+        user = self.context['request'].user
+        return obj.membership_set.filter(user=user, role='admin').exists()
 
 
 class TeamCreateSerializer(serializers.ModelSerializer):
