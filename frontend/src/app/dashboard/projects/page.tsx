@@ -1,3 +1,4 @@
+// frontend/src/app/dashboard/projects/page.tsx
 "use client";
 import React, { useEffect, useState } from "react";
 import { Plus, Filter, Search, Loader2 } from "lucide-react";
