@@ -6,9 +6,16 @@ import { Users } from "lucide-react";
 
 interface Member {
   id: number;
-  name?: string;
-  email: string;
+  user: {
+    id: number;
+    first_name?: string;
+    last_name?: string;
+    email: string;
+  };
+  role: string;
+  joined_at: string;
 }
+
 
 interface Team {
   id: number;
@@ -33,19 +40,25 @@ function stringToColor(str: string): string {
 
 function Avatar({ member }: { member: Member }) {
   const letter =
-    member.name?.[0]?.toUpperCase() ||
-    member.email?.[0]?.toUpperCase() ||
+    member.user?.first_name?.[0]?.toUpperCase() ||
+    member.user?.last_name?.[0]?.toUpperCase() ||
+    member.user?.email?.[0]?.toUpperCase() ||
     "?";
   return (
     <span
       className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-zinc-900 text-xs font-bold text-white shadow"
-      style={{ background: stringToColor(member.email) }}
-      title={member.name || member.email}
+      style={{ background: stringToColor(member.user.email) }}
+      title={
+        member.user.first_name || member.user.last_name
+          ? `${member.user.first_name || ""} ${member.user.last_name || ""}`.trim()
+          : member.user.email
+      }
     >
       {letter}
     </span>
   );
 }
+
 
 export default function TeamCard({ teams, loading }: Props) {
   const maxAvatars = 3;
@@ -85,7 +98,7 @@ export default function TeamCard({ teams, loading }: Props) {
                   {/* Stacked Avatars */}
                   <div className="flex -space-x-2">
                     {avatars.map((member) => (
-                      <Avatar key={member.id} member={member} />
+                      <Avatar key={member.user?.id || member.id} member={member} />
                     ))}
                     {rest > 0 && (
                       <span
