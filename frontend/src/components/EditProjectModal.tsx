@@ -23,12 +23,12 @@ export default function EditProjectModal({ project, open, onClose, onUpdated }: 
       {
         name,
         description,
-        budget: budget === "" ? null : parseFloat(budget),
+        budget: budget ? parseFloat(budget.replace(",", ".")) : null,
         due_date: dueDate || null,
       },
       { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
     );
-    onUpdated(); // callback for parent to refresh project info
+    onUpdated();
     onClose();
   } catch (err: any) {
     setError(err?.response?.data?.detail || "Could not update project.");
