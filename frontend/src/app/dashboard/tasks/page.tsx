@@ -1,3 +1,4 @@
+// frontend/src/app/tasks/page.tsx
 "use client";
 import { useEffect, useState } from "react";
 import axios from "axios";
@@ -55,7 +56,6 @@ export default function TasksPage() {
     }
   };
 
-  // Conversie robustă pentru projectId
   function projectIdToNumber(id: any): number {
     if (typeof id === "string") return parseInt(id);
     if (Array.isArray(id)) return parseInt(id[0]);
@@ -109,7 +109,7 @@ export default function TasksPage() {
           ))
         )}
       </div>
-      {/* TaskModal Edit */}
+      {/* TaskModal */}
       {selectedTask && (
         <TaskModal
           open={!!selectedTask}
