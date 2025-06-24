@@ -48,7 +48,7 @@ export default function EditTaskModal({
     setDueDate(task?.due_date ? formatDateInput(task.due_date) : "");
     setPriority(task?.priority || "medium");
     setStatus(task?.status || "todo");
-    setAssignee(task.assigned_to && task.assigned_to.length ? task.assigned_to[0] : "");
+    setAssignee(task.assigned_to?.id || "");
 
 
     setError("");
