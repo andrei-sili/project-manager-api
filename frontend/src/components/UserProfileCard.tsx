@@ -26,8 +26,11 @@ export default function UserProfileCard({ projects }: Props) {
       .map((project) => {
         if (!project.team?.members) return null;
         const member = project.team.members.find(
-          (m) => m.email === user.email || m.id === user.id
+          (m) =>
+            (m.user && m.user.email === user.email) ||
+            (m.user && m.user.id === user.id)
         );
+
         if (!member) return null;
         return {
           project: { id: project.id, name: project.name },
