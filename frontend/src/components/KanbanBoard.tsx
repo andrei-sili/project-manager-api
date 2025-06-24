@@ -9,7 +9,7 @@ import {
   DroppableProvided,
   DroppableStateSnapshot,
 } from "@hello-pangea/dnd";
-import {Task, TeamMember, TaskStatus} from "@/lib/types";
+import { Task, TeamMember, TaskStatus } from "@/lib/types";
 
 export interface KanbanBoardProps {
   tasks: Task[];
@@ -34,8 +34,9 @@ export default function KanbanBoard({
 }: KanbanBoardProps) {
   const tasksByStatus: Record<string, Task[]> = { todo: [], in_progress: [], done: [] };
   tasks.forEach((t) => {
-    if (tasksByStatus[t.status]) {
-      tasksByStatus[t.status].push(t);
+    const key = (t.status ?? "").toLowerCase();
+    if (tasksByStatus[key]) {
+      tasksByStatus[key].push(t);
     }
   });
 
@@ -89,9 +90,9 @@ export default function KanbanBoard({
                           {...provided.dragHandleProps}
                           className={`mb-4 p-4 rounded-xl shadow border-l-4 transition bg-zinc-900
                           ${
-                            task.priority === "high"
+                            (task.priority ?? "").toLowerCase() === "high"
                               ? "border-red-600"
-                              : task.priority === "medium"
+                              : (task.priority ?? "").toLowerCase() === "medium"
                               ? "border-yellow-400"
                               : "border-green-700"
                           }
