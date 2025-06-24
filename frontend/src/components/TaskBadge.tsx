@@ -28,6 +28,7 @@ export const PriorityBadge = ({ priority }: { priority: string }) => (
     {(priority ?? "").toUpperCase()}
   </span>
 );
+
 interface TaskBadgeProps {
   task: Task;
   onClick?: () => void;
