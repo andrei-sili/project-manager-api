@@ -48,13 +48,8 @@ export default function EditTaskModal({
     setDueDate(task?.due_date ? formatDateInput(task.due_date) : "");
     setPriority(task?.priority || "medium");
     setStatus(task?.status || "todo");
-    setAssignee(
-  task?.assigned_to && typeof task.assigned_to === "object"
-    ? task.assigned_to.id
-    : typeof task?.assigned_to === "number"
-      ? task.assigned_to
-      : ""
-);
+    setAssignee(task.assigned_to && task.assigned_to.length ? task.assigned_to[0] : "");
+
 
     setError("");
     setSuccess("");
@@ -224,7 +219,7 @@ export default function EditTaskModal({
         </div>
         <label className="text-sm">Assignee
           <select
-              value={assignee}
+              value={assignee ?? ""}
               onChange={e => setAssignee(Number(e.target.value) || "")}
               className="w-full px-3 py-2 mt-1 rounded-md bg-zinc-800 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
