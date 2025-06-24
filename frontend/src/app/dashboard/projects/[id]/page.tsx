@@ -1,202 +1,193 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
-import axios from "axios";
-import { Loader2, Edit, Plus, UserPlus2 } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Loader2, Edit, Users, Plus, Clock, ArrowLeft } from "lucide-react";
+import { useRouter, useParams } from "next/navigation";
+import axiosClient from "@/lib/axiosClient";
+import KanbanBoard from "@/components/KanbanBoard";
 import EditProjectModal from "@/components/EditProjectModal";
-import AddTaskModal from "@/components/AddTaskModal";
 import InviteMemberModal from "@/components/InviteMemberModal";
-import { Project, Task, Team, TeamMember, User } from "@/lib/types";
+import AddTaskModal from "@/components/AddTaskModal";
+import type { Project, TeamMember, Task } from "@/lib/types";
+import TaskModal from "@/components/TaskModal";
 
-export default function ProjectDetailPage() {
-  const { id } = useParams();
+export default function ProjectDetailsPage() {
+  const router = useRouter();
+  const { id } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [tasks, setTasks] = useState<Task[]>([]);
-  const [team, setTeam] = useState<Team | null>(null);
-  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  // Modals
-  const [showEditProject, setShowEditProject] = useState(false);
+  const [members, setMembers] = useState<TeamMember[]>([]);
+  const [showEdit, setShowEdit] = useState(false);
+  const [showInvite, setShowInvite] = useState(false);
   const [showAddTask, setShowAddTask] = useState(false);
-  const [showInviteMember, setShowInviteMember] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  const fetchProjectData = async () => {
+  // LOAD PROJECT
+  const fetchAll = () => {
     setLoading(true);
-    try {
-      const token = localStorage.getItem("access");
-      // 1. Project
-      const projRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}/`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setProject(projRes.data);
-
-      // 2. Tasks
-      const tasksRes = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}/tasks/`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      setTasks(tasksRes.data.results ?? tasksRes.data ?? []);
-
-      // 3. Team & Members
-      if (projRes.data.team) {
-        const teamRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/teams/${projRes.data.team.id}/`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setTeam(teamRes.data);
-        setTeamMembers(teamRes.data.members ?? []);
-      } else {
-        setTeam(null);
-        setTeamMembers([]);
-      }
-    } catch (err) {
-      setProject(null);
-      setTasks([]);
-      setTeam(null);
-      setTeamMembers([]);
-    }
-    setLoading(false);
+    axiosClient.get(`/projects/${id}/`)
+      .then(res => {
+        setProject(res.data);
+        setTasks(res.data.tasks || []);
+        setMembers(res.data.members || []);
+      })
+      .finally(() => setLoading(false));
   };
 
-  useEffect(() => {
-    if (id) fetchProjectData();
-    // eslint-disable-next-line
-  }, [id]);
+  useEffect(() => { fetchAll(); }, [id, showEdit, showInvite, showAddTask]);
 
-  if (loading) {
+  // PROGRESS
+  const taskTotal = tasks.length;
+  const taskDone = tasks.filter(t => t.status === "done").length;
+  const progress = taskTotal ? Math.round((taskDone / taskTotal) * 100) : 0;
+  const timeTracked = (project?.time_tracked || 0);
+
+  // TEAM AVATARS
+  function renderTeamAvatars() {
     return (
-      <div className="flex items-center justify-center min-h-[40vh]">
-        <Loader2 className="animate-spin" size={36} />
+      <div className="flex -space-x-4">
+        {(members ?? []).slice(0, 4).map((m, i) => (
+          <div key={i} className="inline-flex items-center justify-center w-9 h-9 rounded-full border-2 border-zinc-900 bg-blue-900 text-blue-200 font-bold shadow text-md select-none uppercase">
+            {((m.user?.first_name ?? "")[0] ?? "") + ((m.user?.last_name ?? "")[0] ?? "")}
+          </div>
+        ))}
+        {(members ?? []).length > 4 && (
+          <span className="inline-flex items-center justify-center w-9 h-9 rounded-full border-2 border-zinc-900 bg-zinc-700 text-white text-md font-bold">+{members.length-4}</span>
+        )}
       </div>
     );
   }
 
-  if (!project) {
+  if (loading || !project) {
     return (
-      <div className="text-center text-red-400 py-16">
-        Project not found.
-      </div>
+      <div className="flex justify-center py-32"><Loader2 className="animate-spin text-blue-600" size={38}/></div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-10">
-      {/* Project Info */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
+    <div className="max-w-6xl mx-auto px-2 py-8">
+      {/* BACK TO PROJECTS */}
+      <button
+        onClick={() => router.push("/dashboard/projects")}
+        className="flex items-center gap-2 mb-6 px-4 py-2 rounded-xl font-semibold bg-zinc-900 border border-zinc-700 text-gray-200 hover:bg-blue-800 transition"
+      >
+        <ArrowLeft size={19} /> Back to Projects
+      </button>
+
+      {/* HEADER */}
+      <div className="bg-zinc-900 rounded-2xl shadow p-7 flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-7 border border-zinc-800">
         <div>
-          <h1 className="text-3xl font-bold text-blue-400 mb-1">{project.name}</h1>
-          <div className="text-gray-300 mb-2">{project.description}</div>
-          <div className="text-sm text-blue-300">
-            Team: {team?.name || project.team?.name || "N/A"}
+          <div className="flex gap-2 items-center mb-2">
+            <h1 className="text-2xl font-bold text-white">{project.name}</h1>
+            {project.status && (
+              <span className="ml-2 text-xs font-semibold px-3 py-1 rounded-full bg-blue-900 text-blue-300 border border-blue-700 uppercase">{project.status}</span>
+            )}
+            <button
+              className="ml-2 p-1 rounded hover:bg-blue-700 transition"
+              onClick={() => setShowEdit(true)}
+              title="Edit project"
+            >
+              <Edit size={20} />
+            </button>
           </div>
-          <div className="text-xs text-gray-400 mt-1">
-            Created by: {project.created_by?.first_name} {project.created_by?.last_name} on {project.created_at?.slice(0, 10)}
+          <div className="text-gray-400 mb-1">{project.description}</div>
+          <div className="flex items-center gap-5 mt-2">
+            <span className="text-xs bg-zinc-800 text-gray-300 px-3 py-1 rounded border border-zinc-700">Team: {project.team?.name}</span>
+            {project.due_date && (
+              <span className="text-xs bg-zinc-800 text-gray-300 px-3 py-1 rounded border border-zinc-700">Deadline: {new Date(project.due_date).toLocaleDateString()}</span>
+            )}
+            <span className="text-xs text-gray-500 ml-3">Created {project.created_at ? new Date(project.created_at).toLocaleDateString() : ""}</span>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col items-end gap-2">
+          {/* PROGRESS */}
+          <div className="w-48">
+            <div className="flex justify-between text-xs text-gray-400 mb-1">
+              <span>Progress</span>
+              <span>{taskDone}/{taskTotal} tasks</span>
+            </div>
+            <div className="w-full h-3 rounded bg-zinc-800">
+              <div
+                className="h-3 rounded bg-blue-600 transition-all"
+                style={{ width: `${progress}%` }}
+              ></div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 mt-3 text-blue-300 font-bold">
+            <Clock size={18}/> Time tracked: <span className="text-white">{Math.floor(timeTracked/60)}h {timeTracked%60}m</span>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <button
+              className="px-4 py-2 bg-blue-700 hover:bg-blue-800 rounded-lg text-white font-bold flex items-center gap-2 shadow"
+              onClick={() => setShowInvite(true)}
+            >
+              <Users size={18}/> Invite Member
+            </button>
+            <button
+              className="px-4 py-2 bg-green-700 hover:bg-green-800 rounded-lg text-white font-bold flex items-center gap-2 shadow"
+              onClick={() => setShowAddTask(true)}
+            >
+              <Plus size={18}/> Add Task
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/*  */}
+      <div className="flex items-center gap-4 mb-8">{renderTeamAvatars()}</div>
+
+      {/* KANBAN BOARD */}
+      <div className="bg-zinc-900 rounded-2xl p-7 shadow border border-zinc-800 mb-10">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-blue-300">Kanban Board</h2>
           <button
-            className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-semibold bg-zinc-800 hover:bg-zinc-700 text-blue-400 transition"
-            onClick={() => setShowEditProject(true)}
-          >
-            <Edit className="w-4 h-4" />
-            Edit Project
-          </button>
-          <button
-            className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-semibold bg-zinc-800 hover:bg-zinc-700 text-green-400 transition"
+            className="px-4 py-2 bg-green-700 hover:bg-green-800 rounded-lg text-white font-bold flex items-center gap-2 shadow"
             onClick={() => setShowAddTask(true)}
           >
-            <Plus className="w-4 h-4" />
-            Add Task
-          </button>
-          <button
-            className="flex items-center gap-1 px-3 py-2 rounded-xl text-sm font-semibold bg-zinc-800 hover:bg-zinc-700 text-indigo-400 transition"
-            onClick={() => setShowInviteMember(true)}
-          >
-            <UserPlus2 className="w-4 h-4" />
-            Invite Member
+            <Plus size={18}/> Add Task
           </button>
         </div>
+        <KanbanBoard
+          tasks={tasks}
+          teamMembers={members ?? []}
+          onStatusChange={(taskId, status) => {
+            axiosClient.patch(`/tasks/${taskId}/`, { status }).then(fetchAll);
+          }}
+          onAddTask={() => setShowAddTask(true)}
+          onViewTask={setSelectedTask}
+        />
       </div>
 
-      {/* Modals */}
-      {showEditProject && (
+      {/* Edit Project Modal */}
+      {showEdit && (
         <EditProjectModal
           project={project}
-          onClose={() => setShowEditProject(false)}
-          onProjectUpdated={fetchProjectData}
+          open={showEdit}
+          onClose={() => setShowEdit(false)}
+          onUpdated={fetchAll}
         />
       )}
-      {showAddTask && (
-        <AddTaskModal
-          projectId={project.id}
-          onClose={() => setShowAddTask(false)}
-          onTaskAdded={fetchProjectData}
-        />
-      )}
-      {showInviteMember && team && (
+      {/* Invite Member Modal */}
+      {showInvite && (
         <InviteMemberModal
-          teamId={team.id}
-          onClose={() => setShowInviteMember(false)}
-          onMemberAdded={fetchProjectData}
+          projectId={project.id}
+          open={showInvite}
+          onClose={() => setShowInvite(false)}
+          onInvited={fetchAll}
+        />
+      )}
+      {/* Add Task Modal */}
+      {selectedTask && (
+        <TaskModal
+          open={!!selectedTask}
+          task={selectedTask}
+          projectId={id}
+          teamMembers={members}
+          onClose={() => setSelectedTask(null)}
+          onTaskUpdated={fetchAll}
         />
       )}
 
-      {/* Tasks */}
-      <div className="mb-10">
-        <h2 className="text-xl font-semibold text-white mb-4">Tasks</h2>
-        {!tasks || tasks.length === 0 ? (
-          <div className="text-gray-400 text-sm">No tasks yet.</div>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {tasks.map((task: Task) => (
-              <li key={task.id} className="bg-zinc-800 rounded-xl p-4 flex flex-col gap-2">
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                  <span className="font-semibold text-white text-lg">{task.title}</span>
-                  <span className="text-sm text-gray-400">
-                    Status: <b>{task.status}</b> | Due: {task.due_date?.slice(0,10) || "N/A"}
-                  </span>
-                </div>
-                {task.description && (
-                  <div className="text-gray-300">{task.description}</div>
-                )}
-                <div className="text-xs text-gray-400">
-                  Assigned to: {typeof task.assigned_to === "object"
-                      ? `${(task.assigned_to as User).first_name} ${(task.assigned_to as User).last_name}`
-                      : task.assigned_to
-                     || "N/A"}
-                </div>
-                <div className="text-xs text-gray-400">
-                  Priority: {task.priority || "N/A"}
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* Members */}
-      <div className="mb-10">
-        <h2 className="text-xl font-semibold text-white mb-3">Team Members</h2>
-        {!teamMembers || teamMembers.length === 0 ? (
-          <div className="text-gray-400 text-sm">No members yet.</div>
-        ) : (
-          <div className="flex flex-wrap gap-2">
-            {teamMembers.map((member: TeamMember) => (
-                    <div key={member.id}>
-                      {
-                        typeof member.user === "object"
-                          ? `${member.user.first_name} ${member.user.last_name} (${member.role})`
-                          : `${member.user} (${member.role})`
-                      }
-                    </div>
-                  ))
-                  }
-          </div>
-        )}
-      </div>
     </div>
   );
 }
