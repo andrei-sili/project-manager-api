@@ -6,7 +6,7 @@ type Timer = {
   running: boolean;
   taskId: string | null;
   startTime: number | null; // Timestamp when timer was started
-  eElapsed: number; // Elapsed seconds (before current running session)
+  elapsed: number; // Elapsed seconds (before current running session)
 };
 
 interface TimerStore {
@@ -24,53 +24,56 @@ export const useTimerStore = create<TimerStore>()(
         running: false,
         taskId: null,
         startTime: null,
-        eElapsed: 0,
+        elapsed: 0,
       },
+      /** Start timer for a specific task (resets timer if already running) */
       startTimer: (taskId: string) => {
         const now = Date.now();
-        // If timer is already running, stop it and reset before starting a new one
         set({
           timer: {
             running: true,
             taskId,
             startTime: now,
-            eElapsed: 0,
+            elapsed: 0,
           }
         });
       },
+      /** Stop timer and add elapsed time to total */
       stopTimer: () => {
         const { timer } = get();
         if (!timer.running) return;
         const now = Date.now();
-        const elapsed = timer.eElapsed + Math.floor((now - (timer.startTime || now)) / 1000);
+        const elapsed = timer.elapsed + Math.floor((now - (timer.startTime || now)) / 1000);
         set({
           timer: {
             ...timer,
             running: false,
             startTime: null,
-            eElapsed: elapsed,
+            elapsed,
           }
         });
       },
+      /** Reset timer to initial state */
       resetTimer: () => set({
         timer: {
           running: false,
           taskId: null,
           startTime: null,
-          eElapsed: 0,
+          elapsed: 0,
         }
       }),
+      /** Get total elapsed seconds (includes running interval) */
       getElapsed: () => {
         const { timer } = get();
         if (!timer.taskId) return 0;
         if (timer.running && timer.startTime) {
-          return timer.eElapsed + Math.floor((Date.now() - timer.startTime) / 1000);
+          return timer.elapsed + Math.floor((Date.now() - timer.startTime) / 1000);
         }
-        return timer.eElapsed;
+        return timer.elapsed;
       }
     }),
     {
-      name: "global-task-timer", // localStorage key
+      name: "global-task-timer",
     }
   )
 );
