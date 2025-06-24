@@ -15,22 +15,28 @@ export default function EditProjectModal({ project, open, onClose, onUpdated }: 
   if (!open) return null;
 
   const handleSubmit = async (e: any) => {
-    e.preventDefault();
-    setLoading(true); setError("");
-    try {
-      await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${project.id}/`,
-        { name, description, budget, due_date: dueDate },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
-      );
-      onUpdated(); // callback for parent to refresh project info
-      onClose();
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Could not update project.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  e.preventDefault();
+  setLoading(true); setError("");
+  try {
+    await axios.patch(
+      `${process.env.NEXT_PUBLIC_API_URL}/projects/${project.id}/`,
+      {
+        name,
+        description,
+        budget: budget === "" ? null : parseFloat(budget),
+        due_date: dueDate || null,
+      },
+      { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+    );
+    onUpdated(); // callback for parent to refresh project info
+    onClose();
+  } catch (err: any) {
+    setError(err?.response?.data?.detail || "Could not update project.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70">
