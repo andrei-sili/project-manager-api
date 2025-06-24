@@ -9,6 +9,7 @@ import InviteMemberModal from "@/components/InviteMemberModal";
 import { useRouter, useParams } from "next/navigation";
 import { Project, Task, TeamMember } from "@/lib/types";
 import EditProjectModal from "@/components/EditProjectModal";
+import { useAuth } from "@/lib/useAuth";
 
 export default function ProjectDetailsPage() {
   const router = useRouter();
@@ -83,15 +84,38 @@ export default function ProjectDetailsPage() {
     fetchAll();
   }
 
+  async function handleDeleteProject() {
+  if (window.confirm("Are you sure you want to delete this project?")) {
+    await axiosClient.delete(`/projects/${id}/`);
+    router.push("/dashboard/projects");
+  }
+}
+
+
+  function canEditOrDeleteProject(members: any[], userId: number | null | undefined) {
+  if (!userId) return false;
+  return members.some(
+    (member) =>
+      member.user?.id === userId &&
+      member.role === "admin" &&
+      (member.status === "accepted" || !member.status)
+  );
+}
+  const { user } = useAuth();
+  const canEdit = canEditOrDeleteProject(members, user?.id);
+
+
   return (
     <div className="flex flex-col gap-8 max-w-[1600px] mx-auto pb-20 pt-10">
       {/* Project HEADER + meta */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6 p-8 rounded-3xl shadow-xl bg-gradient-to-tr from-zinc-900 via-zinc-950 to-zinc-900 border border-blue-900">
+      <div
+          className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6 p-8 rounded-3xl shadow-xl bg-gradient-to-tr from-zinc-900 via-zinc-950 to-zinc-900 border border-blue-900">
         <div className="flex flex-col gap-2">
           <button
-            className="text-blue-400 text-sm hover:underline mb-2 w-max"
-            onClick={() => router.push("/dashboard/projects")}
-          >← Back to projects</button>
+              className="text-blue-400 text-sm hover:underline mb-2 w-max"
+              onClick={() => router.push("/dashboard/projects")}
+          >← Back to projects
+          </button>
           <h1 className="text-4xl font-extrabold tracking-tight text-white flex items-center gap-2">
             {project?.name || "Project"}
           </h1>
@@ -102,24 +126,31 @@ export default function ProjectDetailsPage() {
               {project?.created_at && new Date(project.created_at).toLocaleDateString()}
             </div>
             {project?.due_date && (
-              <div>
-                <span className="font-medium text-zinc-400">Deadline:</span>{" "}
-                {new Date(project.due_date).toLocaleDateString()}
-              </div>
+                <div>
+                  <span className="font-medium text-zinc-400">Deadline:</span>{" "}
+                  {new Date(project.due_date).toLocaleDateString()}
+                </div>
             )}
             {project?.created_by && (
-              <div>
-                <span className="font-medium text-zinc-400">Created by:</span>{" "}
-                {project.created_by.first_name} {project.created_by.last_name}
-              </div>
+                <div>
+                  <span className="font-medium text-zinc-400">Created by:</span>{" "}
+                  {project.created_by.first_name} {project.created_by.last_name}
+                </div>
             )}
+            {project?.budget !== undefined && project?.budget !== null && (
+                <div>
+                  <span className="font-medium text-zinc-400">Budget:</span>{" "}
+                  <span className="text-green-400 font-bold">{project.budget} €</span>
+                </div>
+              )}
+
           </div>
           {/* Time + Progress */}
           <div className="flex gap-6 mt-3">
             <div className="text-zinc-400 flex gap-2 items-center">
               <span className="font-bold text-lg text-blue-400">{progress}%</span> Progress
               <div className="w-32 h-2 bg-zinc-800 rounded ml-2">
-                <div className="bg-blue-500 h-2 rounded" style={{ width: `${progress}%` }}></div>
+                <div className="bg-blue-500 h-2 rounded" style={{width: `${progress}%`}}></div>
               </div>
               <span className="ml-2 text-xs text-zinc-500">{doneTasks}/{totalTasks} done</span>
             </div>
@@ -129,19 +160,30 @@ export default function ProjectDetailsPage() {
           </div>
         </div>
         <div className="flex flex-col gap-3">
+          {canEdit && (
+              <button
+                  className="bg-blue-600 hover:bg-blue-800 text-white px-7 py-3 rounded-2xl font-bold text-lg shadow-lg transition border border-blue-900"
+                  onClick={() => setShowEditProject(true)}
+              >
+                Edit Project
+              </button>
+          )}
+          {canEdit && (
+              <button
+                  className="bg-red-600 hover:bg-red-800 text-white px-7 py-3 rounded-2xl font-bold text-lg shadow-lg transition border border-red-900"
+                  onClick={handleDeleteProject}
+              >
+                Delete Project
+              </button>
+          )}
           <button
-            className="bg-blue-600 hover:bg-blue-800 text-white px-7 py-3 rounded-2xl font-bold text-lg shadow-lg transition border border-blue-900"
-            onClick={() => setShowEditProject(true)}
-          >
-            Edit Project
-          </button>
-          <button
-            className="bg-blue-400 hover:bg-blue-700 text-white px-7 py-3 rounded-2xl font-bold text-lg shadow-lg transition border border-blue-900"
-            onClick={() => setShowInvite(true)}
+              className="bg-blue-400 hover:bg-blue-700 text-white px-7 py-3 rounded-2xl font-bold text-lg shadow-lg transition border border-blue-900"
+              onClick={() => setShowInvite(true)}
           >
             Add Member
           </button>
         </div>
+
       </div>
 
       {/* Team Members */}
@@ -149,15 +191,15 @@ export default function ProjectDetailsPage() {
         <h2 className="text-2xl font-bold mb-5 text-white">Team Members</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {members.length === 0 && (
-            <div className="text-zinc-500 col-span-full text-center">No team members found.</div>
+              <div className="text-zinc-500 col-span-full text-center">No team members found.</div>
           )}
           {members.map((member) => (
-            <div key={member.user?.id}
-              className="rounded-xl bg-zinc-800 p-4 flex flex-col gap-1 border border-zinc-700 shadow hover:shadow-lg transition">
-              <div className="font-semibold text-white flex items-center gap-2">
-                {member.user?.first_name} {member.user?.last_name}
+              <div key={member.user?.id}
+                   className="rounded-xl bg-zinc-800 p-4 flex flex-col gap-1 border border-zinc-700 shadow hover:shadow-lg transition">
+                <div className="font-semibold text-white flex items-center gap-2">
+                  {member.user?.first_name} {member.user?.last_name}
               </div>
-              <div className="text-blue-300 text-xs">{member.user?.email}</div>
+              <div className="text-green-300 text-xs">{member.user?.email}</div>
               <div className="text-xs text-zinc-400 flex gap-3">
                 <span className="font-bold">{member.role || "Member"}</span>
                 <span className="ml-2">
@@ -187,13 +229,14 @@ export default function ProjectDetailsPage() {
 
       {/* MODALS */}
       {showEditProject && (
-        <EditProjectModal
-          open={showEditProject}
-          project={project}
-          onClose={() => setShowEditProject(false)}
-          onSaved={fetchAll}
-        />
-      )}
+          <EditProjectModal
+            open={showEditProject}
+            project={project}
+            onClose={() => setShowEditProject(false)}
+            onUpdated={fetchAll}
+          />
+        )}
+
 
       {showInvite && (
         <InviteMemberModal
