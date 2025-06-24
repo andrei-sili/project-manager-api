@@ -2,10 +2,15 @@
   "dependencies": {
     "@headlessui/react": "^2.2.4",
     "@hello-pangea/dnd": "^18.0.1",
+    "@tanstack/react-query": "^5.80.10",
     "framer-motion": "^12.16.0",
     "lucide-react": "^0.511.0",
     "nextjs-toploader": "^3.8.16",
+    "react-beautiful-dnd": "^13.1.1",
     "react-hot-toast": "^2.5.2",
     "recharts": "^2.15.3"
+  },
+  "devDependencies": {
+    "@types/react-beautiful-dnd": "^13.1.8"
   }
 }
