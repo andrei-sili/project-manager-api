@@ -9,7 +9,7 @@ from apps.projects.models import Project
 from apps.projects.permisions import IsTeamMember
 from apps.tasks.models import Task
 from apps.tasks.permisions import IsTaskCreatorOrAssignee
-from apps.tasks.serializers import TaskSerializer, TaskCreateSerializer
+from apps.tasks.serializers import TaskSerializer, TaskCreateSerializer, TaskUpdateSerializer
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -29,7 +29,9 @@ class TaskViewSet(viewsets.ModelViewSet):
         return Task.objects.filter(project__id=project_id, project__team__members=self.request.user).order_by("-id")
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action == 'update' or self.action == 'partial_update':
+            return TaskUpdateSerializer
+        elif self.action == 'create':
             return TaskCreateSerializer
         return TaskSerializer
 
