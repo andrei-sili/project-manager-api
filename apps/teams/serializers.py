@@ -4,22 +4,27 @@ from apps.teams.models import Team, TeamMembership
 
 
 class TeamMembershipSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField()
-    email = serializers.SerializerMethodField()
-    id = serializers.IntegerField(source='user.id')
+    user = serializers.SerializerMethodField()
+    role = serializers.CharField()
+    joined_at = serializers.DateTimeField()
 
     class Meta:
         model = TeamMembership
         fields = [
-            'id',
             'user',
-            'email',
             'role',
             'joined_at',
         ]
 
-    def get_email(self, obj):
-        return obj.user.email
+    def get_user(self, obj):
+        if obj.user:
+            return {
+                "id": obj.user.id,
+                "first_name": obj.user.first_name or "",
+                "last_name": obj.user.last_name or "",
+                "email": obj.user.email,
+            }
+        return None
 
 
 class TeamSerializer(serializers.ModelSerializer):
