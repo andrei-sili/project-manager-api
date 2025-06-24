@@ -21,10 +21,12 @@ class ProjectSerializer(serializers.ModelSerializer):
             'created_by',
             'created_at',
             'tasks',
+            'budget',
+            'due_date',
         ]
 
 
 class ProjectCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Project
-        fields = ['name', 'description', 'team']
+        fields = ['name', 'description', 'team', 'budget', 'due_date']  # <-- adaugă
