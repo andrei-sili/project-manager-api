@@ -14,7 +14,7 @@ export default function AddTaskModal({
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [priority, setPriority] = useState("medium");
-  const [assigneeEmail, setAssigneeEmail] = useState("");
+  const [assignee, setAssignee] = useState<number | "">("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -33,25 +33,24 @@ export default function AddTaskModal({
         {
           title,
           description,
-          due_date: dueDate + "T23:59:59",
+          due_date: dueDate ? dueDate + "T23:59:59" : null,
           priority,
           status: "todo",
           project: projectId,
-          assigned_to: assigneeEmail || null,
+          assigned_to: assignee || null,
         },
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-          },
+          headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
         }
       );
+
 
       setSuccess("Task added!");
       setTitle("");
       setDescription("");
       setDueDate("");
       setPriority("medium");
-      setAssigneeEmail("");
+      setAssignee("");
       onAdded && onAdded();
       onClose();
     } catch (err: any) {
@@ -126,17 +125,20 @@ export default function AddTaskModal({
 
         <label className="text-sm">Assignee
           <select
-              className="mt-1 bg-zinc-800 p-2 rounded w-full"
-              value={assigneeEmail}
-              onChange={(e) => setAssigneeEmail(e.target.value)}
+              value={assignee}
+              onChange={e => setAssignee(Number(e.target.value) || "")}
+              className="w-full px-3 py-2 mt-1 rounded-md bg-zinc-800 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
+
             <option value="">— No assignee —</option>
             {teamMembers.map((m: any) => (
-                <option key={m.id} value={m.email}>
-                  {m.user}
+                <option key={m.user.id} value={m.user.id}>
+                  {m.user.first_name} {m.user.last_name}
                 </option>
             ))}
           </select>
+
+
         </label>
 
 
