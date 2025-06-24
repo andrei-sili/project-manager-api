@@ -2,8 +2,10 @@
 import React, { useEffect, useState } from "react";
 import { getAllTimeEntries, getTimeSummary } from "@/lib/api";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
-import { Loader2 } from "lucide-react";
+import { Loader2, Download } from "lucide-react";
 import type { TimeEntry } from "@/lib/types";
+
+// Colors for pie chart
 const COLORS = ["#2563eb", "#10b981", "#f59e42", "#a21caf", "#f43f5e", "#fbbf24", "#4b5563"];
 
 function formatMinutes(min: number) {
@@ -18,6 +20,7 @@ export default function TimeTrackingPage() {
   const [entries, setEntries] = useState<TimeEntry[]>([]);
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState(""); // Filter by task title or note
 
   useEffect(() => {
     setLoading(true);
@@ -50,14 +53,40 @@ export default function TimeTrackingPage() {
 
   // Bar chart data: per day
   const barData =
-  summary && summary.per_day
-    ? summary.per_day.map((item: { date: string; minutes: number }) => ({
-        date: item.date.slice(5),
-        minutes: item.minutes,
-      }))
-    : [];
+    summary && summary.per_day
+      ? summary.per_day.map((item: { date: string; minutes: number }) => ({
+          date: item.date.slice(5),
+          minutes: item.minutes,
+        }))
+      : [];
 
+  // Export CSV
+  function exportCSV() {
+    const csv = [
+      ["Date", "Task", "Minutes", "Note"],
+      ...filteredEntries.map(e => [
+        e.date,
+        typeof e.task === "object" ? e.task.title : `Task #${e.task}`,
+        e.minutes,
+        e.note ?? ""
+      ])
+    ].map(row => row.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "time-entries.csv";
+    a.click();
+    window.URL.revokeObjectURL(url);
+  }
 
+  // Filtered entries for table
+  const filteredEntries = React.useMemo(() => {
+    if (!filter) return entries;
+    return entries.filter(e =>
+      ((typeof e.task === "object" ? e.task.title : "") + " " + (e.note ?? "")).toLowerCase().includes(filter.toLowerCase())
+    );
+  }, [entries, filter]);
 
   return (
     <div className="max-w-6xl mx-auto px-3 py-8">
@@ -66,7 +95,7 @@ export default function TimeTrackingPage() {
         Time Tracking
       </h1>
 
-      {/**/}
+      {/* --- Bar Chart: Time Per Day --- */}
       <div className="bg-zinc-900 rounded-2xl p-6 shadow border border-zinc-800 mb-8">
         <h2 className="text-lg text-white font-semibold mb-3">Time Logged Per Day (last 7 days)</h2>
         <div className="h-56">
@@ -85,14 +114,14 @@ export default function TimeTrackingPage() {
                   formatter={v => [`${formatMinutes(Number(v))} tracked`, ""]}
                   wrapperClassName="!bg-zinc-900 !text-white !rounded !px-2 !py-1"
                 />
-                <Bar dataKey="minutes" radius={[8, 8, 0, 0]} fill="#2563eb" />
+                <Bar dataKey="minutes" radius={[8, 8, 0, 0]} fill="#2563eb" isAnimationActive={true} animationDuration={700} />
               </BarChart>
             </ResponsiveContainer>
           )}
         </div>
       </div>
 
-      {/* Flex row Pie  */}
+      {/* --- Row: Pie Chart + Summary --- */}
       <div className="flex flex-col md:flex-row gap-7 mb-8">
         <div className="bg-zinc-900 rounded-2xl p-6 shadow border border-zinc-800 flex-1 min-w-[320px]">
           <h2 className="text-lg text-white font-semibold mb-3">Total Time by Task</h2>
@@ -113,6 +142,8 @@ export default function TimeTrackingPage() {
                     outerRadius={110}
                     fill="#2563eb"
                     label={({ name, value }) => `${name}: ${formatMinutes(Number(value))}`}
+                    isAnimationActive={true}
+                    animationDuration={900}
                   >
                     {pieData.map((_, idx) => (
                       <Cell key={idx} fill={COLORS[idx % COLORS.length]} />
@@ -128,7 +159,7 @@ export default function TimeTrackingPage() {
             )}
           </div>
         </div>
-        {/*  */}
+        {/* Sumar */}
         <div className="flex flex-col gap-4 justify-center min-w-[210px]">
           <div className="bg-zinc-900 rounded-xl px-5 py-3 border border-zinc-800 text-blue-300 font-bold">
             Today: <span className="text-white">{formatMinutes(summary?.today_minutes ?? 0)}</span>
@@ -142,12 +173,31 @@ export default function TimeTrackingPage() {
         </div>
       </div>
 
-      {/*  */}
+      {/* --- Time Entries Table --- */}
       <div className="bg-zinc-900 rounded-2xl shadow border border-zinc-800 p-6">
-        <h2 className="text-lg font-semibold text-white mb-4">Logged Time Entries</h2>
+        <div className="flex flex-col md:flex-row gap-2 mb-4 items-center justify-between">
+          <h2 className="text-lg font-semibold text-white">Logged Time Entries</h2>
+          <div className="flex gap-2 items-center">
+            <input
+              type="text"
+              value={filter}
+              onChange={e => setFilter(e.target.value)}
+              placeholder="Filter by task or note…"
+              className="bg-zinc-800 text-white px-3 py-2 rounded border border-zinc-700 text-sm"
+            />
+            <button
+              className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded text-white font-bold"
+              onClick={exportCSV}
+              title="Export CSV"
+            >
+              <Download size={18} />
+              Export
+            </button>
+          </div>
+        </div>
         {loading ? (
           <div className="flex items-center justify-center py-8"><Loader2 className="animate-spin text-zinc-400" size={24}/></div>
-        ) : entries.length === 0 ? (
+        ) : filteredEntries.length === 0 ? (
           <div className="text-gray-400">No time entries yet.</div>
         ) : (
           <div className="overflow-x-auto">
@@ -161,7 +211,7 @@ export default function TimeTrackingPage() {
                 </tr>
               </thead>
               <tbody>
-                {entries.map((entry: TimeEntry) => (
+                {filteredEntries.map((entry: TimeEntry) => (
                   <tr key={entry.id} className="border-b border-zinc-800 hover:bg-zinc-800/50">
                     <td className="px-3 py-2">{entry.date}</td>
                     <td className="px-3 py-2">
