@@ -47,12 +47,13 @@ export default function KanbanBoard({
   };
 
   function getAssignee(task: Task) {
-    if (typeof task.assigned_to === "object") {
-      const user = task.assigned_to;
-      return [user?.first_name, user?.last_name].filter(Boolean).join(" ") || user?.email || "";
-    }
-    return "";
+  if (task.assigned_to && typeof task.assigned_to === "object") {
+    const user = task.assigned_to;
+    return [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email || "";
   }
+  return "";
+}
+
 
   return (
     <div className="w-full overflow-x-auto pb-8">
@@ -106,15 +107,16 @@ export default function KanbanBoard({
                         >
                           <div className="flex justify-between items-center">
                             <div
-                              className="font-bold text-white cursor-pointer hover:underline"
-                              title={task.description}
-                              onClick={() => onViewTask(task)}
+                                className="font-bold text-white cursor-pointer hover:underline truncate max-w-[500px]"
+                                title={task.description}
+                                onClick={() => onViewTask(task)}
                             >
                               {task.title}
                             </div>
+
                             <button
-                              className="text-xs bg-blue-700 hover:bg-blue-500 text-white px-2 py-1 rounded ml-2"
-                              onClick={() => onViewTask(task)}
+                                className="text-xs bg-blue-700 hover:bg-blue-500 text-white px-2 py-1 rounded ml-2"
+                                onClick={() => onViewTask(task)}
                             >
                               View
                             </button>
