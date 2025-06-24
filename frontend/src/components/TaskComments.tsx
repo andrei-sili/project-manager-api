@@ -18,7 +18,7 @@ type TaskCommentsProps = {
   onCommentsUpdated?: () => void; // Optional refresh callback for parent
 };
 
-export default function CommentThread({
+export default function TaskComments({
   projectId,
   taskId,
   onCommentsUpdated,
