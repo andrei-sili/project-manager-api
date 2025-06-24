@@ -5,9 +5,11 @@ import axios from "axios";
 
 // Modal for creating a new project (with team selection or quick create new team)
 export default function NewProjectModal({
-  onClose,
-  onProjectAdded,
+    open,
+    onClose,
+    onProjectAdded,
 }: {
+  open: boolean;
   onClose: () => void;
   onProjectAdded: () => void;
 }) {
