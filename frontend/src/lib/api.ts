@@ -46,7 +46,10 @@ export function changeRole(teamId: number, userId: number, role: string): Promis
 }
 
 // --- Invite member to team ---
-export function inviteTeamMember(teamId: number, payload: { email: string; role: string }): Promise<void> {
+export function inviteTeamMember(teamId: number, payload: {
+  role: string | undefined;
+  email: string | undefined
+}): Promise<void> {
   return apiClient.post(`/teams/${teamId}/invite-member/`, payload).then(() => {});
 }
 
@@ -61,6 +64,10 @@ export function createTeam(payload: { name: string }): Promise<Team> {
 
 
 /* ----- TASKS ----- */
+export function createTask(projectId: number, payload: Omit<Task, "id">): Promise<Task> {
+  return apiClient.post<Task>(`/projects/${projectId}/tasks/`, payload).then(res => res.data);
+}
+
 export async function getMyTasks(): Promise<Task[]> {
   const res = await axiosClient.get<Paginated<Task>>("/my-tasks/");
   return res.data.results;
