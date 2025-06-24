@@ -47,6 +47,7 @@ export interface Task {
   created_by: User;
   project: { id: number; name: string };
   created_at: string;
+  minutes?: number;
 }
 
 // Project
@@ -59,7 +60,8 @@ export interface Project {
   created_at: string;
   tasks: Task[];
   status?: string;
-  due_date?: string;
+  budget?: number | string | null;
+  due_date?: string | null;
   time_tracked?: number;
 }
 
