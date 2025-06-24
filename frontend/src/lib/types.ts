@@ -11,7 +11,7 @@ export interface User {
 // Team member (association)
 export interface TeamMember {
   id: number;
-  user: {
+  user?: {
     id: number;
     first_name: string;
     last_name: string;
