@@ -27,7 +27,7 @@ export default function ProjectDetailsPage() {
   const [showInvite, setShowInvite] = useState(false);
   const [totalMinutes, setTotalMinutes] = useState(0);
 
-  // Progress și time
+
   const totalTasks = tasks.length;
   const doneTasks = tasks.filter(t => t.status === "done").length;
   const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
@@ -75,7 +75,7 @@ export default function ProjectDetailsPage() {
 
   useEffect(() => {
     fetchAll();
-    // eslint-disable-next-line
+
   }, [id]);
 
   // Kanban handlers
