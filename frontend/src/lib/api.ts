@@ -1,7 +1,7 @@
 // frontend/src/lib/api.ts
 
 import axiosClient from "./axiosClient";
-import type { Project, Team, Task, TimeEntry, PaginatedResponse } from "./types";
+import type {Project, Team, Task, TimeEntry, PaginatedResponse, TeamMember} from "./types";
 import type { AxiosResponse } from "axios";
 import apiClient from "./axiosClient";
 
@@ -53,6 +53,12 @@ export function inviteTeamMember(teamId: number, payload: {
   return apiClient.post(`/teams/${teamId}/invite-member/`, payload).then(() => {});
 }
 
+export async function getTeamMembers(): Promise<TeamMember[]> {
+  const res = await axiosClient.get<Paginated<TeamMember>>("/teams/members/");
+  return res.data.results;
+}
+
+
 // --- Delete a team ---
 export function deleteTeam(teamId: number): Promise<void> {
   return apiClient.delete(`/teams/${teamId}/`).then(() => {});
@@ -67,6 +73,12 @@ export function createTeam(payload: { name: string }): Promise<Team> {
 export function createTask(projectId: number, payload: Omit<Task, "id">): Promise<Task> {
   return apiClient.post<Task>(`/projects/${projectId}/tasks/`, payload).then(res => res.data);
 }
+
+export async function editTask(projectId: number, taskId: number, payload: Partial<Task>): Promise<Task> {
+  const res = await axiosClient.patch<Task>(`/projects/${projectId}/tasks/${taskId}/`, payload);
+  return res.data;
+}
+
 
 export async function getMyTasks(): Promise<Task[]> {
   const res = await axiosClient.get<Paginated<Task>>("/my-tasks/");
