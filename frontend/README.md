@@ -2,6 +2,8 @@
 
 This is the **frontend** part of the Project Management System, built using **Next.js 15**, **React 19**, and **TypeScript**.
 
+
+
 ## 💡 Features
 
 - User-friendly Kanban board

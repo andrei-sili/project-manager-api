@@ -2,10 +2,18 @@
 
 import React, { useEffect, useState } from "react";
 import { getTimeSummary } from "@/lib/api";
-import {Tooltip, BarChart, XAxis, YAxis, CartesianGrid, ResponsiveContainer, Bar} from 'recharts';
+import {
+  Tooltip,
+  BarChart,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  ResponsiveContainer,
+  Bar,
+} from "recharts";
 import { Loader2 } from "lucide-react";
 
-// Helper to format minutes to "Xh Ym"
+// Format helper
 function formatMinutes(min: number) {
   const h = Math.floor(min / 60);
   const m = min % 60;
@@ -21,60 +29,73 @@ export default function TimeTrackingCard() {
   useEffect(() => {
     setLoading(true);
     getTimeSummary()
-      .then(data => setSummary(data))
+      .then((data) => setSummary(data))
       .finally(() => setLoading(false));
   }, []);
 
-  // Prepare data for chart (show last 7 days)
-  let chartData: { date: string, minutes: number }[] = [];
-  if (summary && summary.days) {
+  let chartData: { date: string; minutes: number }[] = [];
+  if (summary?.days) {
     chartData = Object.entries(summary.days).map(([date, min]) => ({
-      date: date.slice(5), // MM-DD for axis
+      date: date.slice(5),
       minutes: min as number,
     }));
   }
 
-  // Calculate week total
   const weekTotal = summary?.week_total_minutes ?? 0;
   const weekTarget = 8 * 7 * 60;
+
   return (
-    <div className="bg-zinc-900 rounded-2xl shadow-xl px-7 py-6 flex flex-col gap-2 border border-zinc-800">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-lg font-semibold text-white">Time Tracked</span>
-        {loading && <Loader2 className="animate-spin text-zinc-400" size={20}/>}
+    <div className="bg-zinc-900 rounded-2xl shadow-xl px-7 py-6 flex flex-col gap-4 border border-zinc-800">
+      <div className="flex justify-between items-center">
+        <h2 className="text-xl font-semibold text-white">Time Tracked</h2>
+        {loading && <Loader2 className="animate-spin text-zinc-400" size={20} />}
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center sm:gap-6 mb-4">
-        <div className="flex flex-col">
-          <span className="text-3xl font-extrabold text-blue-400">{formatMinutes(weekTotal)}</span>
-          <span className="text-sm text-gray-400">This week (target: <b>{formatMinutes(weekTarget)}</b>)</span>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+        <div>
+          <p className="text-4xl font-extrabold text-blue-400">
+            {formatMinutes(weekTotal)}
+          </p>
+          <p className="text-sm text-gray-400 mt-1">
+            This week <span className="text-xs">(target: <b>{formatMinutes(weekTarget)}</b>)</span>
+          </p>
         </div>
-        <div className="w-full sm:w-56 h-28 flex items-end">
-          {chartData.length > 0 && (
+
+        {chartData.length > 0 && (
+          <div className="w-full sm:w-64 h-28">
             <ResponsiveContainer width="100%" height="100%">
-  <BarChart data={chartData}>
-    <CartesianGrid vertical={false} strokeDasharray="2 3" />
-    <XAxis dataKey="date" fontSize={12} tickLine={false} axisLine={false} />
-    <YAxis hide />
-    <Tooltip
-      labelFormatter={(v) => `Day: ${v}`}
-      formatter={(v) => [`${formatMinutes(Number(v))} tracked`, ""]}
-      wrapperClassName="!bg-zinc-900 !text-white !rounded !px-2 !py-1"
-    />
-    <Bar dataKey="minutes" radius={[6, 6, 0, 0]} />
-  </BarChart>
-</ResponsiveContainer>
-
-
-
-          )}
-        </div>
+              <BarChart data={chartData}>
+                <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                <XAxis
+                  dataKey="date"
+                  fontSize={12}
+                  tickLine={false}
+                  axisLine={false}
+                  stroke="#aaa"
+                />
+                <YAxis hide />
+                <Tooltip
+                  labelFormatter={(v) => `Day: ${v}`}
+                  formatter={(v) => [`${formatMinutes(Number(v))} tracked`, ""]}
+                  wrapperClassName="!bg-zinc-900 !text-white !rounded !px-2 !py-1"
+                />
+                <Bar dataKey="minutes" radius={[6, 6, 0, 0]} fill="#60a5fa" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
 
-      <div className="flex flex-col gap-1 text-xs text-gray-300">
-        <span>Today: <b>{formatMinutes(summary?.today_minutes ?? 0)}</b></span>
-        <span>This week: <b>{formatMinutes(summary?.week_total_minutes ?? 0)}</b></span>
-        <span>Total tracked: <b>{formatMinutes(summary?.total_minutes ?? 0)}</b></span>
+      <div className="text-sm text-gray-300 space-y-1">
+        <p>
+          Today: <b>{formatMinutes(summary?.today_minutes ?? 0)}</b>
+        </p>
+        <p>
+          This week: <b>{formatMinutes(summary?.week_total_minutes ?? 0)}</b>
+        </p>
+        <p>
+          Total tracked: <b>{formatMinutes(summary?.total_minutes ?? 0)}</b>
+        </p>
       </div>
     </div>
   );

@@ -177,7 +177,7 @@ export default function ProjectDetailsPage() {
               </button>
           )}
           <button
-              className="bg-blue-400 hover:bg-blue-700 text-white px-7 py-3 rounded-2xl font-bold text-lg shadow-lg transition border border-blue-900"
+              className="bg-green-600 hover:bg-green-800 text-white px-7 py-3 rounded-2xl font-bold text-lg shadow-lg transition border border-green-900"
               onClick={() => setShowInvite(true)}
           >
             Add Member

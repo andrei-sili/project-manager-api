@@ -5,6 +5,32 @@ This is the **backend API** for the Project Management System. It is built with 
 Project Manager is a full-stack web application that helps teams collaborate efficiently through task management, time tracking, team roles, and project organization. Built with Django REST Framework and Next.js, it features a professional Kanban interface, real-time updates, and a modern user experience.
 
 
+## 💻 Preview
+
+This project offers a modern UI with key features such as task management, time tracking, and team collaboration. Below are a few screenshots that demonstrate the main functionalities:
+
+* Clean Dashboard
+* Kanban Task View
+* Project Overview with Member Roles
+* Integrated Time Tracker
+## 📸 Screenshots
+
+### Dashboard
+![Dashboard](./media/task_files/dashboard.png)
+
+### My Tasks
+![My Tasks](./media/task_files/my_tasks.png)
+
+### Task View
+![Task View](./media/task_files/Task_view.png)
+
+### Project Details
+![Project Details](./media/task_files/project_details.png)
+
+### Time Tracking
+![Time Tracking](./media/task_files/time_tracking.png)
+
+
 ## 🚀 Features
 
 - User authentication and registration (JWT)
