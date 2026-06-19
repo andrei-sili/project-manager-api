@@ -17,7 +17,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'description']
 
     def get_queryset(self):
-        return Project.objects.filter(team__members=self.request.user).order_by('-id')
+        return (
+            Project.objects.filter(team__members=self.request.user)
+            .select_related('team', 'created_by')
+            .prefetch_related('tasks', 'tasks__assigned_to', 'team__membership_set__user')
+            .order_by('-id')
+        )
 
     def get_permissions(self):
         if self.action in ['update', 'partial_update', 'destroy']:

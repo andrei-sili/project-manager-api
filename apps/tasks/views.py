@@ -26,7 +26,11 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         project_id = self.kwargs.get('project_pk')
-        return Task.objects.filter(project__id=project_id, project__team__members=self.request.user).order_by("-id")
+        return (
+            Task.objects.filter(project__id=project_id, project__team__members=self.request.user)
+            .select_related('project', 'assigned_to', 'created_by')
+            .order_by("-id")
+        )
 
     def get_serializer_class(self):
         if self.action == 'update' or self.action == 'partial_update':
@@ -95,6 +99,8 @@ class MyTaskViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        return Task.objects.filter(
-            Q(created_by=user) | Q(assigned_to=user)
-        ).order_by("-created_at")
+        return (
+            Task.objects.filter(Q(created_by=user) | Q(assigned_to=user))
+            .select_related('project', 'assigned_to', 'created_by')
+            .order_by("-created_at")
+        )

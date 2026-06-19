@@ -19,9 +19,13 @@ class TeamViewSet(viewsets.ModelViewSet):
     lookup_field = "pk"
 
     def get_queryset(self):
-        return Team.objects.filter(
-            Q(members=self.request.user) | Q(created_by=self.request.user)
-        ).distinct().order_by('-id')
+        return (
+            Team.objects.filter(Q(members=self.request.user) | Q(created_by=self.request.user))
+            .select_related('created_by')
+            .prefetch_related('membership_set__user')
+            .distinct()
+            .order_by('-id')
+        )
 
     def get_serializer_class(self):
         if self.action == 'create':
