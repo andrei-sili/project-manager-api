@@ -1,7 +1,7 @@
 # Project Manager
 
 A full-stack team-collaboration platform — Kanban boards, time tracking, team
-roles, a calendar, analytics and **real-time notifications**. Built with a
+roles, a calendar, analytics and real-time notifications. Built with a
 Django REST + Channels backend and a Next.js frontend.
 
 <p align="center">
@@ -10,7 +10,7 @@ Django REST + Channels backend and a Next.js frontend.
 
 ---
 
-## ✨ Features
+## Features
 
 - **Authentication** — JWT (access/refresh) with register, login, logout
   (refresh-token blacklist) and password reset.
@@ -28,7 +28,7 @@ Django REST + Channels backend and a Next.js frontend.
 - **Activity feed** — audit log of who did what, across the workspace.
 - **API documentation** — interactive Swagger UI at `/api/docs/`.
 
-## 🖼️ Screenshots
+## Screenshots
 
 | Kanban board | Calendar |
 | --- | --- |
@@ -42,7 +42,7 @@ Django REST + Channels backend and a Next.js frontend.
 | --- | --- |
 | ![Projects](docs/screenshots/projects.png) | ![Teams](docs/screenshots/teams.png) |
 
-## 🧰 Tech stack
+## Tech stack
 
 **Backend** — Python 3.12 · Django 5.2 · Django REST Framework 3.16 ·
 Channels + Daphne (WebSockets) · SimpleJWT · drf-spectacular (OpenAPI) ·
@@ -54,7 +54,7 @@ CSS 4 · Zustand · Recharts · @hello-pangea/dnd · Axios.
 
 **Infra** — Docker · docker-compose · GitHub Actions CI.
 
-## 🏗️ Architecture
+## Architecture
 
 Django apps under `apps/`, each owning its models, serializers, views and
 permissions:
@@ -71,7 +71,7 @@ permissions:
 | `notify` | notifications + WebSocket consumer |
 | `logs` | activity / audit log |
 
-## 🚀 Getting started (local)
+## Getting started (local)
 
 Requirements: Python 3.12, Node.js 22. Redis/PostgreSQL are optional in dev
 (SQLite and an in-memory channel layer are used by default).
@@ -101,7 +101,7 @@ npm run dev                     # http://localhost:3000
 - App: <http://localhost:3000>
 - API docs (Swagger): <http://localhost:8000/api/docs/>
 
-## 🐳 Run with Docker
+## Run with Docker
 
 The full production-like stack (PostgreSQL + Redis + Django/ASGI + Next.js)
 in one command:
@@ -111,7 +111,7 @@ cp .env.example .env            # set a strong SECRET_KEY
 docker compose up --build
 ```
 
-## ✅ Tests & quality
+## Tests & quality
 
 ```bash
 pytest                          # backend: 100 tests
@@ -120,13 +120,13 @@ python manage.py check --deploy # security checklist (clean in production)
 cd frontend && npm run lint && npm run build
 ```
 
-## 🔒 Security highlights
+## Security highlights
 
 Secure-by-default permissions, object-level authorization, JWT with
-refresh-token blacklist, **rate limiting** on auth endpoints, password-strength
+refresh-token blacklist, rate limiting on auth endpoints, password-strength
 validation, upload type/size validation, and production security headers
 (HSTS, secure cookies, SSL redirect) gated behind `ENVIRONMENT`.
 
-## 📄 License
+## License
 
 See [LICENSE](LICENSE).
