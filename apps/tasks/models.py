@@ -5,6 +5,8 @@ from apps.users.models import CustomUser
 
 
 class Task(models.Model):
+    """A unit of work on a project (a Kanban card): status, priority, assignee, due date."""
+
     STATUS_TODO = 'todo'
     STATUS_IN_PROGRESS = 'in_progress'
     STATUS_DONE = 'done'

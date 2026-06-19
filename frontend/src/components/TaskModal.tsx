@@ -1,4 +1,3 @@
-// frontend/src/components/TaskModal.tsx
 
 import React, { useState, useEffect } from "react";
 import { X, Edit2, Trash2, Play, Pause, PlusCircle, Save, AlertTriangle } from "lucide-react";

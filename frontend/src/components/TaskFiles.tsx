@@ -1,4 +1,3 @@
-// frontend/src/components/TaskFiles.tsx
 
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";

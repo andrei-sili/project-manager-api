@@ -7,6 +7,7 @@ from apps.notify.models import Notification
 
 
 def notify_user(user, message, email_subject=None, email_body=None, type='general', save=True):
+    """Notify a user: live over WebSocket, optionally by email, and persist a record."""
     if user is None:
         raise ValueError("User cannot be None")
     # WebSocket

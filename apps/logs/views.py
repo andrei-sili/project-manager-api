@@ -5,6 +5,8 @@ from apps.logs.serializers import ActivityLogSerializer
 
 
 class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only activity/audit log, filterable by user, project or target type."""
+
     serializer_class = ActivityLogSerializer
     permission_classes = [permissions.IsAuthenticated]
 

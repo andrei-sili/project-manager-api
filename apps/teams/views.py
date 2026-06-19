@@ -15,6 +15,8 @@ from django.db.models import Q
 
 
 class TeamViewSet(viewsets.ModelViewSet):
+    """Teams the user belongs to, plus actions to invite, accept/decline, remove and change roles."""
+
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
     permission_classes = [permissions.IsAuthenticated]

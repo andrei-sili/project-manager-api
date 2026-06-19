@@ -13,6 +13,8 @@ from apps.tasks.serializers import TaskSerializer, TaskCreateSerializer, TaskUpd
 
 
 class TaskViewSet(viewsets.ModelViewSet):
+    """Tasks within a project. Create/update/delete emit notifications and activity logs."""
+
     queryset = Task.objects.all()
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
     filterset_fields = ['status', 'priority', 'assigned_to', 'project']
@@ -40,6 +42,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         return TaskSerializer
 
     def perform_create(self, serializer):
+        """Validate team membership and assignee, save, notify the assignee and log the activity."""
         project_id = self.kwargs.get('project_pk')
         project = Project.objects.get(id=project_id)
 
@@ -94,6 +97,8 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 
 class MyTaskViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only list of tasks the current user created or is assigned to."""
+
     queryset = Task.objects.none()  # actual rows come from get_queryset; set for schema generation
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated]

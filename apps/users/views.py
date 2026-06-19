@@ -29,6 +29,7 @@ class ThrottledTokenObtainPairView(TokenObtainPairView):
 
 
 class UserViewSet(viewsets.ViewSet):
+    """Self-service user endpoints: register, current profile, change password."""
 
     @extend_schema(request=UserRegisterSerializer, responses={201: UserRegisterSerializer})
     @action(detail=False, methods=['post'], url_path='register',

@@ -9,6 +9,8 @@ from apps.projects.serializers import ProjectCreateSerializer, ProjectSerializer
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
+    """Projects the current user can access (those owned by teams they belong to)."""
+
     queryset = Project.objects.all()
     permission_classes = [permissions.IsAuthenticated, IsTeamMember]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]

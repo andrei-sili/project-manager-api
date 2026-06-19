@@ -3,6 +3,8 @@ from django.contrib.auth.models import AnonymousUser
 
 
 class NotificationConsumer(AsyncJsonWebsocketConsumer):
+    """Per-user WebSocket: authenticates via JWT, joins the ``user_<id>`` group and pushes notifications."""
+
     async def connect(self):
         user = self.scope.get("user")
         if not user or isinstance(user, AnonymousUser) or not user.is_authenticated:

@@ -1,5 +1,3 @@
-# backend/project/models.py
-
 from django.db import models
 from django.conf import settings
 
@@ -7,6 +5,8 @@ from apps.tasks.models import Task
 
 
 class TimeEntry(models.Model):
+    """Time (in minutes) logged by a user against a task on a given day."""
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="time_entries")
     task = models.ForeignKey(Task, on_delete=models.CASCADE, related_name="time_entries")
     date = models.DateField()

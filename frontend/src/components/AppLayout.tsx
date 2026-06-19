@@ -1,4 +1,3 @@
-// frontend/src/components/AppLayout.tsx
 'use client';
 
 import Sidebar from './Sidebar';

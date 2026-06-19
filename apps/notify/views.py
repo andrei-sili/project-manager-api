@@ -7,6 +7,8 @@ from .serializers import NotificationSerializer
 
 
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    """The current user's recent notifications, with a mark-as-read action."""
+
     queryset = Notification.objects.none()  # actual rows come from get_queryset; set for schema generation
     serializer_class = NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]

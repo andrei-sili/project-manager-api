@@ -1,4 +1,3 @@
-// Path: frontend/src/app/dashboard/layout.tsx
 "use client";
 
 import React from "react";

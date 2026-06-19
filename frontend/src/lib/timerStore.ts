@@ -1,4 +1,3 @@
-// frontend/src/lib/timerStore.ts
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 

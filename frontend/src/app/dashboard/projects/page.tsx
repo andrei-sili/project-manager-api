@@ -1,4 +1,3 @@
-// frontend/src/app/dashboard/projects/page.tsx
 "use client";
 import React, { useEffect, useState } from "react";
 import { Plus, Search } from "lucide-react";

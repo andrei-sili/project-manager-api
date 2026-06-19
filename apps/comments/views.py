@@ -12,6 +12,8 @@ from apps.tasks.models import Task
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """Threaded comments on a task (restricted to the project's team members)."""
+
     queryset = Comment.objects.none()  # actual rows come from get_queryset; set for schema generation
     permission_classes = [permissions.IsAuthenticated, IsProjectTeamMember]
 

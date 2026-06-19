@@ -1,4 +1,3 @@
-// frontend/src/components/ActivityFeed.tsx
 import React from "react";
 import type { ActivityLog } from "@/lib/types";
 import { stringToColor } from "@/lib/color";

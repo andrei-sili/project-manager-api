@@ -1,4 +1,3 @@
-// frontend/src/components/UserProfileCard.tsx
 import React from "react";
 import { useAuth } from "@/components/AuthProvider";
 import { User } from "lucide-react";

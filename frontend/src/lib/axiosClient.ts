@@ -1,4 +1,3 @@
-// frontend/scr/lib/axiosClient.ts
 
 import axios from "axios";
 

@@ -1,4 +1,3 @@
-// frontend/src/components/NotificationBell.tsx
 "use client";
 
 import React, { useCallback, useEffect, useRef, useState } from "react";

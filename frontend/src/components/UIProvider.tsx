@@ -1,4 +1,3 @@
-// src/components/UIProvider.tsx
 
 "use client";
 

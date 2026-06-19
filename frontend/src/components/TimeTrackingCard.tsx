@@ -1,4 +1,3 @@
-// frontend/src/components/TimeTrackingCard.tsx
 
 import { useEffect, useState } from "react";
 import { getTimeSummary } from "@/lib/api";

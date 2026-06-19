@@ -1,5 +1,3 @@
-# backend/project/serializers.py
-
 from rest_framework import serializers
 from .models import TimeEntry
 from ..tasks.models import Task

@@ -5,6 +5,8 @@ from apps.users.models import CustomUser
 
 
 class Comment(models.Model):
+    """A comment on a task; a non-null ``parent`` makes it a threaded reply."""
+
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     text = models.TextField()

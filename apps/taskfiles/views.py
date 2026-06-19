@@ -12,6 +12,7 @@ from apps.tasks.models import Task
 
 
 def download_task_file(request, project_id, task_id, file_id):
+    """Stream a task's file as an attachment download."""
     file_obj = get_object_or_404(
         TaskFile,
         id=file_id,
@@ -29,6 +30,8 @@ def download_task_file(request, project_id, task_id, file_id):
 
 
 class TaskFileViewSet(viewsets.ModelViewSet):
+    """File attachments for a task (restricted to the project's team members)."""
+
     queryset = TaskFile.objects.none()  # actual rows come from get_queryset; set for schema generation
     serializer_class = TaskFileSerializer
     permission_classes = [permissions.IsAuthenticated, IsProjectTeamMember]

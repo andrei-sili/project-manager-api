@@ -1,4 +1,3 @@
-// frontend/src/app/dashboard/projects/[id]/tasks/[taskid]/page.tsx
 
 "use client";
 

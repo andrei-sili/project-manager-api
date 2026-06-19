@@ -5,6 +5,8 @@ from apps.users.models import CustomUser
 
 
 class TaskFile(models.Model):
+    """A file attached to a task."""
+
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     uploaded_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     file = models.FileField(upload_to='task_files/')

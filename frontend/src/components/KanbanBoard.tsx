@@ -1,4 +1,3 @@
-// frontend/src/components/KanbanBoard.tsx
 import { StatusBadge, PriorityBadge } from "./TaskBadge";
 import React from "react";
 import {

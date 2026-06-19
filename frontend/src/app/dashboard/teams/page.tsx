@@ -1,4 +1,3 @@
-// Path: frontend/src/app/dashboard/teams/page.tsx
 "use client";
 
 import React from "react";

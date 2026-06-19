@@ -1,4 +1,3 @@
-// frontend/src/components/InviteMemberModal.tsx
 "use client";
 import { useState, type FormEvent } from "react";
 import axios from "axios";

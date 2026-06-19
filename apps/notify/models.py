@@ -3,6 +3,8 @@ from apps.users.models import CustomUser
 
 
 class Notification(models.Model):
+    """A notification for a user; also pushed live over WebSocket when created."""
+
     TYPE_CHOICES = [
         ('general', 'General'),
         ('task', 'Task'),

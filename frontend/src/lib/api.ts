@@ -1,4 +1,3 @@
-// frontend/src/lib/api.ts
 
 import axiosClient from "./axiosClient";
 import type { Project, Team, Task, TimeEntry, TimeSummary, ActivityLog, NotificationItem } from "./types";

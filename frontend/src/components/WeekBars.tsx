@@ -1,4 +1,3 @@
-// frontend/src/components/WeekBars.tsx
 import React from "react";
 import type { TimeSummaryDay } from "@/lib/types";
 

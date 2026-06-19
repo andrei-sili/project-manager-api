@@ -22,6 +22,8 @@ def get_user(token):
 
 
 class JwtAuthMiddleware(BaseMiddleware):
+    """Channels middleware that authenticates a WebSocket from a ``?token=`` JWT query param."""
+
     async def __call__(self, scope, receive, send):
         query_string = parse_qs(scope["query_string"].decode())
         token = query_string.get("token", [None])[0]
