@@ -1,5 +1,7 @@
 import re
 
+from django.contrib.auth.password_validation import validate_password as django_validate_password
+from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
 from rest_framework_simplejwt.tokens import RefreshToken
 
@@ -58,7 +60,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         }
 
     def validate_password(self, value):
-        return validate_password(value)
+        return validate_password_strength(value)
 
 
 class UserChangePasswordSerializer(serializers.Serializer):
@@ -66,7 +68,7 @@ class UserChangePasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(required=True)
 
     def validate_new_password(self, value):
-        return validate_password(value)
+        return validate_password_strength(value)
 
 
 class RequestPasswordResetSerializer(serializers.Serializer):
@@ -78,14 +80,25 @@ class ConfirmPasswordResetSerializer(serializers.Serializer):
     new_password = serializers.CharField()
 
     def validate_new_password(self, value):
-        return validate_password(value)
+        return validate_password_strength(value)
 
 
-def validate_password(value):
-    if len(value) < 8:
-        raise serializers.ValidationError("Password too short (min 7 characters)")
-    if len(value) > 16:
-        raise serializers.ValidationError("Password too long (max 16 characters)")
+# Upper bound guards against denial-of-service via very long passwords
+# (the password hasher processes the entire string).
+MAX_PASSWORD_LENGTH = 128
+
+
+def validate_password_strength(value):
+    if len(value) > MAX_PASSWORD_LENGTH:
+        raise serializers.ValidationError(
+            f"Password too long (max {MAX_PASSWORD_LENGTH} characters)."
+        )
+    # Django's configured validators: minimum length, common, numeric-only, similarity.
+    try:
+        django_validate_password(value)
+    except DjangoValidationError as exc:
+        raise serializers.ValidationError(list(exc.messages))
+    # Complexity rules layered on top of Django's validators.
     if not re.search(r"[A-Z]", value):
         raise serializers.ValidationError("Password must contain at least one uppercase letter.")
     if not re.search(r"\d", value):

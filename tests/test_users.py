@@ -67,7 +67,7 @@ def test_register_short_password(api_client):
 
 @pytest.mark.django_db
 def test_register_long_password(api_client):
-    data = {"email": "x@y.com", "password": "123AB..gdhdt566sgsghjdkkGFdRTtGgj", "first_name": "Ana",
+    data = {"email": "x@y.com", "password": "A1!" + "a" * 200, "first_name": "Ana",
             "last_name": "Pop"}
     url = reverse("user-register")
     res = api_client.post(url, data)
@@ -130,7 +130,6 @@ def test_user_login(api_client):
     data = {"email": user.email, "password": "password123A!"}
 
     response = api_client.post(url, data)
-    print(response.data)
     assert response.status_code == 200
     assert "access" in response.data
 
@@ -223,7 +222,6 @@ def test_update_profile_unauthenticated(api_client):
     url = reverse("user-update-profile")
     data = {"first_name": "Test"}
     response = api_client.patch(url, data)
-    print(response.data)  # DEBUG
     assert response.status_code == 401
 
 
