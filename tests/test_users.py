@@ -247,3 +247,21 @@ def test_reset_password_invalid_token(api_client):
     response = api_client.post(url, data)
     assert response.status_code == 400
     assert "detail" in response.data
+
+
+@pytest.mark.django_db
+def test_logout_blacklists_refresh_token(api_client):
+    from apps.users.models import CustomUser
+    from rest_framework_simplejwt.tokens import RefreshToken
+
+    user = CustomUser.objects.create_user(
+        email="logout@example.com", password="password123A!", is_active=True
+    )
+    refresh = str(RefreshToken.for_user(user))
+
+    res = api_client.post(reverse("logout"), {"refresh": refresh})
+    assert res.status_code == 200
+
+    # A blacklisted refresh token can no longer be exchanged for a new access token.
+    res2 = api_client.post(reverse("token_refresh"), {"refresh": refresh})
+    assert res2.status_code == 401
