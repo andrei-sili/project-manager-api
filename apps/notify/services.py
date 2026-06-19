@@ -30,7 +30,7 @@ def notify_user(user, message, email_subject=None, email_body=None, type='genera
         send_mail(
             subject=email_subject,
             message=email_body,
-            from_email='no-reply@projectmanager.com',
+            from_email=None,  # uses DEFAULT_FROM_EMAIL
             recipient_list=[user.email]
         )
 

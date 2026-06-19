@@ -84,7 +84,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         invite_link = f"{settings.FRONTEND_URL}/register?email={user.email}&team_id={team.id}"
         subject = f"You've been invited to join the team: {team.name}"
         message = f"Hi,\n\nYou've been invited to join '{team.name}' on Project Manager.\nAccept your invitation: {invite_link}"
-        send_mail(subject, message, 'no-reply@yourapp.com', [user.email])
+        send_mail(subject, message, None, [user.email])  # None -> DEFAULT_FROM_EMAIL
 
     @action(detail=True, methods=['post'], url_path='accept-invite', permission_classes=[permissions.IsAuthenticated])
     def accept_invite(self, request, pk=None):
