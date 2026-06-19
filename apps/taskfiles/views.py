@@ -5,7 +5,7 @@ from rest_framework import viewsets, permissions
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 
-from apps.comments.permisions import IsProjectTeamMember
+from apps.comments.permissions import IsProjectTeamMember
 from apps.taskfiles.models import TaskFile
 from apps.taskfiles.serializers import TaskFileSerializer
 from apps.tasks.models import Task

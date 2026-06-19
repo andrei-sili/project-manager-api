@@ -3,7 +3,7 @@ from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from rest_framework.response import Response
 from apps.comments.models import Comment
-from apps.comments.permisions import IsProjectTeamMember
+from apps.comments.permissions import IsProjectTeamMember
 from apps.comments.serializers import CommentCreateSerializer, CommentSerializer
 from apps.logs.services import log_activity
 

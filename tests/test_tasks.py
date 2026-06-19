@@ -1,7 +1,10 @@
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
+
 from tests.factories import UserFactory, TeamFactory, ProjectFactory, TaskFactory
 from apps.teams.models import TeamMembership
 from apps.tasks.models import Task
@@ -22,7 +25,7 @@ def test_create_task(auth_client):
         "assigned_to": assignee.id,
         "status": "todo",
         "priority": "medium",
-        "due_date": "2025-12-31"
+        "due_date": timezone.now().date() + timedelta(days=30)
     }
 
     res = auth_client.post(url, data)
@@ -90,15 +93,11 @@ def test_create_task_without_assignee(auth_client):
         "project": project.id,
         "status": "todo",
         "priority": "low",
-        "due_date": "2025-12-31"
+        "due_date": timezone.now().date() + timedelta(days=30)
     }
     res = auth_client.post(url, data)
     assert res.status_code == 201
     assert res.data["assigned_to"] is None
-
-
-from datetime import timedelta
-from django.utils import timezone
 
 
 @patch("apps.tasks.views.notify_user")
@@ -123,7 +122,6 @@ def test_notify_called_if_creator_not_assignee(mock_notify, auth_client):
     }
 
     res = auth_client.post(url, data)
-    print(res.data)  # DEBUG pentru a vedea cauza 400
     assert res.status_code == 201
     mock_notify.assert_called_once()
 

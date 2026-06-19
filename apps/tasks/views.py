@@ -6,9 +6,9 @@ from rest_framework.exceptions import PermissionDenied
 from apps.logs.services import log_activity
 from apps.notify.services import notify_user
 from apps.projects.models import Project
-from apps.projects.permisions import IsTeamMember
+from apps.projects.permissions import IsTeamMember
 from apps.tasks.models import Task
-from apps.tasks.permisions import IsTaskCreatorOrAssignee
+from apps.tasks.permissions import IsTaskCreatorOrAssignee
 from apps.tasks.serializers import TaskSerializer, TaskCreateSerializer, TaskUpdateSerializer
 
 

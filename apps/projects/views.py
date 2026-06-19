@@ -4,7 +4,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 
 from apps.projects.models import Project
-from apps.projects.permisions import IsTeamMember, IsProjectAdmin
+from apps.projects.permissions import IsTeamMember, IsProjectAdmin
 from apps.projects.serializers import ProjectCreateSerializer, ProjectSerializer
 
 
