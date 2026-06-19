@@ -110,6 +110,12 @@ class TeamViewSet(viewsets.ModelViewSet):
         except TeamMembership.DoesNotExist:
             return Response({'error': 'No invitation found'}, status=404)
 
+    @staticmethod
+    def _is_last_admin(team):
+        return TeamMembership.objects.filter(
+            team=team, role='admin', status='accepted'
+        ).count() <= 1
+
     @action(detail=True, methods=['post'], url_path='remove-member', permission_classes=[IsTeamAdmin])
     def remove_member(self, request, pk=None):
         team = self.get_object()
@@ -120,6 +126,9 @@ class TeamViewSet(viewsets.ModelViewSet):
 
         try:
             membership = TeamMembership.objects.get(team=team, user_id=user_id)
+            if membership.role == 'admin' and self._is_last_admin(team):
+                return Response({'error': 'Cannot remove the last admin of the team.'},
+                                status=status.HTTP_400_BAD_REQUEST)
             membership.delete()
             return Response({'status': 'member removed'})
         except TeamMembership.DoesNotExist:
@@ -136,6 +145,9 @@ class TeamViewSet(viewsets.ModelViewSet):
 
         try:
             membership = TeamMembership.objects.get(team=team, user_id=user_id)
+            if membership.role == 'admin' and new_role != 'admin' and self._is_last_admin(team):
+                return Response({'error': 'The team must keep at least one admin.'},
+                                status=status.HTTP_400_BAD_REQUEST)
             membership.role = new_role
             membership.save()
             return Response({'status': f'Role changed to {new_role}'})

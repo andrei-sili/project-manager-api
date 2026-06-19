@@ -1,6 +1,15 @@
+import os
+
 from rest_framework import serializers
 
 from apps.taskfiles.models import TaskFile
+
+ALLOWED_FILE_EXTENSIONS = {
+    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg",
+    ".pdf", ".txt", ".csv", ".md",
+    ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
+    ".zip",
+}
 
 
 class TaskFileSerializer(serializers.ModelSerializer):
@@ -21,4 +30,7 @@ class TaskFileSerializer(serializers.ModelSerializer):
     def validate_file(self, value):
         if value.size > 5 * 1024 * 1024:  # 5MB
             raise serializers.ValidationError("File too large (max 5MB)")
+        extension = os.path.splitext(value.name)[1].lower()
+        if extension not in ALLOWED_FILE_EXTENSIONS:
+            raise serializers.ValidationError("File type not allowed.")
         return value

@@ -5,6 +5,7 @@ Configuration is environment-driven: copy `.env.example` to `.env` and fill it i
 Deployment checklist: https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 """
 import os
+import sys
 from datetime import timedelta
 from pathlib import Path
 
@@ -12,6 +13,9 @@ from corsheaders.defaults import default_headers
 from dotenv import load_dotenv
 
 load_dotenv()
+
+# True while the test suite runs (used to relax throttling during tests).
+TESTING = "pytest" in sys.modules
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -138,6 +142,16 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        # Disabled while the test suite runs; enforced otherwise.
+        'anon': None if TESTING else '40/min',
+        'user': None if TESTING else '240/min',
+        'auth': None if TESTING else '8/min',  # login / register / password reset
+    },
 }
 
 # --- API schema (drf-spectacular) -------------------------------------------
@@ -188,7 +202,14 @@ MEDIA_ROOT = BASE_DIR / 'media'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # --- Email ------------------------------------------------------------------
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Console backend by default; set EMAIL_BACKEND + SMTP vars in production.
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+EMAIL_HOST = os.getenv("EMAIL_HOST", "")
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@projectmanager.local")
 
 # --- Production security hardening ------------------------------------------
 # Only enforced when DEBUG is off, so local development stays on plain HTTP.
@@ -201,3 +222,19 @@ if not DEBUG:
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+
+# --- Logging ----------------------------------------------------------------
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {"format": "{levelname} {asctime} {name} {message}", "style": "{"},
+    },
+    "handlers": {
+        "console": {"class": "logging.StreamHandler", "formatter": "verbose"},
+    },
+    "root": {"handlers": ["console"], "level": "INFO"},
+    "loggers": {
+        "django.request": {"handlers": ["console"], "level": "WARNING", "propagate": False},
+    },
+}

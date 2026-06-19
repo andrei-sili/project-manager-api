@@ -19,7 +19,6 @@ from django.contrib import admin
 from django.http import JsonResponse
 from django.urls import path, include
 from rest_framework_simplejwt.views import (
-    TokenObtainPairView,
     TokenRefreshView,
     TokenBlacklistView,
 )
@@ -36,13 +35,19 @@ from apps.tasks.views import TaskViewSet, MyTaskViewSet
 from apps.teams.views import TeamViewSet
 from apps.timetrack.views import TimeEntryViewSet
 
-from apps.users.views import RequestPasswordResetView, ConfirmPasswordResetView
+from apps.users.views import RequestPasswordResetView, ConfirmPasswordResetView, ThrottledTokenObtainPairView
 from config import settings
 from apps.taskfiles.views import download_task_file
 
+
+def health(_request):
+    """Public health-check endpoint for load balancers and uptime monitors."""
+    return JsonResponse({"status": "ok"})
+
+
 #  JWT Auth
 auth_urlpatterns = [
-    path('api/token_obtain_pair/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('api/token_obtain_pair/', ThrottledTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/logout/', TokenBlacklistView.as_view(), name='logout'),
 ]
@@ -71,6 +76,7 @@ router.register("time-entries", TimeEntryViewSet, basename="timeentry")
 #  Final urlpatterns
 urlpatterns = [
                   path('admin/', admin.site.urls),
+                  path('api/health/', health, name='health'),
                   path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
                   path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
                   path('api/', include(router.urls)),

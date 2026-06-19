@@ -7,8 +7,10 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenObtainPairView
 
 from apps.teams.models import TeamMembership
+from apps.users.throttles import AuthRateThrottle
 from apps.users.models import CustomUser, PasswordResetToken
 from apps.users.serializers import (
     UserSerializer,
@@ -20,10 +22,17 @@ from apps.users.serializers import (
 )
 
 
+class ThrottledTokenObtainPairView(TokenObtainPairView):
+    """Login endpoint with a stricter per-IP throttle to slow brute-force."""
+
+    throttle_classes = [AuthRateThrottle]
+
+
 class UserViewSet(viewsets.ViewSet):
 
     @extend_schema(request=UserRegisterSerializer, responses={201: UserRegisterSerializer})
-    @action(detail=False, methods=['post'], url_path='register', permission_classes=[permissions.AllowAny])
+    @action(detail=False, methods=['post'], url_path='register',
+            permission_classes=[permissions.AllowAny], throttle_classes=[AuthRateThrottle])
     def register(self, request):
         serializer = UserRegisterSerializer(data=request.data)
         if serializer.is_valid():
@@ -73,6 +82,7 @@ class UserViewSet(viewsets.ViewSet):
 
 class RequestPasswordResetView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [AuthRateThrottle]
     serializer_class = RequestPasswordResetSerializer
 
     @extend_schema(
@@ -105,6 +115,7 @@ class RequestPasswordResetView(APIView):
 
 class ConfirmPasswordResetView(APIView):
     permission_classes = [AllowAny]
+    throttle_classes = [AuthRateThrottle]
     serializer_class = ConfirmPasswordResetSerializer
 
     @extend_schema(
@@ -138,6 +149,7 @@ class ConfirmPasswordResetView(APIView):
 
 class RegisterAndAcceptInviteView(APIView):
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [AuthRateThrottle]
     serializer_class = RegisterAndAcceptInviteSerializer
 
     @extend_schema(request=RegisterAndAcceptInviteSerializer)
