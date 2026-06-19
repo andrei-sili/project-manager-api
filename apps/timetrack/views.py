@@ -10,6 +10,7 @@ from datetime import datetime, timedelta
 
 
 class TimeEntryViewSet(viewsets.ModelViewSet):
+    queryset = TimeEntry.objects.none()  # actual rows come from get_queryset; set for schema generation
     serializer_class = TimeEntrySerializer
     permission_classes = [permissions.IsAuthenticated]
 

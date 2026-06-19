@@ -16,7 +16,7 @@ class TeamMembershipSerializer(serializers.ModelSerializer):
             'joined_at',
         ]
 
-    def get_user(self, obj):
+    def get_user(self, obj) -> dict:
         if obj.user:
             return {
                 "id": obj.user.id,
@@ -43,10 +43,10 @@ class TeamSerializer(serializers.ModelSerializer):
             'is_admin',
         ]
 
-    def get_created_by(self, obj):
+    def get_created_by(self, obj) -> str:
         return f"{obj.created_by.first_name} {obj.created_by.last_name}"
 
-    def get_is_admin(self, obj):
+    def get_is_admin(self, obj) -> bool:
         user = self.context['request'].user
         return obj.membership_set.filter(user=user, role='admin').exists()
 

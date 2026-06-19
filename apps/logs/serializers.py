@@ -22,10 +22,10 @@ class ActivityLogSerializer(serializers.ModelSerializer):
             'timestamp'
         ]
 
-    def get_user_email(self, obj):
+    def get_user_email(self, obj) -> str:
         return obj.user.email
 
-    def get_user(self, obj):
+    def get_user(self, obj) -> dict:
         return {
             "id": obj.user.id,
             "email": obj.user.email,

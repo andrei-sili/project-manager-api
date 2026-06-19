@@ -17,7 +17,7 @@ class CommentSerializer(serializers.ModelSerializer):
         model = Comment
         fields = ['id', 'user_name', 'text', 'created_at', 'replies']
 
-    def get_user_name(self, obj):
+    def get_user_name(self, obj) -> str:
         return f"{obj.user.first_name} {obj.user.last_name}"
 
     def validate(self, data):

@@ -29,6 +29,7 @@ def download_task_file(request, project_id, task_id, file_id):
 
 
 class TaskFileViewSet(viewsets.ModelViewSet):
+    queryset = TaskFile.objects.none()  # actual rows come from get_queryset; set for schema generation
     serializer_class = TaskFileSerializer
     permission_classes = [permissions.IsAuthenticated, IsProjectTeamMember]
 

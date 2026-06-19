@@ -7,6 +7,7 @@ from .serializers import NotificationSerializer
 
 
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Notification.objects.none()  # actual rows come from get_queryset; set for schema generation
     serializer_class = NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]
 

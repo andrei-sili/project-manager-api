@@ -11,10 +11,10 @@ class TaskFileSerializer(serializers.ModelSerializer):
         model = TaskFile
         fields = ['id', 'file', 'file_url', 'uploaded_by', 'uploaded_at']
 
-    def get_uploaded_by(self, obj):
+    def get_uploaded_by(self, obj) -> str:
         return f"{obj.uploaded_by.first_name} {obj.uploaded_by.last_name}"
 
-    def get_file_url(self, obj):
+    def get_file_url(self, obj) -> str:
         request = self.context.get('request')
         return request.build_absolute_uri(obj.file.url) if request else obj.file.url
 

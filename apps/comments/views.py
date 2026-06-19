@@ -12,6 +12,7 @@ from apps.tasks.models import Task
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.none()  # actual rows come from get_queryset; set for schema generation
     permission_classes = [permissions.IsAuthenticated, IsProjectTeamMember]
 
     def get_task(self):

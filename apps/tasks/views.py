@@ -94,6 +94,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 
 class MyTaskViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Task.objects.none()  # actual rows come from get_queryset; set for schema generation
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated]
 
