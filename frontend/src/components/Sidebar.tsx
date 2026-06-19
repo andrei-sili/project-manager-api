@@ -10,6 +10,7 @@ import {
   List,
   Users,
   Clock,
+  Calendar,
   User as UserIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -28,6 +29,7 @@ const navItems: NavItem[] = [
   { label: "Tasks", href: "/dashboard/tasks", Icon: List },
   { label: "Teams", href: "/dashboard/teams", Icon: Users },
   { label: "Time Tracking", href: "/dashboard/time-tracking", Icon: Clock },
+  { label: "Calendar", href: "/dashboard/calendar", Icon: Calendar },
   { label: "Profile", href: "/dashboard/profile", Icon: UserIcon },
 ];
 

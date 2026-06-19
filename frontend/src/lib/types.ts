@@ -121,3 +121,16 @@ export interface PaginatedResponse<T> {
   previous: string | null;
   results: T[];
 }
+
+// Activity log entry (audit feed)
+export interface ActivityLog {
+  id: number;
+  user: { id: number; email: string; full_name: string } | null;
+  user_email: string;
+  project: number | null;
+  action: "created" | "updated" | "deleted" | "commented";
+  target_type: "task" | "comment" | "project";
+  target_id: number;
+  target_repr: string;
+  timestamp: string;
+}

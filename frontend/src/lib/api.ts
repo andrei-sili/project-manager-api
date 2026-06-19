@@ -1,7 +1,7 @@
 // frontend/src/lib/api.ts
 
 import axiosClient from "./axiosClient";
-import type { Project, Team, Task, TimeEntry, TimeSummary } from "./types";
+import type { Project, Team, Task, TimeEntry, TimeSummary, ActivityLog } from "./types";
 
 /** Paginated Response */
 interface Paginated<T> {
@@ -106,4 +106,10 @@ export async function getTimeSummary(): Promise<TimeSummary> {
 export async function getAllTimeEntries(): Promise<TimeEntry[]> {
   const res = await axiosClient.get<{ results?: TimeEntry[] }>("/time-entries/");
   return res.data.results ?? [];
+}
+
+/* ----- ACTIVITY ----- */
+export async function getActivity(limit = 8): Promise<ActivityLog[]> {
+  const res = await axiosClient.get<Paginated<ActivityLog>>("/logs/");
+  return res.data.results.slice(0, limit);
 }
