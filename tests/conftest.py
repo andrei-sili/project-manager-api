@@ -7,6 +7,12 @@ def api_client():
     return APIClient()
 
 
+@pytest.fixture(autouse=True)
+def media_root(settings, tmp_path):
+    """Store uploaded files in a temporary directory, isolated per test."""
+    settings.MEDIA_ROOT = tmp_path / "media"
+
+
 @pytest.fixture
 def user(db):
     from tests.factories import UserFactory
