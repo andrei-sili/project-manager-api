@@ -79,6 +79,7 @@ AUTH_USER_MODEL = 'users.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -110,12 +111,25 @@ ASGI_APPLICATION = 'config.asgi.application'
 
 # --- Database ---------------------------------------------------------------
 # SQLite by default; PostgreSQL is wired from the environment in a later phase.
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+# PostgreSQL when DATABASE_HOST is set (production), otherwise SQLite for dev.
+if os.getenv("DATABASE_HOST"):
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": os.getenv("DATABASE_NAME", "projectmanager"),
+            "USER": os.getenv("DATABASE_USER", "projectmanager"),
+            "PASSWORD": os.getenv("DATABASE_PASSWORD", ""),
+            "HOST": os.getenv("DATABASE_HOST"),
+            "PORT": os.getenv("DATABASE_PORT", "5432"),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 # --- Password validation ----------------------------------------------------
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -173,13 +187,20 @@ SIMPLE_JWT = {
 }
 
 # --- Channels ---------------------------------------------------------------
-# In-memory layer for local development; Redis is wired from the environment
-# in a later phase (required when running more than one process).
-CHANNEL_LAYERS = {
-    "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer",
+# Redis when REDIS_URL is set (required when running more than one process),
+# otherwise an in-memory layer for local development and tests.
+REDIS_URL = os.getenv("REDIS_URL")
+if REDIS_URL:
+    CHANNEL_LAYERS = {
+        "default": {
+            "BACKEND": "channels_redis.core.RedisChannelLayer",
+            "CONFIG": {"hosts": [REDIS_URL]},
+        }
     }
-}
+else:
+    CHANNEL_LAYERS = {
+        "default": {"BACKEND": "channels.layers.InMemoryChannelLayer"},
+    }
 
 # --- CORS / CSRF ------------------------------------------------------------
 CORS_ALLOWED_ORIGINS = env_list("CORS_ALLOWED_ORIGINS", "http://localhost:3000" if DEBUG else "")
@@ -201,6 +222,13 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+# Static files are served by WhiteNoise; compress + hash them in production.
+if not DEBUG:
+    STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    }
+
 # --- Email ------------------------------------------------------------------
 # Console backend by default; set EMAIL_BACKEND + SMTP vars in production.
 EMAIL_BACKEND = os.getenv("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
@@ -214,7 +242,8 @@ DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@projectmanager.lo
 # --- Production security hardening ------------------------------------------
 # Only enforced when DEBUG is off, so local development stays on plain HTTP.
 if not DEBUG:
-    SECURE_SSL_REDIRECT = True
+    # Can be turned off (e.g. local docker-compose over plain HTTP) via env.
+    SECURE_SSL_REDIRECT = os.getenv("SECURE_SSL_REDIRECT", "true").lower() == "true"
     SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
