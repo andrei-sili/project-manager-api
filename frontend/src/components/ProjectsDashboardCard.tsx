@@ -20,7 +20,7 @@ export default function ProjectsDashboardCard({ projects, loading }: Props) {
         <h3 className="text-lg font-bold">Projects</h3>
         <Link
           href="/dashboard/projects"
-          className="flex items-center gap-2 text-blue-400 hover:underline font-medium"
+          className="flex items-center gap-2 text-emerald-400 hover:underline font-medium"
         >
           <FolderKanban className="w-5 h-5" />
           View All
@@ -31,7 +31,7 @@ export default function ProjectsDashboardCard({ projects, loading }: Props) {
         {loading ? "Loading…" : `${projects.length} total`}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {loading ? (
           <div className="col-span-2 text-center text-gray-400">
             Loading projects...
@@ -45,7 +45,7 @@ export default function ProjectsDashboardCard({ projects, loading }: Props) {
               <Link
                   key={project.id}
                   href={`/dashboard/projects/${project.id}`}
-                  className="bg-zinc-800 hover:bg-zinc-700 rounded-xl p-4 border border-transparent hover:border-blue-600 transition group"
+                  className="bg-zinc-800 hover:bg-zinc-700 rounded-xl p-4 border border-transparent hover:border-emerald-500/50 transition group"
               >
                   <div className="font-semibold text-white mb-1 truncate">
                       {project.name}

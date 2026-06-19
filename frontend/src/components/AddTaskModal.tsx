@@ -133,7 +133,7 @@ export default function AddTaskModal({
           <select
               value={assignee}
               onChange={e => setAssignee(Number(e.target.value) || "")}
-              className="w-full px-3 py-2 mt-1 rounded-md bg-zinc-800 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 mt-1 rounded-md bg-zinc-800 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
 
             <option value="">— No assignee —</option>

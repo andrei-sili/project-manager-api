@@ -77,7 +77,7 @@ export default function ProfilePage() {
         </div>
         <button
           type="submit"
-          className="w-full mt-3 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+          className="w-full mt-3 py-2 rounded bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition"
           disabled={loading}
         >
           {loading ? "Saving..." : "Save changes"}

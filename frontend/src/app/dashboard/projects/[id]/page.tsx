@@ -106,10 +106,10 @@ export default function ProjectDetailsPage() {
     <div className="flex flex-col gap-8 max-w-[1600px] mx-auto pb-20 pt-10">
       {/* Project HEADER + meta */}
       <div
-          className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6 p-8 rounded-3xl shadow-xl bg-gradient-to-tr from-zinc-900 via-zinc-950 to-zinc-900 border border-blue-900">
+          className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6 p-8 rounded-3xl shadow-xl bg-gradient-to-tr from-zinc-900 via-zinc-950 to-zinc-900 border border-zinc-800">
         <div className="flex flex-col gap-2">
           <button
-              className="text-blue-400 text-sm hover:underline mb-2 w-max"
+              className="text-emerald-400 text-sm hover:underline mb-2 w-max"
               onClick={() => router.push("/dashboard/projects")}
           >← Back to projects
           </button>
@@ -145,7 +145,7 @@ export default function ProjectDetailsPage() {
           {/* Time + Progress */}
           <div className="flex gap-6 mt-3">
             <div className="text-zinc-400 flex gap-2 items-center">
-              <span className="font-bold text-lg text-blue-400">{progress}%</span> Progress
+              <span className="font-bold text-lg text-emerald-400">{progress}%</span> Progress
               <div className="w-32 h-2 bg-zinc-800 rounded ml-2">
                 <div className="bg-blue-500 h-2 rounded" style={{width: `${progress}%`}}></div>
               </div>
@@ -159,7 +159,7 @@ export default function ProjectDetailsPage() {
         <div className="flex flex-col gap-3">
           {canEdit && (
               <button
-                  className="bg-blue-600 hover:bg-blue-800 text-white px-7 py-3 rounded-2xl font-bold text-lg shadow-lg transition border border-blue-900"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-7 py-3 rounded-2xl font-bold text-lg shadow-lg transition border border-zinc-800"
                   onClick={() => setShowEditProject(true)}
               >
                 Edit Project
@@ -212,7 +212,7 @@ export default function ProjectDetailsPage() {
       <div>
         <h2 className="text-2xl font-bold mb-4 text-white">Tasks</h2>
         {loading ? (
-          <div className="text-center text-blue-300 py-16">Loading...</div>
+          <div className="text-center text-emerald-300 py-16">Loading...</div>
         ) : (
           <KanbanBoard
             tasks={tasks}

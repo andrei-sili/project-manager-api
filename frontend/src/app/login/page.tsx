@@ -59,7 +59,7 @@ export default function LoginPage() {
         <div className="mb-6 text-center">
           <button
             className={`px-4 py-1 text-sm font-medium rounded-l-lg ${
-              !isRegister ? "bg-blue-600 text-white" : "text-zinc-400"
+              !isRegister ? "bg-emerald-600 text-white" : "text-zinc-400"
             }`}
             onClick={() => setIsRegister(false)}
           >
@@ -67,7 +67,7 @@ export default function LoginPage() {
           </button>
           <button
             className={`px-4 py-1 text-sm font-medium rounded-r-lg ${
-              isRegister ? "bg-blue-600 text-white" : "text-zinc-400"
+              isRegister ? "bg-emerald-600 text-white" : "text-zinc-400"
             }`}
             onClick={() => setIsRegister(true)}
           >
@@ -159,7 +159,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-2 rounded-lg font-semibold transition bg-blue-600 hover:bg-blue-700 focus:bg-blue-800 text-white shadow ${
+            className={`w-full py-2 rounded-lg font-semibold transition bg-emerald-600 hover:bg-emerald-700 focus:bg-emerald-700 text-white shadow ${
               loading ? "opacity-60 cursor-not-allowed" : ""
             }`}
           >

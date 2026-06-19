@@ -61,7 +61,7 @@ export default function UserProfileCard({ projects }: Props) {
           projectRoles.map((pr) => (
             <div
               key={pr.project.id}
-              className="flex items-center gap-2 text-xs text-blue-400 justify-center"
+              className="flex items-center gap-2 text-xs text-emerald-400 justify-center"
             >
               <User className="w-4 h-4" />
               <span className="font-medium">{pr.role}</span>
@@ -73,7 +73,7 @@ export default function UserProfileCard({ projects }: Props) {
       </div>
       <button
         onClick={() => router.push("/dashboard/profile")}
-        className="mt-3 px-4 py-1 rounded-full bg-blue-700 hover:bg-blue-800 text-white font-semibold text-sm shadow transition"
+        className="mt-3 px-4 py-1 rounded-full bg-emerald-700 hover:bg-emerald-700 text-white font-semibold text-sm shadow transition"
       >
         Edit profile
       </button>

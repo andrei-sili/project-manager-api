@@ -124,13 +124,13 @@ export default function EditTaskModal({
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70">
       <form
-          className="bg-zinc-900 border border-blue-700 p-6 rounded-2xl shadow-xl w-full max-w-md flex flex-col gap-4 animate-fade-in relative"
+          className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-xl w-full max-w-md flex flex-col gap-4 animate-fade-in relative"
           onSubmit={handleSubmit}
       >
         {/* Close */}
         <button
             type="button"
-            className="absolute top-4 right-4 text-gray-400 hover:text-blue-400 text-xl"
+            className="absolute top-4 right-4 text-gray-400 hover:text-emerald-400 text-xl"
             onClick={onClose}
             tabIndex={-1}
         >
@@ -139,7 +139,7 @@ export default function EditTaskModal({
         <div className="text-xl font-bold mb-1">Edit Task</div>
         <label className="text-sm font-semibold">Title
           <input
-              className="mt-1 bg-zinc-800 p-2 rounded w-full outline-none border border-zinc-700 focus:ring-2 focus:ring-blue-700"
+              className="mt-1 bg-zinc-800 p-2 rounded w-full outline-none border border-zinc-700 focus:ring-2 focus:ring-emerald-500"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -147,7 +147,7 @@ export default function EditTaskModal({
         </label>
         <label className="text-sm font-semibold">Description
           <textarea
-              className="mt-1 bg-zinc-800 p-2 rounded w-full outline-none border border-zinc-700 focus:ring-2 focus:ring-blue-700"
+              className="mt-1 bg-zinc-800 p-2 rounded w-full outline-none border border-zinc-700 focus:ring-2 focus:ring-emerald-500"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -157,7 +157,7 @@ export default function EditTaskModal({
         <label className="text-sm font-semibold">Due Date
           <input
               type="date"
-              className="mt-1 bg-zinc-800 p-2 rounded w-full outline-none border border-zinc-700 focus:ring-2 focus:ring-blue-700"
+              className="mt-1 bg-zinc-800 p-2 rounded w-full outline-none border border-zinc-700 focus:ring-2 focus:ring-emerald-500"
               value={dueDate}
               onChange={(e) => setDueDate(e.target.value)}
               required
@@ -167,7 +167,7 @@ export default function EditTaskModal({
         <div className="flex gap-2">
           <label className="flex-1 text-sm font-semibold">Priority
             <select
-                className="mt-1 p-2 rounded w-full outline-none border border-zinc-700 focus:ring-2 focus:ring-blue-500 bg-zinc-800 text-white"
+                className="mt-1 p-2 rounded w-full outline-none border border-zinc-700 focus:ring-2 focus:ring-emerald-500 bg-zinc-800 text-white"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value)}
                 required
@@ -179,7 +179,7 @@ export default function EditTaskModal({
           </label>
           <label className="flex-1 text-sm font-semibold">Status
             <select
-                className="mt-1 p-2 rounded w-full outline-none border border-zinc-700 focus:ring-2 focus:ring-blue-500 bg-zinc-800 text-white"
+                className="mt-1 p-2 rounded w-full outline-none border border-zinc-700 focus:ring-2 focus:ring-emerald-500 bg-zinc-800 text-white"
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
                 required
@@ -194,7 +194,7 @@ export default function EditTaskModal({
           <select
               value={assignee ?? ""}
               onChange={e => setAssignee(Number(e.target.value) || "")}
-              className="w-full px-3 py-2 mt-1 rounded-md bg-zinc-800 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 mt-1 rounded-md bg-zinc-800 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
             <option value="">— No assignee —</option>
             {teamMembers.map((m) => (
@@ -218,7 +218,7 @@ export default function EditTaskModal({
         <div className="flex gap-2 mt-2">
           <button
               type="submit"
-              className="flex-1 bg-blue-700 hover:bg-blue-800 text-white font-semibold py-2 rounded transition disabled:opacity-50"
+              className="flex-1 bg-emerald-700 hover:bg-emerald-700 text-white font-semibold py-2 rounded transition disabled:opacity-50"
               disabled={loading}
           >
             {loading ? "Saving..." : "Save"}

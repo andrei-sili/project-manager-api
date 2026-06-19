@@ -50,7 +50,7 @@ export default function EditProjectModal({ project, open, onClose, onUpdated }: 
   return (
     <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70">
       <form
-        className="bg-zinc-900 p-6 rounded-2xl shadow-lg w-full max-w-lg flex flex-col gap-4 border border-blue-700"
+        className="bg-zinc-900 p-6 rounded-2xl shadow-lg w-full max-w-lg flex flex-col gap-4 border border-zinc-800"
         onSubmit={handleSubmit}
       >
         <div className="flex justify-between items-center mb-1">
@@ -72,7 +72,7 @@ export default function EditProjectModal({ project, open, onClose, onUpdated }: 
         {error && <div className="text-red-400 text-sm">{error}</div>}
         <button
           type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded mt-2"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded mt-2"
           disabled={loading}
         >
           {loading ? "Saving..." : "Save Changes"}

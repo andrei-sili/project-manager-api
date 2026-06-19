@@ -66,7 +66,7 @@ export default function KanbanBoard({
                   {...provided.droppableProps}
                   className={`flex-1 rounded-2xl px-4 pb-6 pt-3 shadow bg-zinc-800 min-h-[400px] transition border-2 ${
                     snapshot.isDraggingOver
-                      ? "border-blue-500 bg-blue-950"
+                      ? "border-emerald-500 bg-emerald-950"
                       : "border-zinc-900"
                   }`}
                   style={{ minWidth: 300 }}
@@ -76,7 +76,7 @@ export default function KanbanBoard({
                     {col.key === "todo" && (
                       <button
                         onClick={onAddTask}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-xs"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs"
                       >
                         + Add Task
                       </button>
@@ -102,7 +102,7 @@ export default function KanbanBoard({
                               ? "border-yellow-400"
                               : "border-green-700"
                           }
-                          ${snapshot.isDragging ? "bg-blue-900 shadow-xl" : ""}`}
+                          ${snapshot.isDragging ? "bg-emerald-500/15 shadow-xl" : ""}`}
                         >
                           <div className="flex justify-between items-center">
                             <div
@@ -114,7 +114,7 @@ export default function KanbanBoard({
                             </div>
 
                             <button
-                                className="text-xs bg-blue-700 hover:bg-blue-500 text-white px-2 py-1 rounded ml-2"
+                                className="text-xs bg-emerald-700 hover:bg-blue-500 text-white px-2 py-1 rounded ml-2"
                                 onClick={() => onViewTask(task)}
                             >
                               View
@@ -126,7 +126,7 @@ export default function KanbanBoard({
                               <StatusBadge status={task.status}/>
                             </span>
                             {task.assigned_to && (
-                              <span className="inline-block bg-blue-900 text-blue-100 px-2 rounded">
+                              <span className="inline-block bg-emerald-500/15 text-emerald-100 px-2 rounded">
                                 {getAssignee(task)}
                               </span>
                             )}

@@ -6,7 +6,7 @@ import { Loader2, Download } from "lucide-react";
 import type { TimeEntry, TimeSummary } from "@/lib/types";
 
 // Colors for pie chart
-const COLORS = ["#2563eb", "#10b981", "#f59e42", "#a21caf", "#f43f5e", "#fbbf24", "#4b5563"];
+const COLORS = ["#34d399", "#10b981", "#f59e42", "#a21caf", "#f43f5e", "#fbbf24", "#4b5563"];
 
 function formatMinutes(min: number) {
   const h = Math.floor(min / 60);
@@ -90,7 +90,7 @@ export default function TimeTrackingPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-3 py-8">
-      <h1 className="text-3xl font-bold mb-6 text-blue-400 flex items-center gap-3">
+      <h1 className="text-3xl font-bold mb-6 text-emerald-400 flex items-center gap-3">
         <span role="img" aria-label="clock">🕒</span>
         Time Tracking
       </h1>
@@ -114,7 +114,7 @@ export default function TimeTrackingPage() {
                   formatter={v => [`${formatMinutes(Number(v))} tracked`, ""]}
                   wrapperClassName="!bg-zinc-900 !text-white !rounded !px-2 !py-1"
                 />
-                <Bar dataKey="minutes" radius={[8, 8, 0, 0]} fill="#2563eb" isAnimationActive={true} animationDuration={700} />
+                <Bar dataKey="minutes" radius={[8, 8, 0, 0]} fill="#34d399" isAnimationActive={true} animationDuration={700} />
               </BarChart>
             </ResponsiveContainer>
           )}
@@ -140,7 +140,7 @@ export default function TimeTrackingPage() {
                     cx="50%"
                     cy="50%"
                     outerRadius={110}
-                    fill="#2563eb"
+                    fill="#34d399"
                     label={({ name, value }) => `${name}: ${formatMinutes(Number(value))}`}
                     isAnimationActive={true}
                     animationDuration={900}
@@ -161,13 +161,13 @@ export default function TimeTrackingPage() {
         </div>
         {/* Sumar */}
         <div className="flex flex-col gap-4 justify-center min-w-[210px]">
-          <div className="bg-zinc-900 rounded-xl px-5 py-3 border border-zinc-800 text-blue-300 font-bold">
+          <div className="bg-zinc-900 rounded-xl px-5 py-3 border border-zinc-800 text-emerald-300 font-bold">
             Today: <span className="text-white">{formatMinutes(summary?.today_minutes ?? 0)}</span>
           </div>
-          <div className="bg-zinc-900 rounded-xl px-5 py-3 border border-zinc-800 text-blue-300 font-bold">
+          <div className="bg-zinc-900 rounded-xl px-5 py-3 border border-zinc-800 text-emerald-300 font-bold">
             This week: <span className="text-white">{formatMinutes(summary?.week_total_minutes ?? 0)}</span>
           </div>
-          <div className="bg-zinc-900 rounded-xl px-5 py-3 border border-zinc-800 text-blue-300 font-bold">
+          <div className="bg-zinc-900 rounded-xl px-5 py-3 border border-zinc-800 text-emerald-300 font-bold">
             Total tracked: <span className="text-white">{formatMinutes(summary?.total_minutes ?? 0)}</span>
           </div>
         </div>
@@ -186,7 +186,7 @@ export default function TimeTrackingPage() {
               className="bg-zinc-800 text-white px-3 py-2 rounded border border-zinc-700 text-sm"
             />
             <button
-              className="flex items-center gap-2 bg-blue-700 hover:bg-blue-800 px-4 py-2 rounded text-white font-bold"
+              className="flex items-center gap-2 bg-emerald-700 hover:bg-emerald-700 px-4 py-2 rounded text-white font-bold"
               onClick={exportCSV}
               title="Export CSV"
             >

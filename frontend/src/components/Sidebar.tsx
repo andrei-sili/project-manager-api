@@ -1,5 +1,4 @@
 // frontend/src/components/Sidebar.tsx
-
 "use client";
 
 import React from "react";
@@ -12,10 +11,10 @@ import {
   Users,
   Clock,
   User as UserIcon,
-  Box,
   type LucideIcon,
 } from "lucide-react";
 import { useUI } from "@/components/UIProvider";
+import { useAuth } from "@/lib/useAuth";
 
 interface NavItem {
   label: string;
@@ -32,65 +31,84 @@ const navItems: NavItem[] = [
   { label: "Profile", href: "/dashboard/profile", Icon: UserIcon },
 ];
 
+function initials(first?: string, last?: string) {
+  return `${first?.[0] ?? ""}${last?.[0] ?? ""}`.toUpperCase() || "U";
+}
+
 /**
- * Sidebar navigation with logo/title at top,
- * mobile overlay and toggle button.
+ * App sidebar. Static on desktop; on mobile it slides in over an overlay,
+ * toggled from the Topbar's menu button (UI context).
  */
-const Sidebar: React.FC = () => {
+export default function Sidebar() {
   const pathname = usePathname();
   const { sidebarOpen, toggleSidebar } = useUI();
+  const { user } = useAuth();
+
+  const isActive = (href: string) =>
+    href === "/dashboard" ? pathname === href : pathname.startsWith(href);
 
   return (
     <>
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/40 z-10 md:hidden"
+          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"
           onClick={toggleSidebar}
         />
       )}
 
-      {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-full bg-zinc-900 text-white transform ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-zinc-800/70 bg-zinc-950 transition-transform duration-200 ease-out md:static md:z-auto md:translate-x-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } transition-transform md:relative md:translate-x-0 md:w-60 z-20 flex flex-col`}
+        }`}
       >
-        {/* Logo & Title */}
-        <div className="flex items-center gap-2 px-6 py-4 border-b border-zinc-800">
-          <Box size={28} />
-          <span className="text-xl font-bold">Project Manager</span>
+        {/* Brand */}
+        <div className="flex items-center gap-3 px-6 py-5">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-400 shadow-lg shadow-emerald-500/20">
+            <span className="h-3.5 w-3.5 rounded-[5px] bg-zinc-950" />
+          </div>
+          <span className="text-lg font-bold tracking-tight text-white">
+            Project<span className="text-emerald-400">Manager</span>
+          </span>
         </div>
-        {/* Nav items */}
-        <nav className="flex-1 flex flex-col p-4 space-y-2 overflow-y-auto">
-          {navItems.map(({ label, href, Icon }) => (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center p-2 rounded-lg hover:bg-zinc-800 transition ${
-                pathname.startsWith(href) ? "bg-zinc-800" : ""
-              }`}
-            >
-              <Icon className="mr-3" size={20} />
-              <span className="text-sm">{label}</span>
-            </Link>
-          ))}
+
+        {/* Navigation */}
+        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-2">
+          {navItems.map(({ label, href, Icon }) => {
+            const active = isActive(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={() => sidebarOpen && toggleSidebar()}
+                className={`flex items-center gap-3 rounded-xl border px-3 py-2.5 text-sm font-medium transition ${
+                  active
+                    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+                    : "border-transparent text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+                }`}
+              >
+                <Icon size={18} className={active ? "text-emerald-400" : ""} />
+                {label}
+              </Link>
+            );
+          })}
         </nav>
-        {/* Mobile toggle button */}
-        <button
-          className="fixed top-4 left-4 z-30 md:hidden p-2 bg-zinc-900 text-white rounded-full"
-          onClick={toggleSidebar}
-        >
-          ☰
-        </button>
+
+        {/* Current user */}
+        {user && (
+          <div className="mt-auto flex items-center gap-3 border-t border-zinc-800/70 px-4 py-4">
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-400 text-sm font-bold text-zinc-950">
+              {initials(user.first_name, user.last_name)}
+            </span>
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold text-white">
+                {user.first_name} {user.last_name}
+              </div>
+              <div className="truncate text-xs text-zinc-500">{user.email}</div>
+            </div>
+          </div>
+        )}
       </aside>
     </>
   );
-};
-
-export default Sidebar;
-
-
-
-
-
+}

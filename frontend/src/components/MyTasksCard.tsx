@@ -40,7 +40,7 @@ export default function MyTasksCard({ tasks, loading, onTaskClick }: Props) {
               <h3 className="text-lg font-bold">My Tasks</h3>
               <Link
                   href="/dashboard/tasks"
-                  className="flex items-center gap-2 text-blue-400 hover:underline font-medium"
+                  className="flex items-center gap-2 text-emerald-400 hover:underline font-medium"
               >
                   <ListTodo className="w-5 h-5"/>
                   View All
@@ -88,7 +88,7 @@ export default function MyTasksCard({ tasks, loading, onTaskClick }: Props) {
 
 
           {/* List mini task cards */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {loading ? (
                   <div className="col-span-2 text-center text-gray-400">Loading tasks...</div>
               ) : visibleTasks.length === 0 ? (
@@ -96,7 +96,7 @@ export default function MyTasksCard({ tasks, loading, onTaskClick }: Props) {
               ) : (
                   visibleTasks.map((task) => (
                       <div key={task.id} onClick={() => onTaskClick?.(task)}
-                          className="bg-zinc-800 hover:bg-zinc-700 rounded-xl p-3 flex flex-col gap-1 transition border border-transparent hover:border-blue-600 group focus:outline-none"
+                          className="bg-zinc-800 hover:bg-zinc-700 rounded-xl p-3 flex flex-col gap-1 transition border border-transparent hover:border-emerald-500/50 group focus:outline-none"
                        role="button" tabIndex={0}>
                           <div className="flex items-center justify-between mb-1">
                               <span className="font-semibold truncate">{task.title}</span>
@@ -138,7 +138,7 @@ export default function MyTasksCard({ tasks, loading, onTaskClick }: Props) {
                               )}
                           </div>
                           {/* Project Name */}
-                          <div className="text-xs text-blue-300 truncate">
+                          <div className="text-xs text-emerald-300 truncate">
                               {task.project?.name}
                           </div>
                           {/* Progres bar - demo logic (100%  done, 60%  in progress, 0%  todo) */}

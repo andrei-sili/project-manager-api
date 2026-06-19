@@ -119,7 +119,7 @@ export default function TaskFiles({
         {/* Hidden input + custom label */}
         <label
           htmlFor="file-upload"
-          className="inline-flex items-center px-2 py-1 bg-zinc-800 text-blue-300 rounded-md cursor-pointer hover:bg-zinc-700 transition text-xs font-semibold gap-1"
+          className="inline-flex items-center px-2 py-1 bg-zinc-800 text-emerald-300 rounded-md cursor-pointer hover:bg-zinc-700 transition text-xs font-semibold gap-1"
         >
           <Paperclip size={14} />
           {fileToUpload ? "Change" : "Attach"}
@@ -151,7 +151,7 @@ export default function TaskFiles({
         )}
         <button
           type="submit"
-          className={`bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg text-white text-xs font-semibold disabled:opacity-60`}
+          className={`bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded-lg text-white text-xs font-semibold disabled:opacity-60`}
           disabled={uploading || !fileToUpload}
         >
           {uploading ? "..." : "Upload"}
@@ -181,13 +181,13 @@ export default function TaskFiles({
                         title="Preview"
                       />
                     ) : (
-                      <Paperclip size={15} className="text-blue-300 shrink-0" />
+                      <Paperclip size={15} className="text-emerald-300 shrink-0" />
                     )}
                     <a
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-300 font-semibold hover:underline text-xs truncate"
+                      className="text-emerald-300 font-semibold hover:underline text-xs truncate"
                       download={fileName}
                     >
                       {fileName}
@@ -199,7 +199,7 @@ export default function TaskFiles({
                   <div className="flex gap-1">
                     <a
                         href={`${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/files/${f.id}/download/`}
-                        className="text-xs bg-zinc-700 hover:bg-blue-700 text-white px-2 py-0.5 rounded"
+                        className="text-xs bg-zinc-700 hover:bg-emerald-700 text-white px-2 py-0.5 rounded"
                         style={{fontSize: "10px"}}
                         title="Download"
                     >

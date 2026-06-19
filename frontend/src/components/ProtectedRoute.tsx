@@ -17,7 +17,7 @@
 //   if (loading) {
 //     return (
 //       <div className="flex items-center justify-center h-screen">
-//         <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
+//         <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent" />
 //       </div>
 //     );
 //   }
@@ -55,7 +55,7 @@ export default function ProtectedRoute({ children }: Props) {
   if (loading || !isAuthenticated) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent" />
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-emerald-500 border-t-transparent" />
       </div>
     );
   }

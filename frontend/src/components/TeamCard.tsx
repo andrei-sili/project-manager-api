@@ -70,7 +70,7 @@ export default function TeamCard({ teams, loading }: Props) {
         <h3 className="text-lg font-bold">Teams</h3>
         <Link
           href="/dashboard/teams"
-          className="flex items-center gap-2 text-blue-400 hover:underline font-medium"
+          className="flex items-center gap-2 text-emerald-400 hover:underline font-medium"
         >
           <Users className="w-5 h-5" />
           View All
@@ -91,7 +91,7 @@ export default function TeamCard({ teams, loading }: Props) {
             return (
               <div
                 key={team.id}
-                className="bg-zinc-800 hover:bg-zinc-700 rounded-xl p-4 flex flex-col gap-2 border border-transparent hover:border-blue-600 transition"
+                className="bg-zinc-800 hover:bg-zinc-700 rounded-xl p-4 flex flex-col gap-2 border border-transparent hover:border-emerald-500/50 transition"
               >
                 <div className="font-semibold truncate">{team.name}</div>
                 <div className="flex items-center mt-2">
@@ -102,7 +102,7 @@ export default function TeamCard({ teams, loading }: Props) {
                     ))}
                     {rest > 0 && (
                       <span
-                        className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-zinc-900 bg-blue-700 text-xs font-bold text-white shadow"
+                        className="w-7 h-7 flex items-center justify-center rounded-full border-2 border-zinc-900 bg-emerald-700 text-xs font-bold text-white shadow"
                         title={`${rest} more`}
                       >
                         +{rest}

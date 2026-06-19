@@ -49,7 +49,7 @@ export default function TimeTrackingCard() {
 
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
         <div>
-          <p className="text-4xl font-extrabold text-blue-400">
+          <p className="text-4xl font-extrabold text-emerald-400">
             {formatMinutes(weekTotal)}
           </p>
           <p className="text-sm text-gray-400 mt-1">
@@ -75,7 +75,7 @@ export default function TimeTrackingCard() {
                   formatter={(v) => [`${formatMinutes(Number(v))} tracked`, ""]}
                   wrapperClassName="!bg-zinc-900 !text-white !rounded !px-2 !py-1"
                 />
-                <Bar dataKey="minutes" radius={[6, 6, 0, 0]} fill="#60a5fa" />
+                <Bar dataKey="minutes" radius={[6, 6, 0, 0]} fill="#34d399" />
               </BarChart>
             </ResponsiveContainer>
           </div>

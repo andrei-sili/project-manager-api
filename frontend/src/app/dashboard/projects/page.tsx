@@ -45,19 +45,19 @@ export default function ProjectsPage() {
   return (
     <div className="max-w-7xl mx-auto px-2 py-8">
       <div className="flex flex-col md:flex-row gap-4 md:gap-8 items-center mb-8 justify-between">
-        <h1 className="text-3xl font-extrabold text-blue-400 tracking-tight">Projects</h1>
+        <h1 className="text-3xl font-extrabold text-emerald-400 tracking-tight">Projects</h1>
         <div className="flex gap-2 w-full md:w-auto">
           <div className="relative flex-1">
             <Search className="absolute left-2 top-2 text-zinc-400" size={18} />
             <input
-              className="bg-zinc-800 pl-8 pr-3 py-2 rounded-lg text-white border border-zinc-700 focus:border-blue-500 outline-none w-full"
+              className="bg-zinc-800 pl-8 pr-3 py-2 rounded-lg text-white border border-zinc-700 focus:border-emerald-500 outline-none w-full"
               placeholder="Search projects…"
               value={search}
               onChange={e => setSearch(e.target.value)}
             />
           </div>
           <select
-            className="bg-zinc-800 px-3 py-2 rounded-lg text-white border border-zinc-700 focus:border-blue-500 outline-none"
+            className="bg-zinc-800 px-3 py-2 rounded-lg text-white border border-zinc-700 focus:border-emerald-500 outline-none"
             value={teamFilter}
             onChange={e => setTeamFilter(e.target.value)}
           >
@@ -67,7 +67,7 @@ export default function ProjectsPage() {
             ))}
           </select>
           <button
-            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg transition shadow"
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-5 rounded-lg transition shadow"
             onClick={() => setShowModal(true)}
           >
             <Plus size={19} />

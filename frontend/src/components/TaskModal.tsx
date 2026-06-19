@@ -115,7 +115,7 @@ export default function TaskModal({
       hash = str.charCodeAt(i) + ((hash << 5) - hash);
     }
     const colors = [
-      "bg-blue-700",
+      "bg-emerald-700",
       "bg-emerald-600",
       "bg-fuchsia-600",
       "bg-orange-500",
@@ -218,7 +218,7 @@ export default function TaskModal({
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/70 backdrop-blur-md" onClick={onClose} />
-      <div className="relative z-10 w-full max-w-2xl mx-auto rounded-[2.5rem] shadow-2xl border border-blue-800 bg-gradient-to-br from-zinc-950 to-zinc-900 flex flex-col min-h-[650px] max-h-[90vh] h-[90vh]">
+      <div className="relative z-10 w-full max-w-2xl mx-auto rounded-[2.5rem] shadow-2xl border border-zinc-800 bg-gradient-to-br from-zinc-950 to-zinc-900 flex flex-col min-h-[650px] max-h-[90vh] h-[90vh]">
         <div className="flex flex-col gap-2 px-10 pt-9 pb-2">
           <div className="flex justify-between items-center">
             <h2 className="text-3xl font-bold text-white tracking-tight break-words">{task.title}</h2>
@@ -226,7 +226,7 @@ export default function TaskModal({
               {onEditClick && (
                 <button
                   onClick={onEditClick}
-                  className="bg-zinc-700 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-semibold transition"
+                  className="bg-zinc-700 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl flex items-center gap-2 font-semibold transition"
                 >
                   <Edit2 size={18} /> Edit
                 </button>
@@ -320,7 +320,7 @@ export default function TaskModal({
                 placeholder="Minutes"
               />
               <button
-                className="bg-blue-700 hover:bg-blue-800 px-3 py-2 rounded text-white flex items-center gap-1"
+                className="bg-emerald-700 hover:bg-emerald-700 px-3 py-2 rounded text-white flex items-center gap-1"
                 onClick={handleAddManualTime}
               >
                 <PlusCircle size={16} />
@@ -352,7 +352,7 @@ export default function TaskModal({
                           className="bg-zinc-800 text-white w-14 p-1 rounded border border-zinc-700"
                         />
                         <button
-                          className="bg-blue-600 text-white rounded p-1"
+                          className="bg-emerald-600 text-white rounded p-1"
                           onClick={() => handleEditEntry(entry.id)}
                         >
                           <Save size={15} />
@@ -370,7 +370,7 @@ export default function TaskModal({
                     ) : (
                       <>
                         <button
-                          className="text-blue-400 hover:text-blue-600"
+                          className="text-emerald-400 hover:text-emerald-400"
                           onClick={() => {
                             setEditEntryId(entry.id);
                             setEditEntryMinutes(entry.minutes.toString());

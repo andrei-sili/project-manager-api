@@ -18,7 +18,7 @@ export default function TeamsPage() {
     });
   }, []);
 
-  if (!user || loading) return <div className="text-blue-500">Loading teams...</div>;
+  if (!user || loading) return <div className="text-emerald-400">Loading teams...</div>;
 
   return (
     <div className="max-w-6xl mx-auto py-10 px-4">
@@ -42,7 +42,7 @@ export default function TeamsPage() {
             </div>
 
             <div>
-              <h3 className="font-bold text-blue-400 mb-4 text-lg">Members</h3>
+              <h3 className="font-bold text-emerald-400 mb-4 text-lg">Members</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                 {team.members.length === 0 ? (
                   <div className="text-zinc-500 col-span-full">No members yet.</div>
@@ -52,9 +52,9 @@ export default function TeamsPage() {
                     const joinedAt = new Date(member.joined_at).toLocaleDateString();
                     const initial = member.user.first_name?.[0] || member.user.last_name?.[0] || member.user.email[0];
                     return (
-                      <div key={member.user.id} className="bg-zinc-800 rounded-xl p-4 flex flex-col gap-2 border border-zinc-700 hover:border-blue-500 transition">
+                      <div key={member.user.id} className="bg-zinc-800 rounded-xl p-4 flex flex-col gap-2 border border-zinc-700 hover:border-emerald-500/50 transition">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow">
+                          <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow">
                             {initial.toUpperCase()}
                           </div>
                           <div className="flex flex-col">
@@ -63,7 +63,7 @@ export default function TeamsPage() {
                           </div>
                         </div>
                         <div className="flex justify-between items-center text-sm">
-                          <span className="bg-blue-900 text-blue-300 px-2 py-0.5 rounded text-xs">{member.role}</span>
+                          <span className="bg-emerald-500/15 text-emerald-300 px-2 py-0.5 rounded text-xs">{member.role}</span>
                           <span className="text-zinc-500 text-xs">Joined: {joinedAt}</span>
                         </div>
                         {team.is_admin && user.id !== member.user.id && (
@@ -94,7 +94,7 @@ export default function TeamsPage() {
 
             {team.is_admin && (
               <div className="mt-6">
-                <h4 className="font-bold text-blue-300 mb-2">Invite Member</h4>
+                <h4 className="font-bold text-emerald-300 mb-2">Invite Member</h4>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <input
                     type="email"
@@ -119,7 +119,7 @@ export default function TeamsPage() {
                     <option value="admin">Admin</option>
                   </select>
                   <button
-                    className="bg-blue-700 hover:bg-blue-800 text-white rounded px-3 py-1"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white rounded px-3 py-1"
                     onClick={async () => {
                       try {
                         await inviteTeamMember(team.id, {
