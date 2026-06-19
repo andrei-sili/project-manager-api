@@ -7,7 +7,9 @@ from rest_framework.response import Response
 
 from apps.teams.models import Team, TeamMembership
 from apps.teams.permissions import IsTeamAdmin
-from apps.teams.serializers import TeamSerializer, TeamCreateSerializer
+from drf_spectacular.utils import OpenApiResponse, extend_schema
+
+from apps.teams.serializers import TeamSerializer, TeamCreateSerializer, InviteMemberSerializer
 from apps.users.models import CustomUser
 from django.db.models import Q
 
@@ -44,14 +46,17 @@ class TeamViewSet(viewsets.ModelViewSet):
             status='accepted'
         )
 
+    @extend_schema(
+        request=InviteMemberSerializer,
+        responses={200: OpenApiResponse(description="Invitation sent.")},
+    )
     @action(detail=True, methods=['post'], url_path='invite-member', permission_classes=[IsTeamAdmin])
     def invite_member(self, request, pk=None):
         team = self.get_object()
-        email = request.data.get('email')
-        role = request.data.get('role', 'developer')
-
-        if not email:
-            return Response({'error': 'Email is required'}, status=400)
+        serializer = InviteMemberSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        role = serializer.validated_data['role']
 
         try:
             user = CustomUser.objects.get(email=email)

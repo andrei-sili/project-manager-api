@@ -59,4 +59,4 @@ class TeamCreateSerializer(serializers.ModelSerializer):
 
 class InviteMemberSerializer(serializers.Serializer):
     email = serializers.EmailField()
-    role = serializers.ChoiceField(choices=TeamMembership.ROLE_CHOICES)
+    role = serializers.ChoiceField(choices=TeamMembership.ROLE_CHOICES, default='developer')

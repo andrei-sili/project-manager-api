@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.core.mail import send_mail
+from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
@@ -9,12 +10,19 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.teams.models import TeamMembership
 from apps.users.models import CustomUser, PasswordResetToken
-from apps.users.serializers import UserSerializer, UserRegisterSerializer, UserChangePasswordSerializer, \
-    ConfirmPasswordResetSerializer, RequestPasswordResetSerializer
+from apps.users.serializers import (
+    UserSerializer,
+    UserRegisterSerializer,
+    UserChangePasswordSerializer,
+    ConfirmPasswordResetSerializer,
+    RequestPasswordResetSerializer,
+    RegisterAndAcceptInviteSerializer,
+)
 
 
 class UserViewSet(viewsets.ViewSet):
 
+    @extend_schema(request=UserRegisterSerializer, responses={201: UserRegisterSerializer})
     @action(detail=False, methods=['post'], url_path='register', permission_classes=[permissions.AllowAny])
     def register(self, request):
         serializer = UserRegisterSerializer(data=request.data)
@@ -23,11 +31,13 @@ class UserViewSet(viewsets.ViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(responses={200: UserSerializer})
     @action(detail=False, methods=['get'], url_path='me', permission_classes=[permissions.IsAuthenticated])
     def me(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
 
+    @extend_schema(request=UserSerializer, responses={200: UserSerializer})
     @action(detail=False, methods=['patch'], url_path='update-profile',
             permission_classes=[permissions.IsAuthenticated])
     def update_profile(self, request):
@@ -36,6 +46,10 @@ class UserViewSet(viewsets.ViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
+    @extend_schema(
+        request=UserChangePasswordSerializer,
+        responses={200: OpenApiResponse(description="Password changed successfully.")},
+    )
     @action(detail=False, methods=['post'], url_path='change-password',
             permission_classes=[permissions.IsAuthenticated])
     def change_password(self, request):
@@ -59,7 +73,12 @@ class UserViewSet(viewsets.ViewSet):
 
 class RequestPasswordResetView(APIView):
     permission_classes = [AllowAny]
+    serializer_class = RequestPasswordResetSerializer
 
+    @extend_schema(
+        request=RequestPasswordResetSerializer,
+        responses={200: OpenApiResponse(description="A reset link is sent if the email exists.")},
+    )
     def post(self, request):
         serializer = RequestPasswordResetSerializer(data=request.data)
         if serializer.is_valid():
@@ -71,7 +90,6 @@ class RequestPasswordResetView(APIView):
 
             token = PasswordResetToken.objects.create(user=user)
             reset_link = f"{settings.FRONTEND_URL}/reset-password?token={token.token}"
-
 
             send_mail(
                 subject="Password Reset Request",
@@ -87,7 +105,12 @@ class RequestPasswordResetView(APIView):
 
 class ConfirmPasswordResetView(APIView):
     permission_classes = [AllowAny]
+    serializer_class = ConfirmPasswordResetSerializer
 
+    @extend_schema(
+        request=ConfirmPasswordResetSerializer,
+        responses={200: OpenApiResponse(description="Password reset successful.")},
+    )
     def post(self, request):
         serializer = ConfirmPasswordResetSerializer(data=request.data)
         if serializer.is_valid():
@@ -115,13 +138,18 @@ class ConfirmPasswordResetView(APIView):
 
 class RegisterAndAcceptInviteView(APIView):
     permission_classes = [permissions.AllowAny]
+    serializer_class = RegisterAndAcceptInviteSerializer
 
+    @extend_schema(request=RegisterAndAcceptInviteSerializer)
     def post(self, request):
-        email = request.data.get("email")
-        password = request.data.get("password")
-        first_name = request.data.get("first_name")
-        last_name = request.data.get("last_name")
-        team_id = request.data.get("team_id")
+        serializer = RegisterAndAcceptInviteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+        email = data["email"]
+        password = data["password"]
+        first_name = data["first_name"]
+        last_name = data["last_name"]
+        team_id = data["team_id"]
 
         try:
             user = CustomUser.objects.get(email=email)

@@ -52,7 +52,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         user = CustomUser.objects.create_user(**validated_data)
         return user
 
-    def get_token(self, user):
+    def get_token(self, user) -> dict:
         refresh = RefreshToken.for_user(user)
         return {
             'refresh': str(refresh),
@@ -106,3 +106,14 @@ def validate_password_strength(value):
     if not re.search(r"[!@#$%^&*(),.?\":{}|<>]", value):
         raise serializers.ValidationError("Password must contain at least one special character.")
     return value
+
+
+class RegisterAndAcceptInviteSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True)
+    first_name = serializers.CharField()
+    last_name = serializers.CharField()
+    team_id = serializers.IntegerField()
+
+    def validate_password(self, value):
+        return validate_password_strength(value)
