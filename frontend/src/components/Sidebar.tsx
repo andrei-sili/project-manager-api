@@ -11,6 +11,7 @@ import {
   Users,
   Clock,
   Calendar,
+  BarChart3,
   User as UserIcon,
   type LucideIcon,
 } from "lucide-react";
@@ -30,6 +31,7 @@ const navItems: NavItem[] = [
   { label: "Teams", href: "/dashboard/teams", Icon: Users },
   { label: "Time Tracking", href: "/dashboard/time-tracking", Icon: Clock },
   { label: "Calendar", href: "/dashboard/calendar", Icon: Calendar },
+  { label: "Reports", href: "/dashboard/reports", Icon: BarChart3 },
   { label: "Profile", href: "/dashboard/profile", Icon: UserIcon },
 ];
 
