@@ -37,6 +37,57 @@ export default function TaskModal({
   onTaskUpdated,
   onEditClick,
 }: TaskModalProps) {
+  // --- Hooks must run on every render, before any early return ---
+  const [timeEntries, setTimeEntries] = useState<any[]>([]);
+  const [isLoadingEntries, setIsLoadingEntries] = useState(false);
+  const [manualMinutes, setManualMinutes] = useState("");
+  const [timeEntryError, setTimeEntryError] = useState<string | null>(null);
+  const [editEntryId, setEditEntryId] = useState<number | null>(null);
+  const [editEntryMinutes, setEditEntryMinutes] = useState<string>("");
+
+  // Timer store (global)
+  const {
+    timer,
+    startTimer,
+    stopTimer,
+    resetTimer,
+    getElapsed,
+  } = useTimerStore();
+
+  const taskId = task?.id?.toString();
+
+  // Check if another timer is active
+  const isThisTaskActive = timer.running && timer.taskId === taskId;
+  const isOtherTaskActive = timer.running && timer.taskId && timer.taskId !== taskId;
+  const otherTaskId = timer.taskId && timer.taskId !== taskId ? timer.taskId : null;
+
+  // Local timer for UI update
+  const [localElapsed, setLocalElapsed] = useState(getElapsed());
+  useEffect(() => {
+    if (isThisTaskActive) {
+      const intv = setInterval(() => setLocalElapsed(getElapsed()), 1000);
+      return () => clearInterval(intv);
+    } else {
+      setLocalElapsed(getElapsed());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isThisTaskActive, timer.running, timer.taskId]);
+
+  // Fetch time entries for this task
+  useEffect(() => {
+    if (!task?.id) return;
+    setIsLoadingEntries(true);
+    getTimeEntriesForTask(task.id)
+      .then((data) => setTimeEntries(data))
+      .catch(() => setTimeEntries([]))
+      .finally(() => setIsLoadingEntries(false));
+    setManualMinutes("");
+    setEditEntryId(null);
+    setEditEntryMinutes("");
+    setTimeEntryError(null);
+  }, [task]);
+
+  // --- Early return AFTER all hooks (keeps hook order stable) ---
   if (!open || !task) return null;
 
   // Assigned user (avatar logic)
@@ -80,56 +131,6 @@ export default function TaskModal({
     (typeof task.project === "string" ? task.project : "") ||
     "—";
   const effectiveProjectId = projectId || task?.project?.id?.toString() || "";
-
-  // --- Time Tracking Section ---
-  const [timeEntries, setTimeEntries] = useState<any[]>([]);
-  const [isLoadingEntries, setIsLoadingEntries] = useState(false);
-  const [manualMinutes, setManualMinutes] = useState("");
-  const [timeEntryError, setTimeEntryError] = useState<string | null>(null);
-  const [editEntryId, setEditEntryId] = useState<number | null>(null);
-  const [editEntryMinutes, setEditEntryMinutes] = useState<string>("");
-
-  // Timer store (global)
-  const {
-    timer,
-    startTimer,
-    stopTimer,
-    resetTimer,
-    getElapsed,
-  } = useTimerStore();
-
-  const taskId = task.id?.toString();
-
-  // Check if another timer is active
-  const isThisTaskActive = timer.running && timer.taskId === taskId;
-  const isOtherTaskActive = timer.running && timer.taskId && timer.taskId !== taskId;
-  const otherTaskId = timer.taskId && timer.taskId !== taskId ? timer.taskId : null;
-
-  // Local timer for UI update
-  const [localElapsed, setLocalElapsed] = useState(getElapsed());
-  useEffect(() => {
-    if (isThisTaskActive) {
-      const intv = setInterval(() => setLocalElapsed(getElapsed()), 1000);
-      return () => clearInterval(intv);
-    } else {
-      setLocalElapsed(getElapsed());
-    }
-    // eslint-disable-next-line
-  }, [isThisTaskActive, timer.running, timer.taskId]);
-
-  // Fetch time entries for this task
-  useEffect(() => {
-    if (!task?.id) return;
-    setIsLoadingEntries(true);
-    getTimeEntriesForTask(task.id)
-      .then((data) => setTimeEntries(data))
-      .catch(() => setTimeEntries([]))
-      .finally(() => setIsLoadingEntries(false));
-    setManualMinutes("");
-    setEditEntryId(null);
-    setEditEntryMinutes("");
-    setTimeEntryError(null);
-  }, [task]);
 
   // --- Timer Handlers ---
   function handleStartTimer() {

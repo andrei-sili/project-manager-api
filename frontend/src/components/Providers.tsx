@@ -1,8 +1,7 @@
 // Path: frontend/src/components/Providers.tsx
 "use client";
 
-import React, { useState } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import React from "react";
 import AuthProvider from "./AuthProvider";
 import UIProvider from "./UIProvider";
 import { useApiInterceptors } from "@/lib/useApi";
@@ -15,15 +14,11 @@ function ApiInterceptorWrapper({ children }: Props) {
 }
 
 export default function Providers({ children }: Props) {
-  const [queryClient] = useState(() => new QueryClient());
-
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ApiInterceptorWrapper>
-          <UIProvider>{children}</UIProvider>
-        </ApiInterceptorWrapper>
-      </AuthProvider>
-    </QueryClientProvider>
+    <AuthProvider>
+      <ApiInterceptorWrapper>
+        <UIProvider>{children}</UIProvider>
+      </ApiInterceptorWrapper>
+    </AuthProvider>
   );
 }
