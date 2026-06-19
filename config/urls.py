@@ -24,6 +24,7 @@ from rest_framework_simplejwt.views import (
     TokenBlacklistView,
 )
 from rest_framework_nested import routers
+from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
 from apps.comments.views import CommentViewSet
 from apps.logs.views import ActivityLogViewSet
@@ -70,6 +71,8 @@ router.register("time-entries", TimeEntryViewSet, basename="timeentry")
 #  Final urlpatterns
 urlpatterns = [
                   path('admin/', admin.site.urls),
+                  path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
+                  path('api/docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
                   path('api/', include(router.urls)),
                   path('api/', include(projects_router.urls)),
                   path('api/', include('apps.users.urls')),

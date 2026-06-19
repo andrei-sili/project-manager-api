@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'django_filters',
     'corsheaders',
+    'drf_spectacular',
 
     # local apps
     'apps.users',
@@ -136,6 +137,16 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+}
+
+# --- API schema (drf-spectacular) -------------------------------------------
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'Project Manager API',
+    'DESCRIPTION': 'Team collaboration platform: projects, tasks (Kanban), '
+                   'time tracking, roles and real-time notifications.',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
 
 # --- SimpleJWT --------------------------------------------------------------
