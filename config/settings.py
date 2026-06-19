@@ -48,6 +48,7 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
 # --- Applications -----------------------------------------------------------
 INSTALLED_APPS = [
+    'daphne',  # must precede staticfiles so `runserver` uses the ASGI server (WebSockets)
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -62,6 +63,7 @@ INSTALLED_APPS = [
     'django_filters',
     'corsheaders',
     'drf_spectacular',
+    'channels',
 
     # local apps
     'apps.users',

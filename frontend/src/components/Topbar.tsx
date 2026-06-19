@@ -6,6 +6,7 @@ import Link from "next/link";
 import { Menu, ChevronDown, User as UserIcon, KeyRound, LogOut } from "lucide-react";
 import { useAuth } from "@/lib/useAuth";
 import { useUI } from "@/components/UIProvider";
+import NotificationBell from "@/components/NotificationBell";
 
 /**
  * Top bar: mobile menu button + greeting on the left, user menu on the right
@@ -46,7 +47,9 @@ const Topbar: React.FC = () => {
         </div>
       </div>
 
-      <div className="relative" ref={menuRef}>
+      <div className="flex items-center gap-1">
+        <NotificationBell />
+        <div className="relative" ref={menuRef}>
         <button
           onClick={() => setOpen((o) => !o)}
           className="flex items-center gap-2 rounded-xl border border-zinc-800 bg-zinc-900/60 py-1.5 pl-1.5 pr-2.5 transition hover:border-zinc-700"
@@ -84,6 +87,7 @@ const Topbar: React.FC = () => {
             </button>
           </div>
         )}
+        </div>
       </div>
     </header>
   );

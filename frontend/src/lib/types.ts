@@ -122,6 +122,15 @@ export interface PaginatedResponse<T> {
   results: T[];
 }
 
+// Notification (bell)
+export interface NotificationItem {
+  id: number;
+  message: string;
+  type: string;
+  is_read: boolean;
+  created_at: string;
+}
+
 // Activity log entry (audit feed)
 export interface ActivityLog {
   id: number;

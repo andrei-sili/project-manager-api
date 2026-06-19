@@ -1,7 +1,7 @@
 // frontend/src/lib/api.ts
 
 import axiosClient from "./axiosClient";
-import type { Project, Team, Task, TimeEntry, TimeSummary, ActivityLog } from "./types";
+import type { Project, Team, Task, TimeEntry, TimeSummary, ActivityLog, NotificationItem } from "./types";
 
 /** Paginated Response */
 interface Paginated<T> {
@@ -112,4 +112,14 @@ export async function getAllTimeEntries(): Promise<TimeEntry[]> {
 export async function getActivity(limit = 8): Promise<ActivityLog[]> {
   const res = await axiosClient.get<Paginated<ActivityLog>>("/logs/");
   return res.data.results.slice(0, limit);
+}
+
+/* ----- NOTIFICATIONS ----- */
+export async function getNotifications(): Promise<NotificationItem[]> {
+  const res = await axiosClient.get<Paginated<NotificationItem> | NotificationItem[]>("/notifications/");
+  return Array.isArray(res.data) ? res.data : res.data.results;
+}
+
+export async function markNotificationRead(id: number): Promise<void> {
+  await axiosClient.post(`/notifications/${id}/mark_as_read/`);
 }
