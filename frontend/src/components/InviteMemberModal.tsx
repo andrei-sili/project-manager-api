@@ -1,19 +1,27 @@
 // frontend/src/components/InviteMemberModal.tsx
 "use client";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import axios from "axios";
+import { getErrorMessage } from "@/lib/errors";
+
+type InviteMemberModalProps = {
+  open: boolean;
+  onClose: () => void;
+  teamId: number | string;
+  onInvited?: () => void;
+};
 
 // Modal for inviting a member to the team
-export default function InviteMemberModal({ open, onClose, teamId, onInvited }: any) {
+export default function InviteMemberModal({ open, onClose, teamId, onInvited }: InviteMemberModalProps) {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("member");
+  const [role, setRole] = useState("developer");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
   if (!open) return null;
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true); setError(""); setSuccess("");
     try {
@@ -24,14 +32,10 @@ export default function InviteMemberModal({ open, onClose, teamId, onInvited }: 
       );
       setSuccess("Invitation sent!");
       setEmail("");
-      setRole("member");
-      onInvited && onInvited();
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.email?.[0] ||
-        err?.response?.data?.detail ||
-        "Failed to send invitation."
-      );
+      setRole("developer");
+      onInvited?.();
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to send invitation."));
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function ChangePasswordPage() {
   const [old_password, setOldPassword] = useState("");
@@ -21,8 +22,8 @@ export default function ChangePasswordPage() {
       setError("Passwords do not match.");
       return;
     }
-    if (new_password.length < 8 || new_password.length > 16) {
-      setError("Password must be 8-16 characters.");
+    if (new_password.length < 8) {
+      setError("Password must be at least 8 characters.");
       return;
     }
     setLoading(true);
@@ -36,8 +37,8 @@ export default function ChangePasswordPage() {
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Password change failed.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Password change failed."));
     } finally {
       setLoading(false);
     }

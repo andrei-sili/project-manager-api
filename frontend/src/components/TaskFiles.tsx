@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Paperclip, X } from "lucide-react";
+import { getErrorMessage } from "@/lib/errors";
 
 interface TaskFile {
   id: number;
@@ -79,12 +80,8 @@ export default function TaskFiles({
       if (fileInputRef.current) fileInputRef.current.value = "";
       fetchFiles();
       if (onFilesUpdated) onFilesUpdated(); // Call refresh if provided
-    } catch (err: any) {
-      if (err?.response?.data?.file) {
-        setError(err.response.data.file[0]);
-      } else {
-        setError("Failed to upload file.");
-      }
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to upload file."));
     } finally {
       setUploading(false);
     }

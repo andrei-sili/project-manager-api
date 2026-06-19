@@ -56,7 +56,7 @@ export default function MyTasksPage() {
           open={showAdd}
           onClose={() => setShowAdd(false)}
           onAdded={loadTasks}
-          projectId={null}
+          projectId={""}
           teamMembers={[]}
         />
       )}

@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { X } from "lucide-react";
-import { User, Task, TeamMember, TaskStatus } from "@/lib/types";
+import type { Task, TeamMember } from "@/lib/types";
+import { getErrorMessage } from "@/lib/errors";
 
 
 interface EditTaskModalProps {
   open: boolean;
-  task: any;
+  task: Task;
   teamMembers: TeamMember[];
   projectId: number;
   onClose: () => void;
@@ -29,8 +30,8 @@ export default function EditTaskModal({
   const [dueDate, setDueDate] = useState(
     task?.due_date ? formatDateInput(task.due_date) : ""
   );
-  const [priority, setPriority] = useState(task?.priority || "medium");
-  const [status, setStatus] = useState(task?.status || "todo");
+  const [priority, setPriority] = useState<string>(task?.priority || "medium");
+  const [status, setStatus] = useState<string>(task?.status || "todo");
   const [assignee, setAssignee] = useState<number | "">(
   task.assigned_to && typeof task.assigned_to === "object"
     ? task.assigned_to.id
@@ -48,7 +49,7 @@ export default function EditTaskModal({
     setDueDate(task?.due_date ? formatDateInput(task.due_date) : "");
     setPriority(task?.priority || "medium");
     setStatus(task?.status || "todo");
-    setAssignee(task.assigned_to?.id || "");
+    setAssignee(task.assigned_to && typeof task.assigned_to === "object" ? task.assigned_to.id : "");
 
 
     setError("");
@@ -58,7 +59,7 @@ export default function EditTaskModal({
   if (!open) return null;
 
   // PATCH request to update task
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -82,14 +83,10 @@ export default function EditTaskModal({
         }
       );
       setSuccess("Task updated!");
-      onSaved && onSaved();
+      onSaved?.();
       onClose();
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.detail ||
-          JSON.stringify(err?.response?.data, null, 2) ||
-          "Could not update task."
-      );
+    } catch (err) {
+      setError(getErrorMessage(err, "Could not update task."));
     } finally {
       setLoading(false);
     }
@@ -109,38 +106,14 @@ export default function EditTaskModal({
           },
         }
       );
-      onSaved && onSaved();
+      onSaved?.();
       onClose();
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.detail ||
-          JSON.stringify(err?.response?.data, null, 2) ||
-          "Could not delete task."
-      );
+    } catch (err) {
+      setError(getErrorMessage(err, "Could not delete task."));
     } finally {
       setLoading(false);
     }
   };
-
-  // Status/priority colors
-  function statusColor(s: string) {
-    return s === "todo"
-      ? "bg-zinc-600"
-      : s === "in_progress"
-      ? "bg-yellow-600"
-      : s === "done"
-      ? "bg-green-700"
-      : "bg-zinc-600";
-  }
-  function priorityColor(p: string) {
-    return p === "low"
-      ? "bg-green-700"
-      : p === "medium"
-      ? "bg-yellow-700"
-      : p === "high"
-      ? "bg-red-700"
-      : "bg-zinc-600";
-  }
 
   // Format for input type="date"
   function formatDateInput(date: string) {
@@ -224,7 +197,7 @@ export default function EditTaskModal({
               className="w-full px-3 py-2 mt-1 rounded-md bg-zinc-800 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">— No assignee —</option>
-            {teamMembers.map((m: any) => (
+            {teamMembers.map((m) => (
                 <option key={m.user.id} value={m.user.id}>
                   {m.user.first_name} {m.user.last_name}
                 </option>

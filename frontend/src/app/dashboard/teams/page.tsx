@@ -4,7 +4,7 @@
 import React from "react";
 import { getTeams, removeMember, changeRole, inviteTeamMember, deleteTeam } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
-import type { Team, TeamMember } from "@/lib/types";
+import type { Team } from "@/lib/types";
 
 export default function TeamsPage() {
   const { user } = useAuth();
@@ -131,7 +131,7 @@ export default function TeamsPage() {
                           t.id === team.id ? { ...t, inviteEmail: "", inviteRole: "developer" } : t
                         ));
                         window.location.reload();
-                      } catch (e) {
+                      } catch {
                         alert("Failed to send invitation!");
                       }
                     }}

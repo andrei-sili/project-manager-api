@@ -1,20 +1,29 @@
 // frontend/src/components/EditProjectModal.tsx
 "use client";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import axios from "axios";
+import type { Project } from "@/lib/types";
+import { getErrorMessage } from "@/lib/errors";
+
+type EditProjectModalProps = {
+  project: Project;
+  open: boolean;
+  onClose: () => void;
+  onUpdated: () => void;
+};
 
 // Modal component for editing a project
-export default function EditProjectModal({ project, open, onClose, onUpdated }: any) {
+export default function EditProjectModal({ project, open, onClose, onUpdated }: EditProjectModalProps) {
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description);
-  const [budget, setBudget] = useState(project.budget || "");
+  const [budget, setBudget] = useState<string>(project.budget != null ? String(project.budget) : "");
   const [dueDate, setDueDate] = useState(project.due_date ? project.due_date.slice(0,10) : "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   if (!open) return null;
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent) => {
   e.preventDefault();
   setLoading(true); setError("");
   try {
@@ -30,8 +39,8 @@ export default function EditProjectModal({ project, open, onClose, onUpdated }: 
     );
     onUpdated();
     onClose();
-  } catch (err: any) {
-    setError(err?.response?.data?.detail || "Could not update project.");
+  } catch (err) {
+    setError(getErrorMessage(err, "Could not update project."));
   } finally {
     setLoading(false);
   }

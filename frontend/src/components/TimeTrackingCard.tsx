@@ -1,7 +1,8 @@
 // frontend/src/components/TimeTrackingCard.tsx
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { getTimeSummary } from "@/lib/api";
+import type { TimeSummary } from "@/lib/types";
 import {
   Tooltip,
   BarChart,
@@ -23,7 +24,7 @@ function formatMinutes(min: number) {
 }
 
 export default function TimeTrackingCard() {
-  const [summary, setSummary] = useState<any>(null);
+  const [summary, setSummary] = useState<TimeSummary | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -33,13 +34,8 @@ export default function TimeTrackingCard() {
       .finally(() => setLoading(false));
   }, []);
 
-  let chartData: { date: string; minutes: number }[] = [];
-  if (summary?.days) {
-    chartData = Object.entries(summary.days).map(([date, min]) => ({
-      date: date.slice(5),
-      minutes: min as number,
-    }));
-  }
+  const chartData =
+    summary?.per_day?.map((d) => ({ date: d.date.slice(5), minutes: d.minutes })) ?? [];
 
   const weekTotal = summary?.week_total_minutes ?? 0;
   const weekTarget = 8 * 7 * 60;

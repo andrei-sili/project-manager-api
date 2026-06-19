@@ -5,6 +5,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
 import axiosClient from "@/lib/axiosClient";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -45,25 +46,9 @@ export default function LoginPage() {
       } else {
         await login(email, password);
       }
-    } catch (e: any) {
-  const res = e?.response;
-  if (res?.data) {
-    const data = res.data;
-    if (typeof data === "string") {
-      setError(data);
-    } else if (typeof data === "object") {
-      const flatErrors = Object.entries(data)
-        .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(", ") : val}`)
-        .join(" | ");
-      setError(flatErrors || "Something went wrong.");
-    } else {
-      setError("Unexpected error occurred.");
-    }
-  } else {
-    setError(e.message || "Request failed.");
-  }
-}
- finally {
+    } catch (e) {
+      setError(getErrorMessage(e, "Request failed."));
+    } finally {
       setLoading(false);
     }
   };

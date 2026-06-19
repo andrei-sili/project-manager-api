@@ -63,7 +63,7 @@ export default function ProjectDetailsPage() {
       const { data: timeSummary } = await axiosClient.get(`/time-entries/summary/?project=${id}`);
       setTotalMinutes(timeSummary.total_minutes || 0);
 
-    } catch (err) {
+    } catch {
       setProject(null);
       setTasks([]);
       setMembers([]);
@@ -92,13 +92,10 @@ export default function ProjectDetailsPage() {
 }
 
 
-  function canEditOrDeleteProject(members: any[], userId: number | null | undefined) {
+  function canEditOrDeleteProject(members: TeamMember[], userId: number | null | undefined) {
   if (!userId) return false;
   return members.some(
-    (member) =>
-      member.user?.id === userId &&
-      member.role === "admin" &&
-      (member.status === "accepted" || !member.status)
+    (member) => member.user?.id === userId && member.role === "admin"
   );
 }
   const { user } = useAuth();
@@ -228,7 +225,7 @@ export default function ProjectDetailsPage() {
       </div>
 
       {/* MODALS */}
-      {showEditProject && (
+      {showEditProject && project && (
           <EditProjectModal
             open={showEditProject}
             project={project}
@@ -238,10 +235,10 @@ export default function ProjectDetailsPage() {
         )}
 
 
-      {showInvite && (
+      {showInvite && project?.team && (
         <InviteMemberModal
           open={showInvite}
-          teamId={project?.team?.id || project?.team}
+          teamId={project.team.id}
           onClose={() => setShowInvite(false)}
           onInvited={fetchAll}
         />

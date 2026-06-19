@@ -70,6 +70,7 @@ export interface Project {
   budget?: number | string | null;
   due_date?: string | null;
   time_tracked?: number;
+  task_count?: number;
 }
 
 // Time Entry
@@ -81,6 +82,18 @@ export interface TimeEntry {
   date: string;
   note?: string;
   created_at?: string;
+}
+
+export interface TimeSummaryDay {
+  date: string;
+  minutes: number;
+}
+
+export interface TimeSummary {
+  total_minutes: number;
+  today_minutes: number;
+  week_total_minutes: number;
+  per_day: TimeSummaryDay[];
 }
 
 // Comments (threaded)

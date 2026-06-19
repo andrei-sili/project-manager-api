@@ -28,7 +28,7 @@ export default function ProfilePage() {
       );
       setSuccess("Profile updated successfully!");
       refreshUser();
-    } catch (err: any) {
+    } catch {
       setError("Error updating profile.");
     } finally {
       setLoading(false);

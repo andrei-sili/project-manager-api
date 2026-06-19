@@ -5,6 +5,7 @@ import { X, Edit2, Trash2, Play, Pause, PlusCircle, Save, AlertTriangle } from "
 import { StatusBadge, PriorityBadge } from "@/components/TaskBadge";
 import { useTimerStore } from "@/lib/timerStore";
 import { getTimeEntriesForTask, createTimeEntry, editTimeEntry, deleteTimeEntry } from "@/lib/api";
+import type { Task, TeamMember, TimeEntry } from "@/lib/types";
 import TaskFiles from "@/components/TaskFiles";
 import TaskComments from "@/components/TaskComments";
 
@@ -12,9 +13,9 @@ import TaskComments from "@/components/TaskComments";
 // --- TaskModal Props ---
 type TaskModalProps = {
   open: boolean;
-  task: any;
+  task: Task;
   projectId: string;
-  teamMembers?: any[];
+  teamMembers?: TeamMember[];
   onClose: () => void;
   onDelete?: () => void;
   onTaskUpdated?: () => void;
@@ -31,14 +32,13 @@ export default function TaskModal({
   open,
   task,
   projectId,
-  teamMembers,
   onClose,
   onDelete,
   onTaskUpdated,
   onEditClick,
 }: TaskModalProps) {
   // --- Hooks must run on every render, before any early return ---
-  const [timeEntries, setTimeEntries] = useState<any[]>([]);
+  const [timeEntries, setTimeEntries] = useState<TimeEntry[]>([]);
   const [isLoadingEntries, setIsLoadingEntries] = useState(false);
   const [manualMinutes, setManualMinutes] = useState("");
   const [timeEntryError, setTimeEntryError] = useState<string | null>(null);
@@ -94,10 +94,10 @@ export default function TaskModal({
   const assignedUser =
     task.assigned_to && typeof task.assigned_to === "object"
       ? {
-          name: [task.assigned_to.first_name, task.assigned_to.last_name].filter(Boolean).join(" ") || task.assigned_to.name || "—",
+          name: [task.assigned_to.first_name, task.assigned_to.last_name].filter(Boolean).join(" ") || "—",
           email: task.assigned_to.email,
         }
-      : { name: task.assigned_to || "—", email: "" };
+      : { name: "—", email: "" };
 
   function getInitials(name: string) {
     if (!name) return "?";
@@ -126,10 +126,7 @@ export default function TaskModal({
   }
 
   const avatarClass = getAvatarColor(assignedUser.email || assignedUser.name);
-  const projectBadge =
-    task.project?.name ||
-    (typeof task.project === "string" ? task.project : "") ||
-    "—";
+  const projectBadge = task.project?.name || "—";
   const effectiveProjectId = projectId || task?.project?.id?.toString() || "";
 
   // --- Timer Handlers ---
@@ -157,7 +154,7 @@ export default function TaskModal({
           note: "Tracked with timer",
         });
         getTimeEntriesForTask(task.id).then(setTimeEntries);
-      } catch (err) {
+      } catch {
         setTimeEntryError("Failed to save time entry.");
       }
     }
@@ -182,7 +179,7 @@ export default function TaskModal({
       getTimeEntriesForTask(task.id).then(setTimeEntries);
       setManualMinutes("");
       setTimeEntryError(null);
-    } catch (err: any) {
+    } catch {
       setTimeEntryError("Failed to add time entry.");
     }
   }

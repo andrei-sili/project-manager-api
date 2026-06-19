@@ -71,7 +71,6 @@ export default function ProjectsDashboardCard({ projects, loading }: Props) {
                       Created by:{" "}
                       {typeof project.created_by === "object"
                           ? `${project.created_by.first_name ?? ""} ${project.created_by.last_name ?? ""}`.trim() ||
-                          project.created_by.name ||
                           "N/A"
                           : project.created_by || "N/A"}
                   </div>

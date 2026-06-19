@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { getAllTimeEntries, getTimeSummary } from "@/lib/api";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Legend } from "recharts";
 import { Loader2, Download } from "lucide-react";
-import type { TimeEntry } from "@/lib/types";
+import type { TimeEntry, TimeSummary } from "@/lib/types";
 
 // Colors for pie chart
 const COLORS = ["#2563eb", "#10b981", "#f59e42", "#a21caf", "#f43f5e", "#fbbf24", "#4b5563"];
@@ -18,7 +18,7 @@ function formatMinutes(min: number) {
 
 export default function TimeTrackingPage() {
   const [entries, setEntries] = useState<TimeEntry[]>([]);
-  const [summary, setSummary] = useState<any>(null);
+  const [summary, setSummary] = useState<TimeSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState(""); // Filter by task title or note
 

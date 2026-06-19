@@ -1,7 +1,7 @@
 // frontend/src/app/dashboard/projects/page.tsx
 "use client";
 import React, { useEffect, useState } from "react";
-import { Plus, Filter, Search, Loader2 } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import NewProjectModal from "@/components/NewProjectModal";
 import ProjectOverviewCard from "@/components/ProjectOverviewCard";
 import axios from "axios";

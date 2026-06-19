@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import apiClient from "@/lib/axiosClient";
+import { getErrorMessage } from "@/lib/errors";
 
 interface User {
   id: number;
@@ -16,7 +17,6 @@ interface User {
   first_name: string;
   last_name: string;
   date_joined?: string;
-  [key: string]: any;
 }
 interface AuthContextType {
   user: User | null;
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
     setUser(res.data);
-  } catch (err: any) {
+  } catch {
 
     try {
       const refreshRes = await apiClient.post<{ access: string }>("/token/refresh/", { refresh });
@@ -103,8 +103,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem("refresh", res.data.refresh);
       await refreshUser();
       router.push("/dashboard");
-    } catch (e: any) {
-      throw new Error(e?.response?.data?.detail || "Login failed");
+    } catch (e) {
+      throw new Error(getErrorMessage(e, "Login failed"));
     } finally {
       setLoading(false);
     }
@@ -112,6 +112,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Clears session and navigates to /login */
   const logout = (): void => {
+    const refresh = localStorage.getItem("refresh");
+    if (refresh) {
+      // Best-effort: blacklist the refresh token server-side; ignore failures.
+      apiClient.post("/logout/", { refresh }).catch(() => {});
+    }
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
     setUser(null);

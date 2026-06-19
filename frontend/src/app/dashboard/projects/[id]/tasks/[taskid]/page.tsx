@@ -6,11 +6,12 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import axios from "axios";
 import TaskModal from "@/components/TaskModal";
+import type { Task, TeamMember } from "@/lib/types";
 
 export default function TaskDetailPage() {
   const { id, taskid } = useParams();
-  const [task, setTask] = useState<any | null>(null);
-  const [teamMembers, setTeamMembers] = useState([]);
+  const [task, setTask] = useState<Task | null>(null);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 

@@ -41,7 +41,7 @@ export default function TaskComments({
         { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
       );
       setComments(res.data.results || res.data);
-    } catch (e) {
+    } catch {
       setError("Could not load comments.");
     } finally {
       setLoading(false);

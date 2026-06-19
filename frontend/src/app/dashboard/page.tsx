@@ -9,7 +9,7 @@ import TeamCard from "@/components/TeamCard";
 import UserProfileCard from "@/components/UserProfileCard";
 import TimeTrackingCard from "@/components/TimeTrackingCard";
 import apiClient from "@/lib/axiosClient";
-import { Project, Task, Team } from "@/lib/types";
+import { Project, Task, Team, TeamMember } from "@/lib/types";
 import TaskModal from "@/components/TaskModal";
 import EditTaskModal from "@/components/EditTaskModal";
 
@@ -20,7 +20,7 @@ export default function DashboardPage(): JSX.Element {
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
   const [projectId, setProjectId] = useState<string>("");
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [editTask, setEditTask] = useState<Task | null>(null);
 
   useEffect(() => {

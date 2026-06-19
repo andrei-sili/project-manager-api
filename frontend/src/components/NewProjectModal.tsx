@@ -2,6 +2,8 @@
 "use client";
 import { useState, useEffect } from "react";
 import axios from "axios";
+import type { Team } from "@/lib/types";
+import { getErrorMessage } from "@/lib/errors";
 
 // Modal for creating a new project (with team selection or quick create new team)
 export default function NewProjectModal({
@@ -16,7 +18,7 @@ export default function NewProjectModal({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [team, setTeam] = useState("");
-  const [teams, setTeams] = useState<any[]>([]);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [newTeamName, setNewTeamName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -30,6 +32,8 @@ export default function NewProjectModal({
       .then(res => setTeams(Array.isArray(res.data.results) ? res.data.results : []))
       .catch(() => setTeams([]));
   }, []);
+
+  if (!open) return null;
 
   // Handles submit for both flows: existing team or create new team
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,8 +56,6 @@ export default function NewProjectModal({
         { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
       );
       teamId = teamRes.data.id;
-
-      console.log("Created team:", teamRes.data);
     }
 
 
@@ -75,16 +77,8 @@ export default function NewProjectModal({
     setNewTeamName("");
     onProjectAdded();
     onClose();
-  } catch (err: any) {
-
-    console.log("Project create error:", err?.response?.data || err);
-    setError(
-      err?.response?.data?.team?.[0] ||
-      err?.response?.data?.name?.[0] ||
-      err?.response?.data?.description?.[0] ||
-      err?.response?.data?.detail ||
-      "Failed to create project."
-    );
+  } catch (err) {
+    setError(getErrorMessage(err, "Failed to create project."));
   } finally {
     setLoading(false);
   }

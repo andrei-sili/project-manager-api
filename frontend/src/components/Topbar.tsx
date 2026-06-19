@@ -5,14 +5,12 @@ import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/lib/useAuth";
 import Link from "next/link";
 
-interface TopbarProps {}
-
 /**
  * Topbar with greeting on the left,
  * avatar/email on the right and a dark-themed dropdown:
  * My Profile, Change Password, Logout.
  */
-const Topbar: React.FC<TopbarProps> = () => {
+const Topbar: React.FC = () => {
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);

@@ -1,7 +1,17 @@
 // frontend/src/components/AddTaskModal.tsx
 "use client";
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import axios from "axios";
+import type { TeamMember } from "@/lib/types";
+import { getErrorMessage } from "@/lib/errors";
+
+type AddTaskModalProps = {
+  open: boolean;
+  onClose: () => void;
+  projectId: string | number;
+  teamMembers: TeamMember[];
+  onAdded?: () => void;
+};
 
 export default function AddTaskModal({
   open,
@@ -9,7 +19,7 @@ export default function AddTaskModal({
   projectId,
   teamMembers,
   onAdded,
-}: any) {
+}: AddTaskModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -21,7 +31,7 @@ export default function AddTaskModal({
 
   if (!open) return null;
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -51,14 +61,10 @@ export default function AddTaskModal({
       setDueDate("");
       setPriority("medium");
       setAssignee("");
-      onAdded && onAdded();
+      onAdded?.();
       onClose();
-    } catch (err: any) {
-      setError(
-        JSON.stringify(err?.response?.data, null, 2) ||
-        err?.response?.data?.detail ||
-        "Could not create task."
-      );
+    } catch (err) {
+      setError(getErrorMessage(err, "Could not create task."));
     } finally {
       setLoading(false);
     }
@@ -131,7 +137,7 @@ export default function AddTaskModal({
           >
 
             <option value="">— No assignee —</option>
-            {teamMembers.map((m: any) => (
+            {teamMembers.map((m) => (
                 <option key={m.user.id} value={m.user.id}>
                   {m.user.first_name} {m.user.last_name}
                 </option>

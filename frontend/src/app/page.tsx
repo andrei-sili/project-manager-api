@@ -30,8 +30,8 @@ export default function LoginPage() {
     try {
       await login(email, password);
       // No need to redirect, AuthProvider will do it.
-    } catch (e: any) {
-      setError(e?.message || "Login failed. Check your credentials.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Login failed. Check your credentials.");
     } finally {
       setSubmitting(false);
     }

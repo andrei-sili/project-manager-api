@@ -13,13 +13,14 @@ import {
   Clock,
   User as UserIcon,
   Box,
+  type LucideIcon,
 } from "lucide-react";
 import { useUI } from "@/components/UIProvider";
 
 interface NavItem {
   label: string;
   href: string;
-  Icon: React.ComponentType<any>;
+  Icon: LucideIcon;
 }
 
 const navItems: NavItem[] = [

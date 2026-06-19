@@ -7,7 +7,7 @@ import {
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
-import { User, Task, TeamMember, TaskStatus } from "@/lib/types";
+import { Task, TeamMember, TaskStatus } from "@/lib/types";
 
 export interface KanbanBoardProps {
   tasks: Task[];
@@ -25,7 +25,6 @@ const statusColumns = [
 
 export default function KanbanBoard({
   tasks,
-  teamMembers,
   onStatusChange,
   onAddTask,
   onViewTask,

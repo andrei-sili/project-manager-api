@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ListTodo, Clock, ChevronRight } from "lucide-react";
+import { ListTodo, Clock } from "lucide-react";
 import { Task } from "@/lib/types";
 
 
