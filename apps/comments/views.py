@@ -2,7 +2,7 @@ from rest_framework import viewsets, permissions
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
 from apps.comments.models import Comment
-from apps.comments.permissions import IsProjectTeamMember
+from apps.comments.permissions import IsProjectTeamMember, IsCommentAuthor
 from apps.comments.serializers import CommentCreateSerializer, CommentSerializer
 from apps.logs.services import log_activity
 
@@ -15,6 +15,11 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     queryset = Comment.objects.none()  # actual rows come from get_queryset; set for schema generation
     permission_classes = [permissions.IsAuthenticated, IsProjectTeamMember]
+
+    def get_permissions(self):
+        if self.action in ('update', 'partial_update', 'destroy'):
+            return [permissions.IsAuthenticated(), IsProjectTeamMember(), IsCommentAuthor()]
+        return super().get_permissions()
 
     def get_task(self):
         task = get_object_or_404(Task, id=self.kwargs["task_pk"], project_id=self.kwargs["project_pk"])

@@ -136,7 +136,8 @@ def test_update_task_by_assignee_if_allowed(api_client):
     api_client.force_authenticate(user=user)
     url = reverse("project-tasks-detail", args=[project.id, task.id])
     res = api_client.patch(url, {"description": "Updated by assignee"})
-    assert res.status_code in (200, 403)
+    assert res.status_code == 200
+    assert res.data["description"] == "Updated by assignee"
 
 
 @pytest.mark.django_db
@@ -172,4 +173,20 @@ def test_create_task_with_past_due_date_should_fail(auth_client):
         "due_date": "2000-01-01"
     }
     res = auth_client.post(url, data)
-    assert res.status_code in (400, 201)
+    assert res.status_code == 400
+    assert "due_date" in res.data
+
+
+@pytest.mark.django_db
+def test_my_tasks_returns_only_own_tasks(auth_client):
+    user = auth_client.handler._force_user
+    team = TeamFactory(members=[user])
+    project = ProjectFactory(team=team)
+    mine_created = TaskFactory(project=project, created_by=user, assigned_to=None)
+    mine_assigned = TaskFactory(project=project, created_by=UserFactory(), assigned_to=user)
+    TaskFactory(project=project, created_by=UserFactory(), assigned_to=UserFactory())
+
+    res = auth_client.get(reverse("my-tasks-list"))
+    assert res.status_code == 200
+    ids = {t["id"] for t in res.data["results"]}
+    assert ids == {mine_created.id, mine_assigned.id}

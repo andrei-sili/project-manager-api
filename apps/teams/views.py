@@ -158,13 +158,7 @@ class TeamViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         team = self.get_object()
 
-        is_admin = TeamMembership.objects.filter(
-            team=team,
-            user=request.user,
-            role='admin'
-        ).exists()
-
-        if not is_admin:
+        if not team.has_admin(request.user):
             raise PermissionDenied("You must be team admin to delete this team.")
 
         team_name = team.name

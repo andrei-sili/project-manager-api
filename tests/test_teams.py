@@ -152,3 +152,29 @@ def test_create_team_with_duplicate_name_should_fail(auth_client):
     res2 = auth_client.post(url, data)
     assert res2.status_code == 400
     assert "name" in res2.data or "error" in res2.data
+
+
+@pytest.mark.django_db
+def test_cannot_demote_last_admin(auth_client):
+    admin = auth_client.handler._force_user
+    team = TeamFactory(created_by=admin)
+    TeamMembership.objects.create(team=team, user=admin, role="admin", status="accepted")
+
+    url = reverse("teams-change-role", args=[team.id])
+    res = auth_client.post(url, {"user_id": admin.id, "role": "developer"})
+
+    assert res.status_code == 400
+    assert TeamMembership.objects.get(team=team, user=admin).role == "admin"
+
+
+@pytest.mark.django_db
+def test_non_admin_cannot_delete_team(api_client):
+    admin = UserFactory()
+    team = TeamFactory(created_by=admin)
+    TeamMembership.objects.create(team=team, user=admin, role="admin", status="accepted")
+    dev = UserFactory()
+    TeamMembership.objects.create(team=team, user=dev, role="developer", status="accepted")
+
+    api_client.force_authenticate(user=dev)
+    res = api_client.delete(reverse("teams-detail", args=[team.id]))
+    assert res.status_code == 403

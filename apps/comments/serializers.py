@@ -20,14 +20,6 @@ class CommentSerializer(serializers.ModelSerializer):
     def get_user_name(self, obj) -> str:
         return f"{obj.user.first_name} {obj.user.last_name}"
 
-    def validate(self, data):
-        parent = data.get("parent")
-        task = self.context["view"].get_task()
-
-        if parent and parent.task_id != task.id:
-            raise serializers.ValidationError("Parent comment must belong to the same task.")
-        return data
-
 
 class CommentCreateSerializer(serializers.ModelSerializer):
     class Meta:
