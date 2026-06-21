@@ -1,7 +1,10 @@
+from datetime import timedelta
 from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
+from django.utils import timezone
+
 from tests.factories import UserFactory, TeamFactory, ProjectFactory, TaskFactory
 from apps.teams.models import TeamMembership
 from apps.tasks.models import Task
@@ -22,7 +25,7 @@ def test_create_task(auth_client):
         "assigned_to": assignee.id,
         "status": "todo",
         "priority": "medium",
-        "due_date": "2025-12-31"
+        "due_date": timezone.now().date() + timedelta(days=30)
     }
 
     res = auth_client.post(url, data)
@@ -90,15 +93,11 @@ def test_create_task_without_assignee(auth_client):
         "project": project.id,
         "status": "todo",
         "priority": "low",
-        "due_date": "2025-12-31"
+        "due_date": timezone.now().date() + timedelta(days=30)
     }
     res = auth_client.post(url, data)
     assert res.status_code == 201
     assert res.data["assigned_to"] is None
-
-
-from datetime import timedelta
-from django.utils import timezone
 
 
 @patch("apps.tasks.views.notify_user")
@@ -123,7 +122,6 @@ def test_notify_called_if_creator_not_assignee(mock_notify, auth_client):
     }
 
     res = auth_client.post(url, data)
-    print(res.data)  # DEBUG pentru a vedea cauza 400
     assert res.status_code == 201
     mock_notify.assert_called_once()
 
@@ -138,7 +136,8 @@ def test_update_task_by_assignee_if_allowed(api_client):
     api_client.force_authenticate(user=user)
     url = reverse("project-tasks-detail", args=[project.id, task.id])
     res = api_client.patch(url, {"description": "Updated by assignee"})
-    assert res.status_code in (200, 403)
+    assert res.status_code == 200
+    assert res.data["description"] == "Updated by assignee"
 
 
 @pytest.mark.django_db
@@ -174,4 +173,20 @@ def test_create_task_with_past_due_date_should_fail(auth_client):
         "due_date": "2000-01-01"
     }
     res = auth_client.post(url, data)
-    assert res.status_code in (400, 201)
+    assert res.status_code == 400
+    assert "due_date" in res.data
+
+
+@pytest.mark.django_db
+def test_my_tasks_returns_only_own_tasks(auth_client):
+    user = auth_client.handler._force_user
+    team = TeamFactory(members=[user])
+    project = ProjectFactory(team=team)
+    mine_created = TaskFactory(project=project, created_by=user, assigned_to=None)
+    mine_assigned = TaskFactory(project=project, created_by=UserFactory(), assigned_to=user)
+    TaskFactory(project=project, created_by=UserFactory(), assigned_to=UserFactory())
+
+    res = auth_client.get(reverse("my-tasks-list"))
+    assert res.status_code == 200
+    ids = {t["id"] for t in res.data["results"]}
+    assert ids == {mine_created.id, mine_assigned.id}

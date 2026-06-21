@@ -2,26 +2,34 @@ from django.conf import settings
 from django.core.mail import send_mail
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
-from rest_framework.exceptions import APIException, PermissionDenied
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from apps.teams.models import Team, TeamMembership
-from apps.teams.permisions import IsTeamAdmin
-from apps.teams.serializers import TeamSerializer, TeamCreateSerializer
+from apps.teams.permissions import IsTeamAdmin
+from drf_spectacular.utils import OpenApiResponse, extend_schema
+
+from apps.teams.serializers import TeamSerializer, TeamCreateSerializer, InviteMemberSerializer
 from apps.users.models import CustomUser
 from django.db.models import Q
 
 
 class TeamViewSet(viewsets.ModelViewSet):
+    """Teams the user belongs to, plus actions to invite, accept/decline, remove and change roles."""
+
     queryset = Team.objects.all()
     serializer_class = TeamSerializer
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = "pk"
 
     def get_queryset(self):
-        return Team.objects.filter(
-            Q(members=self.request.user) | Q(created_by=self.request.user)
-        ).distinct().order_by('-id')
+        return (
+            Team.objects.filter(Q(members=self.request.user) | Q(created_by=self.request.user))
+            .select_related('created_by')
+            .prefetch_related('membership_set__user')
+            .distinct()
+            .order_by('-id')
+        )
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -29,9 +37,8 @@ class TeamViewSet(viewsets.ModelViewSet):
         return TeamSerializer
 
     def perform_create(self, serializer):
-        name = serializer.validated_data.get("name")
-        if Team.objects.filter(name=name).exists():
-            raise APIException("A team with this name already exists.")
+        # Name uniqueness is enforced by the serializer (Team.name is unique),
+        # which returns a clean 400 instead of a 500.
         team = serializer.save(created_by=self.request.user)
         TeamMembership.objects.create(
             team=team,
@@ -40,14 +47,17 @@ class TeamViewSet(viewsets.ModelViewSet):
             status='accepted'
         )
 
+    @extend_schema(
+        request=InviteMemberSerializer,
+        responses={200: OpenApiResponse(description="Invitation sent.")},
+    )
     @action(detail=True, methods=['post'], url_path='invite-member', permission_classes=[IsTeamAdmin])
     def invite_member(self, request, pk=None):
         team = self.get_object()
-        email = request.data.get('email')
-        role = request.data.get('role', 'developer')
-
-        if not email:
-            return Response({'error': 'Email is required'}, status=400)
+        serializer = InviteMemberSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        email = serializer.validated_data['email']
+        role = serializer.validated_data['role']
 
         try:
             user = CustomUser.objects.get(email=email)
@@ -73,7 +83,7 @@ class TeamViewSet(viewsets.ModelViewSet):
         invite_link = f"{settings.FRONTEND_URL}/register?email={user.email}&team_id={team.id}"
         subject = f"You've been invited to join the team: {team.name}"
         message = f"Hi,\n\nYou've been invited to join '{team.name}' on Project Manager.\nAccept your invitation: {invite_link}"
-        send_mail(subject, message, 'no-reply@yourapp.com', [user.email])
+        send_mail(subject, message, None, [user.email])  # None -> DEFAULT_FROM_EMAIL
 
     @action(detail=True, methods=['post'], url_path='accept-invite', permission_classes=[permissions.IsAuthenticated])
     def accept_invite(self, request, pk=None):
@@ -101,6 +111,12 @@ class TeamViewSet(viewsets.ModelViewSet):
         except TeamMembership.DoesNotExist:
             return Response({'error': 'No invitation found'}, status=404)
 
+    @staticmethod
+    def _is_last_admin(team):
+        return TeamMembership.objects.filter(
+            team=team, role='admin', status='accepted'
+        ).count() <= 1
+
     @action(detail=True, methods=['post'], url_path='remove-member', permission_classes=[IsTeamAdmin])
     def remove_member(self, request, pk=None):
         team = self.get_object()
@@ -111,6 +127,9 @@ class TeamViewSet(viewsets.ModelViewSet):
 
         try:
             membership = TeamMembership.objects.get(team=team, user_id=user_id)
+            if membership.role == 'admin' and self._is_last_admin(team):
+                return Response({'error': 'Cannot remove the last admin of the team.'},
+                                status=status.HTTP_400_BAD_REQUEST)
             membership.delete()
             return Response({'status': 'member removed'})
         except TeamMembership.DoesNotExist:
@@ -127,6 +146,9 @@ class TeamViewSet(viewsets.ModelViewSet):
 
         try:
             membership = TeamMembership.objects.get(team=team, user_id=user_id)
+            if membership.role == 'admin' and new_role != 'admin' and self._is_last_admin(team):
+                return Response({'error': 'The team must keep at least one admin.'},
+                                status=status.HTTP_400_BAD_REQUEST)
             membership.role = new_role
             membership.save()
             return Response({'status': f'Role changed to {new_role}'})
@@ -136,13 +158,7 @@ class TeamViewSet(viewsets.ModelViewSet):
     def destroy(self, request, *args, **kwargs):
         team = self.get_object()
 
-        is_admin = TeamMembership.objects.filter(
-            team=team,
-            user=request.user,
-            role='admin'
-        ).exists()
-
-        if not is_admin:
+        if not team.has_admin(request.user):
             raise PermissionDenied("You must be team admin to delete this team.")
 
         team_name = team.name

@@ -1,5 +1,3 @@
-# backend/project/serializers.py
-
 from rest_framework import serializers
 from .models import TimeEntry
 from ..tasks.models import Task
@@ -17,6 +15,16 @@ class TimeEntrySerializer(serializers.ModelSerializer):
     task_id = serializers.PrimaryKeyRelatedField(
         queryset=Task.objects.all(), source="task", write_only=True
     )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Only allow logging time on tasks that belong to the user's teams.
+        request = self.context.get("request")
+        if request and request.user.is_authenticated:
+            self.fields["task_id"].queryset = Task.objects.filter(
+                project__team__membership_set__user=request.user,
+                project__team__membership_set__status="accepted",
+            )
 
     class Meta:
         model = TimeEntry

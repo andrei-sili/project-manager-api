@@ -1,9 +1,8 @@
 from rest_framework import viewsets, permissions
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
-from rest_framework.response import Response
 from apps.comments.models import Comment
-from apps.comments.permisions import IsProjectTeamMember
+from apps.comments.permissions import IsProjectTeamMember, IsCommentAuthor
 from apps.comments.serializers import CommentCreateSerializer, CommentSerializer
 from apps.logs.services import log_activity
 
@@ -12,11 +11,19 @@ from apps.tasks.models import Task
 
 
 class CommentViewSet(viewsets.ModelViewSet):
+    """Threaded comments on a task (restricted to the project's team members)."""
+
+    queryset = Comment.objects.none()  # actual rows come from get_queryset; set for schema generation
     permission_classes = [permissions.IsAuthenticated, IsProjectTeamMember]
+
+    def get_permissions(self):
+        if self.action in ('update', 'partial_update', 'destroy'):
+            return [permissions.IsAuthenticated(), IsProjectTeamMember(), IsCommentAuthor()]
+        return super().get_permissions()
 
     def get_task(self):
         task = get_object_or_404(Task, id=self.kwargs["task_pk"], project_id=self.kwargs["project_pk"])
-        if not task.project.team.members.filter(id=self.request.user.id).exists():
+        if not task.project.team.has_member(self.request.user):
             raise PermissionDenied("You are not a member of this team.")
         return task
 
@@ -52,17 +59,6 @@ class CommentViewSet(viewsets.ModelViewSet):
             target_repr=f"Comment on task: {task.title}",
             project=task.project
         )
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        page = self.paginate_queryset(queryset)
-
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
 
     def perform_destroy(self, instance):
         log_activity(

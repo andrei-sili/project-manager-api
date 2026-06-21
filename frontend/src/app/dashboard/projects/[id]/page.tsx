@@ -7,7 +7,7 @@ import EditTaskModal from "@/components/EditTaskModal";
 import TaskModal from "@/components/TaskModal";
 import InviteMemberModal from "@/components/InviteMemberModal";
 import { useRouter, useParams } from "next/navigation";
-import { Project, Task, TeamMember } from "@/lib/types";
+import { Project, Task, TaskStatus, TeamMember } from "@/lib/types";
 import EditProjectModal from "@/components/EditProjectModal";
 import { useAuth } from "@/lib/useAuth";
 
@@ -23,6 +23,7 @@ export default function ProjectDetailsPage() {
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [viewTask, setViewTask] = useState<Task | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const [showEditProject, setShowEditProject] = useState(false);
   const [showInvite, setShowInvite] = useState(false);
   const [totalMinutes, setTotalMinutes] = useState(0);
@@ -34,40 +35,34 @@ export default function ProjectDetailsPage() {
   const totalHours = Math.floor(totalMinutes / 60);
   const restMinutes = totalMinutes % 60;
 
-  // Fetch ALL (project, tasks, team)
+  // Fetch project, tasks and time summary in parallel; team depends on the
+  // project's team id so it follows.
   async function fetchAll() {
     setLoading(true);
+    setError("");
     try {
-      // 1. Project
-      const { data: projectData } = await axiosClient.get(`/projects/${id}/`);
-      setProject(projectData);
+      const [projectRes, tasksRes, timeRes] = await Promise.all([
+        axiosClient.get(`/projects/${id}/`),
+        axiosClient.get(`/projects/${id}/tasks/`),
+        axiosClient.get(`/time-entries/summary/?project=${id}`),
+      ]);
+      setProject(projectRes.data);
+      setTasks(tasksRes.data.results || []);
+      setTotalMinutes(timeRes.data.total_minutes || 0);
 
-      // 2. Tasks
-      const { data: tasksData } = await axiosClient.get(`/projects/${id}/tasks/`);
-      setTasks(tasksData.results || []);
-
-      // 3. Team Members (by team id din project)
-      if (projectData.team?.id || projectData.team_id || projectData.team) {
-        const tid = projectData.team?.id || projectData.team_id || projectData.team;
-        if (tid) {
-          const { data: teamData } = await axiosClient.get(`/teams/${tid}/`);
-          setMembers(teamData.members || []);
-        } else {
-          setMembers([]);
-        }
+      const tid = projectRes.data.team?.id || projectRes.data.team_id || projectRes.data.team;
+      if (tid) {
+        const { data: teamData } = await axiosClient.get(`/teams/${tid}/`);
+        setMembers(teamData.members || []);
       } else {
         setMembers([]);
       }
-
-      // 4. Project time tracked (summary)
-      const { data: timeSummary } = await axiosClient.get(`/time-entries/summary/?project=${id}`);
-      setTotalMinutes(timeSummary.total_minutes || 0);
-
-    } catch (err) {
+    } catch {
       setProject(null);
       setTasks([]);
       setMembers([]);
       setTotalMinutes(0);
+      setError("Could not load this project.");
     } finally {
       setLoading(false);
     }
@@ -78,10 +73,16 @@ export default function ProjectDetailsPage() {
 
   }, [id]);
 
-  // Kanban handlers
+  // Optimistically move the card; revert if the request fails.
   async function handleStatusChange(taskId: number, newStatus: string) {
-    await axiosClient.patch(`/projects/${id}/tasks/${taskId}/`, { status: newStatus });
-    fetchAll();
+    const previous = tasks;
+    setTasks(ts => ts.map(t => (t.id === taskId ? { ...t, status: newStatus as TaskStatus } : t)));
+    try {
+      await axiosClient.patch(`/projects/${id}/tasks/${taskId}/`, { status: newStatus });
+    } catch {
+      setTasks(previous);
+      setError("Could not update the task. Please try again.");
+    }
   }
 
   async function handleDeleteProject() {
@@ -92,13 +93,10 @@ export default function ProjectDetailsPage() {
 }
 
 
-  function canEditOrDeleteProject(members: any[], userId: number | null | undefined) {
+  function canEditOrDeleteProject(members: TeamMember[], userId: number | null | undefined) {
   if (!userId) return false;
   return members.some(
-    (member) =>
-      member.user?.id === userId &&
-      member.role === "admin" &&
-      (member.status === "accepted" || !member.status)
+    (member) => member.user?.id === userId && member.role === "admin"
   );
 }
   const { user } = useAuth();
@@ -107,12 +105,17 @@ export default function ProjectDetailsPage() {
 
   return (
     <div className="flex flex-col gap-8 max-w-[1600px] mx-auto pb-20 pt-10">
+      {error && (
+        <div className="rounded border border-red-700 bg-red-950/60 px-3 py-2 text-sm text-red-300">
+          {error}
+        </div>
+      )}
       {/* Project HEADER + meta */}
       <div
-          className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6 p-8 rounded-3xl shadow-xl bg-gradient-to-tr from-zinc-900 via-zinc-950 to-zinc-900 border border-blue-900">
+          className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6 p-8 rounded-3xl shadow-xl bg-gradient-to-tr from-zinc-900 via-zinc-950 to-zinc-900 border border-zinc-800">
         <div className="flex flex-col gap-2">
           <button
-              className="text-blue-400 text-sm hover:underline mb-2 w-max"
+              className="text-emerald-400 text-sm hover:underline mb-2 w-max"
               onClick={() => router.push("/dashboard/projects")}
           >← Back to projects
           </button>
@@ -148,7 +151,7 @@ export default function ProjectDetailsPage() {
           {/* Time + Progress */}
           <div className="flex gap-6 mt-3">
             <div className="text-zinc-400 flex gap-2 items-center">
-              <span className="font-bold text-lg text-blue-400">{progress}%</span> Progress
+              <span className="font-bold text-lg text-emerald-400">{progress}%</span> Progress
               <div className="w-32 h-2 bg-zinc-800 rounded ml-2">
                 <div className="bg-blue-500 h-2 rounded" style={{width: `${progress}%`}}></div>
               </div>
@@ -162,7 +165,7 @@ export default function ProjectDetailsPage() {
         <div className="flex flex-col gap-3">
           {canEdit && (
               <button
-                  className="bg-blue-600 hover:bg-blue-800 text-white px-7 py-3 rounded-2xl font-bold text-lg shadow-lg transition border border-blue-900"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white px-7 py-3 rounded-2xl font-bold text-lg shadow-lg transition border border-zinc-800"
                   onClick={() => setShowEditProject(true)}
               >
                 Edit Project
@@ -215,11 +218,10 @@ export default function ProjectDetailsPage() {
       <div>
         <h2 className="text-2xl font-bold mb-4 text-white">Tasks</h2>
         {loading ? (
-          <div className="text-center text-blue-300 py-16">Loading...</div>
+          <div className="text-center text-emerald-300 py-16">Loading...</div>
         ) : (
           <KanbanBoard
             tasks={tasks}
-            teamMembers={members}
             onStatusChange={handleStatusChange}
             onAddTask={() => setShowAdd(true)}
             onViewTask={setViewTask}
@@ -228,7 +230,7 @@ export default function ProjectDetailsPage() {
       </div>
 
       {/* MODALS */}
-      {showEditProject && (
+      {showEditProject && project && (
           <EditProjectModal
             open={showEditProject}
             project={project}
@@ -238,10 +240,10 @@ export default function ProjectDetailsPage() {
         )}
 
 
-      {showInvite && (
+      {showInvite && project?.team && (
         <InviteMemberModal
           open={showInvite}
-          teamId={project?.team?.id || project?.team}
+          teamId={project.team.id}
           onClose={() => setShowInvite(false)}
           onInvited={fetchAll}
         />

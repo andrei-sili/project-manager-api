@@ -9,6 +9,14 @@ import React, {
 } from "react";
 import { useRouter } from "next/navigation";
 import apiClient from "@/lib/axiosClient";
+import { getErrorMessage } from "@/lib/errors";
+import {
+  getAccessToken,
+  getRefreshToken,
+  setTokens,
+  clearTokens,
+  refreshAccessToken,
+} from "@/lib/token";
 
 interface User {
   id: number;
@@ -16,7 +24,6 @@ interface User {
   first_name: string;
   last_name: string;
   date_joined?: string;
-  [key: string]: any;
 }
 interface AuthContextType {
   user: User | null;
@@ -30,17 +37,6 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 /**
- * Refresh access token using refresh-token endpoint.
- * POST /api/token/refresh/
- */
-export async function refreshToken(): Promise<void> {
-  const refresh = localStorage.getItem("refresh");
-  if (!refresh) throw new Error("No refresh token");
-  const res = await apiClient.post<{ access: string }>("/token/refresh/", { refresh });
-  localStorage.setItem("access", res.data.access);
-}
-
-/**
  * Provides auth state & actions via context.
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -50,44 +46,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Load current user profile if token exists */
   const refreshUser = async (): Promise<void> => {
-  let access = localStorage.getItem("access");
-  const refresh = localStorage.getItem("refresh");
+    const access = getAccessToken();
+    const refresh = getRefreshToken();
 
-  if (!access || !refresh) {
-    setUser(null);
-    setLoading(false);
-    return;
-  }
-
-  try {
-    const res = await apiClient.get<User>("/users/me/", {
-      headers: {
-        Authorization: `Bearer ${access}`,
-      },
-    });
-    setUser(res.data);
-  } catch (err: any) {
+    if (!access || !refresh) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
 
     try {
-      const refreshRes = await apiClient.post<{ access: string }>("/token/refresh/", { refresh });
-      access = refreshRes.data.access;
-      localStorage.setItem("access", access);
-
-      const retryRes = await apiClient.get<User>("/users/me/", {
-        headers: {
-          Authorization: `Bearer ${access}`,
-        },
+      const res = await apiClient.get<User>("/users/me/", {
+        headers: { Authorization: `Bearer ${access}` },
       });
-      setUser(retryRes.data);
+      setUser(res.data);
     } catch {
-      localStorage.removeItem("access");
-      localStorage.removeItem("refresh");
-      setUser(null);
+      try {
+        const newAccess = await refreshAccessToken();
+        const retryRes = await apiClient.get<User>("/users/me/", {
+          headers: { Authorization: `Bearer ${newAccess}` },
+        });
+        setUser(retryRes.data);
+      } catch {
+        clearTokens();
+        setUser(null);
+      }
+    } finally {
+      setLoading(false);
     }
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
 
 
@@ -99,12 +86,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         "/token_obtain_pair/",
         { email, password }
       );
-      localStorage.setItem("access", res.data.access);
-      localStorage.setItem("refresh", res.data.refresh);
+      setTokens(res.data.access, res.data.refresh);
       await refreshUser();
       router.push("/dashboard");
-    } catch (e: any) {
-      throw new Error(e?.response?.data?.detail || "Login failed");
+    } catch (e) {
+      throw new Error(getErrorMessage(e, "Login failed"));
     } finally {
       setLoading(false);
     }
@@ -112,8 +98,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /** Clears session and navigates to /login */
   const logout = (): void => {
-    localStorage.removeItem("access");
-    localStorage.removeItem("refresh");
+    const refresh = getRefreshToken();
+    if (refresh) {
+      // Best-effort: blacklist the refresh token server-side; ignore failures.
+      apiClient.post("/logout/", { refresh }).catch(() => {});
+    }
+    clearTokens();
     setUser(null);
     router.replace("/login");
   };

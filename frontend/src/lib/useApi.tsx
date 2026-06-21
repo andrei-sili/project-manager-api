@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import apiClient from "@/lib/axiosClient";
+import { getAccessToken, refreshAccessToken } from "@/lib/token";
 import { useAuth } from "@/lib/useAuth";
 
 export function useApiInterceptors(): void {
@@ -10,7 +11,7 @@ export function useApiInterceptors(): void {
   useEffect(() => {
     // Request interceptor: attach access token
     const reqI = apiClient.interceptors.request.use((config) => {
-      const token = localStorage.getItem("access");
+      const token = getAccessToken();
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }
@@ -27,13 +28,11 @@ export function useApiInterceptors(): void {
         if (error.response?.status === 401 && !originalRequest._retry) {
           originalRequest._retry = true;
           try {
-            const refresh = localStorage.getItem("refresh");
-            const r2 = await apiClient.post<{ access: string }>("/token/refresh/", { refresh });
-            localStorage.setItem("access", r2.data.access);
+            const access = await refreshAccessToken();
             if (!originalRequest.headers) {
               originalRequest.headers = {};
             }
-            originalRequest.headers.Authorization = `Bearer ${r2.data.access}`;
+            originalRequest.headers.Authorization = `Bearer ${access}`;
             return apiClient.request(originalRequest);
           } catch {
             logout();

@@ -4,6 +4,8 @@ from apps.users.models import CustomUser
 
 
 class Team(models.Model):
+    """A group of users that owns projects; members join through TeamMembership."""
+
     name = models.CharField(max_length=100, unique=True)
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='teams_created')
     members = models.ManyToManyField(CustomUser, through='TeamMembership', related_name='teams_joined')
@@ -11,8 +13,24 @@ class Team(models.Model):
     def __str__(self):
         return self.name
 
+    def has_member(self, user):
+        """True if the user is an accepted member of this team."""
+        return self.membership_set.filter(
+            user=user, status=TeamMembership.STATUS_ACCEPTED
+        ).exists()
+
+    def has_admin(self, user):
+        """True if the user is an accepted admin of this team."""
+        return self.membership_set.filter(
+            user=user,
+            role=TeamMembership.ROLE_ADMIN,
+            status=TeamMembership.STATUS_ACCEPTED,
+        ).exists()
+
 
 class TeamMembership(models.Model):
+    """A user's membership in a team: their role and invitation status."""
+
     ROLE_ADMIN = 'admin'
     ROLE_MANAGER = 'manager'
     ROLE_DEVELOPER = 'developer'

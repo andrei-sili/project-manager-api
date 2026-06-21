@@ -106,7 +106,7 @@ def test_delete_comment_not_owned_should_fail(api_client):
     api_client.force_authenticate(user=other_user)
     url = reverse("task-comments-detail", args=[project.id, task.id, comment.id])
     res = api_client.delete(url)
-    assert res.status_code in (403, 204)  # 204 dacă nu ai restricție, 403 dacă da
+    assert res.status_code == 403  # only the comment's author may delete it
 
 
 @pytest.mark.django_db
@@ -157,4 +157,4 @@ def test_create_reply_to_comment_from_another_task_should_fail(auth_client):
     comment_from_other_task = CommentFactory(task=task2, user=user)
     url = reverse("task-comments-list", args=[project1.id, task1.id])
     res = auth_client.post(url, {"text": "invalid reply", "parent": comment_from_other_task.id})
-    assert res.status_code in (400, 403)
+    assert res.status_code == 400

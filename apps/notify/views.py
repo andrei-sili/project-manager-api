@@ -7,11 +7,16 @@ from .serializers import NotificationSerializer
 
 
 class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    """The current user's recent notifications, with a mark-as-read action."""
+
+    queryset = Notification.objects.none()  # actual rows come from get_queryset; set for schema generation
     serializer_class = NotificationSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user).order_by('-created_at')[:20]
+        # Ordering only; let pagination cap the page size so older notifications
+        # remain reachable.
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
 
     @action(detail=True, methods=["post"], url_path="mark_as_read")
     def mark_as_read(self, request, pk=None):

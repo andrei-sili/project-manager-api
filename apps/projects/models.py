@@ -5,6 +5,8 @@ from apps.users.models import CustomUser
 
 
 class Project(models.Model):
+    """A project owned by a team, with an optional budget and due date."""
+
     name = models.CharField(max_length=255, unique=True)
     description = models.TextField(blank=True)
     team = models.ForeignKey(Team, on_delete=models.CASCADE)

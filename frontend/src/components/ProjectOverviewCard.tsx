@@ -18,7 +18,7 @@ export default function ProjectOverviewCard({ project }: Props) {
       className="block focus:outline-none"
     >
       <div
-        className="rounded-2xl bg-zinc-900 shadow p-5 hover:shadow-lg hover:ring-2 hover:ring-blue-600 transition cursor-pointer flex flex-col gap-2"
+        className="rounded-2xl bg-zinc-900 shadow p-5 hover:shadow-lg hover:ring-2 hover:ring-emerald-500/40 transition cursor-pointer flex flex-col gap-2"
       >
         <div className="flex justify-between items-center">
           <h3 className="text-lg font-bold truncate">{project.name}</h3>
@@ -29,7 +29,7 @@ export default function ProjectOverviewCard({ project }: Props) {
         <div className="text-sm text-gray-400 mb-2 truncate">{project.description}</div>
         <div className="flex justify-between items-center mt-auto">
           {project.team && (
-            <span className="text-xs font-medium text-blue-400">
+            <span className="text-xs font-medium text-emerald-400">
               {project.team.name}
             </span>
           )}
@@ -37,7 +37,6 @@ export default function ProjectOverviewCard({ project }: Props) {
             Created by:{" "}
             {typeof project.created_by === "object"
               ? `${project.created_by.first_name ?? ""} ${project.created_by.last_name ?? ""}`.trim() ||
-                project.created_by.name ||
                 "N/A"
               : project.created_by || "N/A"}
           </span>

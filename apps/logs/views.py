@@ -5,11 +5,21 @@ from apps.logs.serializers import ActivityLogSerializer
 
 
 class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only activity/audit log, filterable by user, project or target type."""
+
     serializer_class = ActivityLogSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        queryset = ActivityLog.objects.all().order_by('-timestamp')
+        # Only logs for projects on teams the user is an accepted member of.
+        queryset = (
+            ActivityLog.objects.filter(
+                project__team__membership_set__user=self.request.user,
+                project__team__membership_set__status='accepted',
+            )
+            .select_related('user', 'project')
+            .order_by('-timestamp')
+        )
 
         user_id = self.request.query_params.get('user')
         project_id = self.request.query_params.get('project')
@@ -22,4 +32,4 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
         if target_type:
             queryset = queryset.filter(target_type=target_type)
 
-        return queryset.order_by('-timestamp')
+        return queryset

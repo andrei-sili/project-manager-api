@@ -70,6 +70,7 @@ export interface Project {
   budget?: number | string | null;
   due_date?: string | null;
   time_tracked?: number;
+  task_count?: number;
 }
 
 // Time Entry
@@ -81,6 +82,18 @@ export interface TimeEntry {
   date: string;
   note?: string;
   created_at?: string;
+}
+
+export interface TimeSummaryDay {
+  date: string;
+  minutes: number;
+}
+
+export interface TimeSummary {
+  total_minutes: number;
+  today_minutes: number;
+  week_total_minutes: number;
+  per_day: TimeSummaryDay[];
 }
 
 // Comments (threaded)
@@ -107,4 +120,26 @@ export interface PaginatedResponse<T> {
   next: string | null;
   previous: string | null;
   results: T[];
+}
+
+// Notification (bell)
+export interface NotificationItem {
+  id: number;
+  message: string;
+  type: string;
+  is_read: boolean;
+  created_at: string;
+}
+
+// Activity log entry (audit feed)
+export interface ActivityLog {
+  id: number;
+  user: { id: number; email: string; full_name: string } | null;
+  user_email: string;
+  project: number | null;
+  action: "created" | "updated" | "deleted" | "commented";
+  target_type: "task" | "comment" | "project";
+  target_id: number;
+  target_repr: string;
+  timestamp: string;
 }

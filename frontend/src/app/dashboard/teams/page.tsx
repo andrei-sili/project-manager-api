@@ -1,28 +1,35 @@
-// Path: frontend/src/app/dashboard/teams/page.tsx
 "use client";
 
 import React from "react";
 import { getTeams, removeMember, changeRole, inviteTeamMember, deleteTeam } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
-import type { Team, TeamMember } from "@/lib/types";
+import type { Team } from "@/lib/types";
 
 export default function TeamsPage() {
   const { user } = useAuth();
   const [loading, setLoading] = React.useState(true);
+  const [notice, setNotice] = React.useState("");
   const [teams, setTeams] = React.useState<(Team & { inviteEmail?: string; inviteRole?: string })[]>([]);
 
-  React.useEffect(() => {
-    getTeams().then(data => {
-      setTeams(data);
-      setLoading(false);
-    });
+  const loadTeams = React.useCallback(async () => {
+    const data = await getTeams();
+    setTeams(data);
   }, []);
 
-  if (!user || loading) return <div className="text-blue-500">Loading teams...</div>;
+  React.useEffect(() => {
+    loadTeams().finally(() => setLoading(false));
+  }, [loadTeams]);
+
+  if (!user || loading) return <div className="text-emerald-400">Loading teams...</div>;
 
   return (
     <div className="max-w-6xl mx-auto py-10 px-4">
       <h1 className="text-4xl font-bold mb-10 text-white">Your Teams</h1>
+      {notice && (
+        <div className="mb-6 rounded border border-emerald-700 bg-emerald-950/60 px-3 py-2 text-sm text-emerald-300">
+          {notice}
+        </div>
+      )}
       <div className="space-y-10">
         {teams.map(team => (
           <div key={team.id} className="bg-zinc-900 rounded-2xl shadow-xl p-6 border border-zinc-800">
@@ -33,7 +40,12 @@ export default function TeamsPage() {
               </div>
               {team.is_admin && (
                 <button
-                  onClick={() => deleteTeam(team.id).then(() => window.location.reload())}
+                  onClick={async () => {
+                    if (!window.confirm(`Delete team "${team.name}"?`)) return;
+                    await deleteTeam(team.id);
+                    setNotice(`Team "${team.name}" deleted.`);
+                    loadTeams();
+                  }}
                   className="bg-red-700 hover:bg-red-800 text-white rounded px-3 py-1 text-sm"
                 >
                   Delete Team
@@ -42,7 +54,7 @@ export default function TeamsPage() {
             </div>
 
             <div>
-              <h3 className="font-bold text-blue-400 mb-4 text-lg">Members</h3>
+              <h3 className="font-bold text-emerald-400 mb-4 text-lg">Members</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                 {team.members.length === 0 ? (
                   <div className="text-zinc-500 col-span-full">No members yet.</div>
@@ -52,9 +64,9 @@ export default function TeamsPage() {
                     const joinedAt = new Date(member.joined_at).toLocaleDateString();
                     const initial = member.user.first_name?.[0] || member.user.last_name?.[0] || member.user.email[0];
                     return (
-                      <div key={member.user.id} className="bg-zinc-800 rounded-xl p-4 flex flex-col gap-2 border border-zinc-700 hover:border-blue-500 transition">
+                      <div key={member.user.id} className="bg-zinc-800 rounded-xl p-4 flex flex-col gap-2 border border-zinc-700 hover:border-emerald-500/50 transition">
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-lg shadow">
+                          <div className="w-12 h-12 rounded-full bg-emerald-600 flex items-center justify-center text-white font-bold text-lg shadow">
                             {initial.toUpperCase()}
                           </div>
                           <div className="flex flex-col">
@@ -63,14 +75,18 @@ export default function TeamsPage() {
                           </div>
                         </div>
                         <div className="flex justify-between items-center text-sm">
-                          <span className="bg-blue-900 text-blue-300 px-2 py-0.5 rounded text-xs">{member.role}</span>
+                          <span className="bg-emerald-500/15 text-emerald-300 px-2 py-0.5 rounded text-xs">{member.role}</span>
                           <span className="text-zinc-500 text-xs">Joined: {joinedAt}</span>
                         </div>
                         {team.is_admin && user.id !== member.user.id && (
                           <div className="flex justify-end gap-2 mt-2">
                             <select
                               value={member.role}
-                              onChange={e => changeRole(team.id, member.user.id, e.target.value).then(() => window.location.reload())}
+                              onChange={async e => {
+                                await changeRole(team.id, member.user.id, e.target.value);
+                                setNotice(`Updated ${fullName}'s role.`);
+                                loadTeams();
+                              }}
                               className="bg-zinc-900 border border-zinc-700 text-white text-xs rounded px-2 py-1"
                             >
                               <option value="developer">Developer</option>
@@ -79,7 +95,12 @@ export default function TeamsPage() {
                             </select>
                             <button
                               className="text-red-500 text-xs hover:underline"
-                              onClick={() => removeMember(team.id, member.user.id).then(() => window.location.reload())}
+                              onClick={async () => {
+                                if (!window.confirm(`Remove ${fullName} from the team?`)) return;
+                                await removeMember(team.id, member.user.id);
+                                setNotice(`Removed ${fullName}.`);
+                                loadTeams();
+                              }}
                             >
                               Remove
                             </button>
@@ -94,7 +115,7 @@ export default function TeamsPage() {
 
             {team.is_admin && (
               <div className="mt-6">
-                <h4 className="font-bold text-blue-300 mb-2">Invite Member</h4>
+                <h4 className="font-bold text-emerald-300 mb-2">Invite Member</h4>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-2">
                   <input
                     type="email"
@@ -119,20 +140,20 @@ export default function TeamsPage() {
                     <option value="admin">Admin</option>
                   </select>
                   <button
-                    className="bg-blue-700 hover:bg-blue-800 text-white rounded px-3 py-1"
+                    className="bg-emerald-600 hover:bg-emerald-700 text-white rounded px-3 py-1"
                     onClick={async () => {
                       try {
                         await inviteTeamMember(team.id, {
                           email: team.inviteEmail,
                           role: team.inviteRole,
                         });
-                        alert("Invitation sent!");
+                        setNotice(`Invitation sent to ${team.inviteEmail}.`);
                         setTeams(teams => teams.map(t =>
                           t.id === team.id ? { ...t, inviteEmail: "", inviteRole: "developer" } : t
                         ));
-                        window.location.reload();
-                      } catch (e) {
-                        alert("Failed to send invitation!");
+                        loadTeams();
+                      } catch {
+                        setNotice("Failed to send invitation.");
                       }
                     }}
                     disabled={!team.inviteEmail}

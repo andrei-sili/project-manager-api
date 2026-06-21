@@ -1,37 +1,53 @@
-// frontend/src/components/EditProjectModal.tsx
 "use client";
-import { useState } from "react";
-import axios from "axios";
+import { useState, useEffect, type FormEvent } from "react";
+import axiosClient from "@/lib/axiosClient";
+import type { Project } from "@/lib/types";
+import { getErrorMessage } from "@/lib/errors";
+import Modal from "@/components/Modal";
+
+type EditProjectModalProps = {
+  project: Project;
+  open: boolean;
+  onClose: () => void;
+  onUpdated: () => void;
+};
 
 // Modal component for editing a project
-export default function EditProjectModal({ project, open, onClose, onUpdated }: any) {
+export default function EditProjectModal({ project, open, onClose, onUpdated }: EditProjectModalProps) {
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description);
-  const [budget, setBudget] = useState(project.budget || "");
+  const [budget, setBudget] = useState<string>(project.budget != null ? String(project.budget) : "");
   const [dueDate, setDueDate] = useState(project.due_date ? project.due_date.slice(0,10) : "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  if (!open) return null;
+  // Re-sync the form when the modal is (re)opened for a project.
+  useEffect(() => {
+    if (!open) return;
+    setName(project.name);
+    setDescription(project.description);
+    setBudget(project.budget != null ? String(project.budget) : "");
+    setDueDate(project.due_date ? project.due_date.slice(0, 10) : "");
+    setError("");
+  }, [project, open]);
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent) => {
   e.preventDefault();
   setLoading(true); setError("");
   try {
-    await axios.patch(
-      `${process.env.NEXT_PUBLIC_API_URL}/projects/${project.id}/`,
+    await axiosClient.patch(
+      `/projects/${project.id}/`,
       {
         name,
         description,
         budget: budget ? parseFloat(budget.replace(",", ".")) : null,
         due_date: dueDate || null,
-      },
-      { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      }
     );
     onUpdated();
     onClose();
-  } catch (err: any) {
-    setError(err?.response?.data?.detail || "Could not update project.");
+  } catch (err) {
+    setError(getErrorMessage(err, "Could not update project."));
   } finally {
     setLoading(false);
   }
@@ -39,15 +55,8 @@ export default function EditProjectModal({ project, open, onClose, onUpdated }: 
 
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70">
-      <form
-        className="bg-zinc-900 p-6 rounded-2xl shadow-lg w-full max-w-lg flex flex-col gap-4 border border-blue-700"
-        onSubmit={handleSubmit}
-      >
-        <div className="flex justify-between items-center mb-1">
-          <div className="text-lg font-bold">Edit Project</div>
-          <button type="button" className="text-gray-400 hover:text-red-400 text-xl" onClick={onClose}>×</button>
-        </div>
+    <Modal open={open} onClose={onClose} title="Edit Project">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <label className="text-sm">Name
           <input className="mt-1 bg-zinc-800 p-2 rounded w-full" value={name} onChange={e=>setName(e.target.value)} required/>
         </label>
@@ -63,13 +72,13 @@ export default function EditProjectModal({ project, open, onClose, onUpdated }: 
         {error && <div className="text-red-400 text-sm">{error}</div>}
         <button
           type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded mt-2"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded mt-2"
           disabled={loading}
         >
           {loading ? "Saving..." : "Save Changes"}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }
 

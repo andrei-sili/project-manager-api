@@ -1,4 +1,4 @@
-// frontend/src/components/TaskBadge.tsx
+"use client";
 import React from "react";
 import { Task } from "@/lib/types";
 
@@ -46,7 +46,7 @@ const TaskBadge: React.FC<TaskBadgeProps> = ({ task, onClick, onView }) => (
           e.stopPropagation();
           onView?.();
         }}
-        className="text-xs rounded bg-blue-800 text-white px-2 py-1"
+        className="text-xs rounded bg-emerald-700 text-white px-2 py-1"
       >
         View
       </button>
@@ -57,7 +57,7 @@ const TaskBadge: React.FC<TaskBadgeProps> = ({ task, onClick, onView }) => (
       <PriorityBadge priority={task.priority} />
     </div>
     {task.due_date && (
-      <div className="text-xs text-blue-400 mt-1">Due: {task.due_date}</div>
+      <div className="text-xs text-emerald-400 mt-1">Due: {task.due_date}</div>
     )}
   </div>
 );

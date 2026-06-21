@@ -1,32 +1,29 @@
-// frontend/src/app/dashboard/projects/[id]/tasks/[taskid]/page.tsx
 
 "use client";
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 import TaskModal from "@/components/TaskModal";
+import type { Task, TeamMember } from "@/lib/types";
 
 export default function TaskDetailPage() {
   const { id, taskid } = useParams();
-  const [task, setTask] = useState<any | null>(null);
-  const [teamMembers, setTeamMembers] = useState([]);
+  const [task, setTask] = useState<Task | null>(null);
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     async function fetchData() {
       try {
-        const token = localStorage.getItem("access");
-        const taskRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}/tasks/${taskid}/`,
-          { headers: { Authorization: `Bearer ${token}` } }
+        const taskRes = await axiosClient.get(
+          `/projects/${id}/tasks/${taskid}/`
         );
         setTask(taskRes.data);
 
-        const projectRes = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}/`,
-          { headers: { Authorization: `Bearer ${token}` } }
+        const projectRes = await axiosClient.get(
+          `/projects/${id}/`
         );
         setTeamMembers(projectRes.data.team?.members || []);
       } catch {
@@ -41,10 +38,8 @@ export default function TaskDetailPage() {
 
   const handleTaskUpdated = async () => {
     try {
-      const token = localStorage.getItem("access");
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${id}/tasks/${taskid}/`,
-        { headers: { Authorization: `Bearer ${token}` } }
+      const res = await axiosClient.get(
+        `/projects/${id}/tasks/${taskid}/`
       );
       setTask(res.data);
     } catch {

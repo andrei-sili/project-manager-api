@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    env:
+      ENVIRONMENT: development
+      SECRET_KEY: ci-secret-key-not-for-production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - run: python manage.py check
+      - run: pytest -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npx next lint
+      - run: npm test
+      - run: npm run build
+        env:
+          NEXT_PUBLIC_API_URL: http://localhost:8000/api
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build images
+        run: docker compose build
+      - name: Start the stack
+        run: docker compose up -d
+        env:
+          SECRET_KEY: ci-secret-key-not-for-production
+      - name: Wait for the backend to be healthy
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/api/health/; then
+              echo "backend healthy" && exit 0
+            fi
+            sleep 5
+          done
+          echo "backend did not become healthy" >&2
+          docker compose logs backend
+          exit 1
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

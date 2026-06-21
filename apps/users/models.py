@@ -8,6 +8,8 @@ from django.utils import timezone
 
 
 class CustomUserManager(BaseUserManager):
+    """Creates users and superusers using email instead of a username."""
+
     def create_user(self, email, password=None, **extra_fields):
         if not email:
             raise ValueError('User must an email address')
@@ -23,6 +25,8 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
+    """Application user. Email is the unique login identifier (USERNAME_FIELD)."""
+
     email = models.EmailField(max_length=100, unique=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
@@ -43,6 +47,8 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
 
 class PasswordResetToken(models.Model):
+    """One-time, time-limited token used to reset a password (expires after 1h)."""
+
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     token = models.UUIDField(default=uuid.uuid4, unique=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -3,6 +3,8 @@ from apps.users.models import CustomUser
 
 
 class Notification(models.Model):
+    """A notification for a user; also pushed live over WebSocket when created."""
+
     TYPE_CHOICES = [
         ('general', 'General'),
         ('task', 'Task'),
@@ -15,6 +17,11 @@ class Notification(models.Model):
     type = models.CharField(max_length=50, choices=TYPE_CHOICES, default='general')
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+        ]
 
     def __str__(self):
         return f"{self.user.email} - {self.type} - {self.message[:30]}"

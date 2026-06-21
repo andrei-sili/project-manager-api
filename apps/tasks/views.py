@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, permissions, filters
 from rest_framework.exceptions import PermissionDenied
@@ -6,13 +7,15 @@ from rest_framework.exceptions import PermissionDenied
 from apps.logs.services import log_activity
 from apps.notify.services import notify_user
 from apps.projects.models import Project
-from apps.projects.permisions import IsTeamMember
+from apps.projects.permissions import IsTeamMember
 from apps.tasks.models import Task
-from apps.tasks.permisions import IsTaskCreatorOrAssignee
+from apps.tasks.permissions import IsTaskCreatorOrAssignee
 from apps.tasks.serializers import TaskSerializer, TaskCreateSerializer, TaskUpdateSerializer
 
 
 class TaskViewSet(viewsets.ModelViewSet):
+    """Tasks within a project. Create/update/delete emit notifications and activity logs."""
+
     queryset = Task.objects.all()
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
     filterset_fields = ['status', 'priority', 'assigned_to', 'project']
@@ -26,7 +29,15 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         project_id = self.kwargs.get('project_pk')
-        return Task.objects.filter(project__id=project_id, project__team__members=self.request.user).order_by("-id")
+        return (
+            Task.objects.filter(
+                project__id=project_id,
+                project__team__membership_set__user=self.request.user,
+                project__team__membership_set__status='accepted',
+            )
+            .select_related('project', 'assigned_to', 'created_by')
+            .order_by("-id")
+        )
 
     def get_serializer_class(self):
         if self.action == 'update' or self.action == 'partial_update':
@@ -36,14 +47,15 @@ class TaskViewSet(viewsets.ModelViewSet):
         return TaskSerializer
 
     def perform_create(self, serializer):
+        """Validate team membership and assignee, save, notify the assignee and log the activity."""
         project_id = self.kwargs.get('project_pk')
-        project = Project.objects.get(id=project_id)
+        project = get_object_or_404(Project, id=project_id)
 
-        if not project.team.members.filter(id=self.request.user.id).exists():
+        if not project.team.has_member(self.request.user):
             raise PermissionDenied("You're not a member of this team.")
 
         assigned_user = serializer.validated_data.get('assigned_to')
-        if assigned_user and not project.team.members.filter(id=assigned_user.id).exists():
+        if assigned_user and not project.team.has_member(assigned_user):
             raise PermissionDenied("Assigned user is not part of this team.")
 
         task = serializer.save(created_by=self.request.user, project=project)
@@ -66,6 +78,10 @@ class TaskViewSet(viewsets.ModelViewSet):
         )
 
     def perform_update(self, serializer):
+        assigned_user = serializer.validated_data.get('assigned_to')
+        if assigned_user and not serializer.instance.project.team.has_member(assigned_user):
+            raise PermissionDenied("Assigned user is not part of this team.")
+
         task = serializer.save()
 
         log_activity(
@@ -90,11 +106,16 @@ class TaskViewSet(viewsets.ModelViewSet):
 
 
 class MyTaskViewSet(viewsets.ReadOnlyModelViewSet):
+    """Read-only list of tasks the current user created or is assigned to."""
+
+    queryset = Task.objects.none()  # actual rows come from get_queryset; set for schema generation
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
-        return Task.objects.filter(
-            Q(created_by=user) | Q(assigned_to=user)
-        ).order_by("-created_at")
+        return (
+            Task.objects.filter(Q(created_by=user) | Q(assigned_to=user))
+            .select_related('project', 'assigned_to', 'created_by')
+            .order_by("-created_at")
+        )

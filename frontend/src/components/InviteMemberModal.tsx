@@ -1,52 +1,46 @@
-// frontend/src/components/InviteMemberModal.tsx
 "use client";
-import { useState } from "react";
-import axios from "axios";
+import { useState, type FormEvent } from "react";
+import axiosClient from "@/lib/axiosClient";
+import { getErrorMessage } from "@/lib/errors";
+import Modal from "@/components/Modal";
+
+type InviteMemberModalProps = {
+  open: boolean;
+  onClose: () => void;
+  teamId: number | string;
+  onInvited?: () => void;
+};
 
 // Modal for inviting a member to the team
-export default function InviteMemberModal({ open, onClose, teamId, onInvited }: any) {
+export default function InviteMemberModal({ open, onClose, teamId, onInvited }: InviteMemberModalProps) {
   const [email, setEmail] = useState("");
-  const [role, setRole] = useState("member");
+  const [role, setRole] = useState("developer");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  if (!open) return null;
-
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true); setError(""); setSuccess("");
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/teams/${teamId}/invite-member/`,
-        { email, role },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      await axiosClient.post(
+        `/teams/${teamId}/invite-member/`,
+        { email, role }
       );
       setSuccess("Invitation sent!");
       setEmail("");
-      setRole("member");
-      onInvited && onInvited();
-    } catch (err: any) {
-      setError(
-        err?.response?.data?.email?.[0] ||
-        err?.response?.data?.detail ||
-        "Failed to send invitation."
-      );
+      setRole("developer");
+      onInvited?.();
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to send invitation."));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70">
-      <form
-        className="bg-zinc-900 p-6 rounded-2xl shadow-lg w-full max-w-md flex flex-col gap-4 border border-blue-700"
-        onSubmit={handleSubmit}
-      >
-        <div className="flex justify-between items-center mb-1">
-          <div className="text-lg font-bold">Invite Member</div>
-          <button type="button" className="text-gray-400 hover:text-red-400 text-xl" onClick={onClose}>×</button>
-        </div>
+    <Modal open={open} onClose={onClose} title="Invite Member" widthClass="max-w-md">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <label className="text-sm">Email
           <input className="mt-1 bg-zinc-800 p-2 rounded w-full" type="email" value={email} onChange={e=>setEmail(e.target.value)} required/>
         </label>
@@ -61,13 +55,13 @@ export default function InviteMemberModal({ open, onClose, teamId, onInvited }: 
         {success && <div className="text-green-400 text-sm">{success}</div>}
         <button
           type="submit"
-          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded mt-2"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-2 rounded mt-2"
           disabled={loading}
         >
           {loading ? "Sending..." : "Send Invitation"}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }
 

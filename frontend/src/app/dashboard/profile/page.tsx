@@ -1,8 +1,7 @@
-// frontend/src/app/dashboard/profile/page.tsx
 "use client";
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
-import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
@@ -21,14 +20,13 @@ export default function ProfilePage() {
     setSuccess("");
     setError("");
     try {
-      await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/update-profile/`,
-        { first_name, last_name },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      await axiosClient.patch(
+        `/users/update-profile/`,
+        { first_name, last_name }
       );
       setSuccess("Profile updated successfully!");
       refreshUser();
-    } catch (err: any) {
+    } catch {
       setError("Error updating profile.");
     } finally {
       setLoading(false);
@@ -77,7 +75,7 @@ export default function ProfilePage() {
         </div>
         <button
           type="submit"
-          className="w-full mt-3 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+          className="w-full mt-3 py-2 rounded bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition"
           disabled={loading}
         >
           {loading ? "Saving..." : "Save changes"}
@@ -99,7 +97,7 @@ export default function ProfilePage() {
             <button
               className="text-lg px-2 font-bold hover:opacity-70"
               onClick={() => {
-                setSuccess("Profile updated successfully!");
+                setSuccess("");
                 setError("");
               }}
               type="button"

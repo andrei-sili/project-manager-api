@@ -1,4 +1,3 @@
-// frontend/src/app/login/page.tsx
 
 "use client";
 import { useState, useEffect } from "react";
@@ -30,8 +29,8 @@ export default function LoginPage() {
     try {
       await login(email, password);
       // No need to redirect, AuthProvider will do it.
-    } catch (e: any) {
-      setError(e?.message || "Login failed. Check your credentials.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Login failed. Check your credentials.");
     } finally {
       setSubmitting(false);
     }
@@ -77,7 +76,7 @@ export default function LoginPage() {
         </div>
         <button
           type="submit"
-          className="w-full mt-3 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+          className="w-full mt-3 py-2 rounded bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition"
           disabled={submitting || loading}
         >
           {submitting || loading ? "Signing in..." : "Sign In"}

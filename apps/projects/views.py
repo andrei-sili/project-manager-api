@@ -4,11 +4,13 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 
 from apps.projects.models import Project
-from apps.projects.permisions import IsTeamMember, IsProjectAdmin
+from apps.projects.permissions import IsTeamMember, IsProjectAdmin
 from apps.projects.serializers import ProjectCreateSerializer, ProjectSerializer
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
+    """Projects the current user can access (those owned by teams they belong to)."""
+
     queryset = Project.objects.all()
     permission_classes = [permissions.IsAuthenticated, IsTeamMember]
     filter_backends = [DjangoFilterBackend, filters.OrderingFilter, filters.SearchFilter]
@@ -17,7 +19,19 @@ class ProjectViewSet(viewsets.ModelViewSet):
     search_fields = ['name', 'description']
 
     def get_queryset(self):
-        return Project.objects.filter(team__members=self.request.user).order_by('-id')
+        return (
+            Project.objects.filter(
+                team__membership_set__user=self.request.user,
+                team__membership_set__status='accepted',
+            )
+            .select_related('team', 'created_by')
+            .prefetch_related(
+                'tasks', 'tasks__assigned_to', 'tasks__created_by',
+                'team__membership_set__user',
+            )
+            .distinct()
+            .order_by('-id')
+        )
 
     def get_permissions(self):
         if self.action in ['update', 'partial_update', 'destroy']:
@@ -31,7 +45,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         team = serializer.validated_data.get('team')
-        if not team.members.filter(id=self.request.user.id).exists():
+        if not team.has_member(self.request.user):
             raise PermissionDenied("You are not a member of this team.")
         serializer.save(created_by=self.request.user)
 

@@ -1,7 +1,17 @@
-// frontend/src/components/AddTaskModal.tsx
 "use client";
-import { useState } from "react";
-import axios from "axios";
+import { useState, type FormEvent } from "react";
+import axiosClient from "@/lib/axiosClient";
+import type { TeamMember } from "@/lib/types";
+import { getErrorMessage } from "@/lib/errors";
+import Modal from "@/components/Modal";
+
+type AddTaskModalProps = {
+  open: boolean;
+  onClose: () => void;
+  projectId: string | number;
+  teamMembers: TeamMember[];
+  onAdded?: () => void;
+};
 
 export default function AddTaskModal({
   open,
@@ -9,7 +19,7 @@ export default function AddTaskModal({
   projectId,
   teamMembers,
   onAdded,
-}: any) {
+}: AddTaskModalProps) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [dueDate, setDueDate] = useState("");
@@ -17,19 +27,15 @@ export default function AddTaskModal({
   const [assignee, setAssignee] = useState<number | "">("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
-  if (!open) return null;
-
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setSuccess("");
 
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/`,
+      await axiosClient.post(
+        `/projects/${projectId}/tasks/`,
         {
           title,
           description,
@@ -38,49 +44,27 @@ export default function AddTaskModal({
           status: "todo",
           project: projectId,
           assigned_to: assignee || null,
-        },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
         }
       );
 
 
-      setSuccess("Task added!");
       setTitle("");
       setDescription("");
       setDueDate("");
       setPriority("medium");
       setAssignee("");
-      onAdded && onAdded();
+      onAdded?.();
       onClose();
-    } catch (err: any) {
-      setError(
-        JSON.stringify(err?.response?.data, null, 2) ||
-        err?.response?.data?.detail ||
-        "Could not create task."
-      );
+    } catch (err) {
+      setError(getErrorMessage(err, "Could not create task."));
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70">
-      <form
-          className="bg-zinc-900 p-6 rounded-2xl shadow-lg w-full max-w-md flex flex-col gap-4 border border-green-700"
-          onSubmit={handleSubmit}
-      >
-        <div className="flex justify-between items-center mb-1">
-          <div className="text-lg font-bold">Add Task</div>
-          <button
-              type="button"
-              className="text-gray-400 hover:text-red-400 text-xl"
-              onClick={onClose}
-          >
-            ×
-          </button>
-        </div>
-
+    <Modal open={open} onClose={onClose} title="Add Task" widthClass="max-w-md">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <label className="text-sm">Title
           <input
               className="mt-1 bg-zinc-800 p-2 rounded w-full"
@@ -127,11 +111,11 @@ export default function AddTaskModal({
           <select
               value={assignee}
               onChange={e => setAssignee(Number(e.target.value) || "")}
-              className="w-full px-3 py-2 mt-1 rounded-md bg-zinc-800 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 mt-1 rounded-md bg-zinc-800 text-white border border-zinc-700 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           >
 
             <option value="">— No assignee —</option>
-            {teamMembers.map((m: any) => (
+            {teamMembers.map((m) => (
                 <option key={m.user.id} value={m.user.id}>
                   {m.user.first_name} {m.user.last_name}
                 </option>
@@ -143,7 +127,6 @@ export default function AddTaskModal({
 
 
         {error && <div className="text-red-400 text-sm whitespace-pre-wrap">{error}</div>}
-        {success && <div className="text-green-400 text-sm">{success}</div>}
 
         <button
             type="submit"
@@ -153,7 +136,7 @@ export default function AddTaskModal({
           {loading ? "Saving..." : "Add Task"}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }
 

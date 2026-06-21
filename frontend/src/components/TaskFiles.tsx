@@ -1,8 +1,8 @@
-// frontend/src/components/TaskFiles.tsx
-
+"use client";
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 import { Paperclip, X } from "lucide-react";
+import { getErrorMessage } from "@/lib/errors";
 
 interface TaskFile {
   id: number;
@@ -22,6 +22,8 @@ interface TaskFilesProps {
 const getFileName = (f: TaskFile) =>
   f.file.split('/').pop() || "file";
 
+const isImageName = (name: string) => /\.(png|jpg|jpeg|gif|bmp|webp)$/i.test(name);
+
 export default function TaskFiles({
   projectId,
   taskId,
@@ -29,23 +31,46 @@ export default function TaskFiles({
   onFilesUpdated,
 }: TaskFilesProps) {
   const [files, setFiles] = useState<TaskFile[]>([]);
+  const [previews, setPreviews] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const previewsRef = useRef<Record<number, string>>({});
+  previewsRef.current = previews;
 
   const fetchFiles = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/files/`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
-        }
+      const res = await axiosClient.get(
+        `/projects/${projectId}/tasks/${taskId}/files/`
       );
-      setFiles(res.data.results || res.data);
+      const list: TaskFile[] = res.data.results || res.data;
+      setFiles(list);
       setError("");
+
+      // Build authenticated object-URL previews for images so we never depend
+      // on a publicly served /media/ path.
+      const pairs = await Promise.all(
+        list
+          .filter((f) => isImageName(getFileName(f)))
+          .map(async (f) => {
+            try {
+              const r = await axiosClient.get(
+                `/projects/${projectId}/tasks/${taskId}/files/${f.id}/download/`,
+                { responseType: "blob" }
+              );
+              return [f.id, URL.createObjectURL(r.data)] as const;
+            } catch {
+              return null;
+            }
+          })
+      );
+      setPreviews((prev) => {
+        Object.values(prev).forEach((u) => URL.revokeObjectURL(u));
+        return Object.fromEntries(pairs.filter(Boolean) as [number, string][]);
+      });
     } catch {
       setError("Could not load files.");
     } finally {
@@ -58,6 +83,11 @@ export default function TaskFiles({
     // eslint-disable-next-line
   }, [projectId, taskId]);
 
+  // Revoke any outstanding object URLs on unmount.
+  useEffect(() => () => {
+    Object.values(previewsRef.current).forEach((u) => URL.revokeObjectURL(u));
+  }, []);
+
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!fileToUpload) return;
@@ -65,41 +95,50 @@ export default function TaskFiles({
     const formData = new FormData();
     formData.append("file", fileToUpload);
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/files/`,
+      await axiosClient.post(
+        `/projects/${projectId}/tasks/${taskId}/files/`,
         formData,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         }
       );
       setFileToUpload(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
       fetchFiles();
       if (onFilesUpdated) onFilesUpdated(); // Call refresh if provided
-    } catch (err: any) {
-      if (err?.response?.data?.file) {
-        setError(err.response.data.file[0]);
-      } else {
-        setError("Failed to upload file.");
-      }
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to upload file."));
     } finally {
       setUploading(false);
+    }
+  };
+
+  // The download endpoint is authenticated, so fetch it as a blob (carrying the
+  // bearer token via axiosClient) rather than navigating to a bare URL.
+  const handleDownload = async (f: TaskFile) => {
+    try {
+      const res = await axiosClient.get(
+        `/projects/${projectId}/tasks/${taskId}/files/${f.id}/download/`,
+        { responseType: "blob" }
+      );
+      const url = window.URL.createObjectURL(res.data);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = getFileName(f);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setError("Failed to download file.");
     }
   };
 
   const handleDelete = async (fileId: number) => {
     if (!window.confirm("Delete this file?")) return;
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/files/${fileId}/`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-          },
-        }
+      await axiosClient.delete(
+        `/projects/${projectId}/tasks/${taskId}/files/${fileId}/`
       );
       fetchFiles();
       if (onFilesUpdated) onFilesUpdated(); // Call refresh if provided
@@ -122,7 +161,7 @@ export default function TaskFiles({
         {/* Hidden input + custom label */}
         <label
           htmlFor="file-upload"
-          className="inline-flex items-center px-2 py-1 bg-zinc-800 text-blue-300 rounded-md cursor-pointer hover:bg-zinc-700 transition text-xs font-semibold gap-1"
+          className="inline-flex items-center px-2 py-1 bg-zinc-800 text-emerald-300 rounded-md cursor-pointer hover:bg-zinc-700 transition text-xs font-semibold gap-1"
         >
           <Paperclip size={14} />
           {fileToUpload ? "Change" : "Attach"}
@@ -154,7 +193,7 @@ export default function TaskFiles({
         )}
         <button
           type="submit"
-          className={`bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded-lg text-white text-xs font-semibold disabled:opacity-60`}
+          className={`bg-emerald-600 hover:bg-emerald-700 px-3 py-1 rounded-lg text-white text-xs font-semibold disabled:opacity-60`}
           disabled={uploading || !fileToUpload}
         >
           {uploading ? "..." : "Upload"}
@@ -169,45 +208,43 @@ export default function TaskFiles({
           <ul className="space-y-1">
             {files.map((f: TaskFile) => {
               const fileName = getFileName(f);
-              const isImage = /\.(png|jpg|jpeg|gif|bmp|webp)$/i.test(fileName);
-              const url = f.file_url;
+              const preview = previews[f.id];
               return (
                 <li key={f.id} className="flex items-center justify-between bg-zinc-800 p-2 rounded">
                   <div className="flex items-center gap-2 min-w-0">
-                    {isImage ? (
+                    {preview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={url}
+                        src={preview}
                         alt={fileName}
                         className="w-8 h-8 object-cover rounded shadow border border-zinc-700 cursor-pointer"
                         style={{ minWidth: 32, minHeight: 32, maxWidth: 32, maxHeight: 32 }}
-                        onClick={() => window.open(url, "_blank")}
-                        title="Preview"
+                        onClick={() => handleDownload(f)}
+                        title="Download"
                       />
                     ) : (
-                      <Paperclip size={15} className="text-blue-300 shrink-0" />
+                      <Paperclip size={15} className="text-emerald-300 shrink-0" />
                     )}
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-300 font-semibold hover:underline text-xs truncate"
-                      download={fileName}
+                    <button
+                      type="button"
+                      onClick={() => handleDownload(f)}
+                      className="text-emerald-300 font-semibold hover:underline text-xs truncate"
                     >
                       {fileName}
-                    </a>
+                    </button>
                     <span className="ml-2 text-xs text-gray-400 truncate">
                       by {f.uploaded_by}
                     </span>
                   </div>
                   <div className="flex gap-1">
-                    <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/files/${f.id}/download/`}
-                        className="text-xs bg-zinc-700 hover:bg-blue-700 text-white px-2 py-0.5 rounded"
-                        style={{fontSize: "10px"}}
+                    <button
+                        type="button"
+                        onClick={() => handleDownload(f)}
+                        className="text-xs bg-zinc-700 hover:bg-emerald-700 text-white px-2 py-0.5 rounded text-[10px]"
                         title="Download"
                     >
                       Download
-                    </a>
+                    </button>
 
                     <button
                         className="text-xs bg-zinc-700 hover:bg-red-700 text-white px-2 py-0.5 rounded"

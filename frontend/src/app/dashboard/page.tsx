@@ -1,141 +1,138 @@
-// frontend/src/app/dashboard/page.tsx
-
 "use client";
 
-import React, { useState, useEffect, JSX } from "react";
-import ProjectsDashboardCard from "@/components/ProjectsDashboardCard";
-import MyTasksCard from "@/components/MyTasksCard";
-import TeamCard from "@/components/TeamCard";
-import UserProfileCard from "@/components/UserProfileCard";
-import TimeTrackingCard from "@/components/TimeTrackingCard";
-import apiClient from "@/lib/axiosClient";
-import { Project, Task, Team } from "@/lib/types";
-import TaskModal from "@/components/TaskModal";
-import EditTaskModal from "@/components/EditTaskModal";
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { getProjects, getTimeSummary, getActivity } from "@/lib/api";
+import { useAuth } from "@/lib/useAuth";
+import type { Project, TimeSummary, ActivityLog } from "@/lib/types";
+import StatCard from "@/components/StatCard";
+import WeekBars from "@/components/WeekBars";
+import ActivityFeed from "@/components/ActivityFeed";
 
-export default function DashboardPage(): JSX.Element {
+function formatHours(min: number) {
+  const h = Math.floor(min / 60);
+  const m = min % 60;
+  if (h && m) return `${h}h ${m}m`;
+  if (h) return `${h}h`;
+  return `${m}m`;
+}
+
+function greeting() {
+  const h = new Date().getHours();
+  if (h < 12) return "Good morning";
+  if (h < 18) return "Good afternoon";
+  return "Good evening";
+}
+
+const PROJECT_COLORS = [
+  "bg-emerald-400",
+  "bg-sky-400",
+  "bg-violet-400",
+  "bg-amber-400",
+  "bg-rose-400",
+  "bg-teal-400",
+];
+
+export default function DashboardPage() {
+  const { user } = useAuth();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
-  const [projectId, setProjectId] = useState<string>("");
-  const [teamMembers, setTeamMembers] = useState<any[]>([]);
-  const [editTask, setEditTask] = useState<Task | null>(null);
+  const [summary, setSummary] = useState<TimeSummary | null>(null);
+  const [activity, setActivity] = useState<ActivityLog[]>([]);
 
   useEffect(() => {
-    setLoading(true);
     Promise.all([
-      apiClient.get<{ results: Project[] }>("/projects/"),
-      apiClient.get<{ results: Task[] }>("/my-tasks/"),
-      apiClient.get<{ results: Team[] }>("/teams/"),
-    ])
-      .then(([projRes, taskRes, teamRes]) => {
-        const projectsWithTaskCount = projRes.data.results.map((project) => ({
-          ...project,
-          task_count: project.tasks ? project.tasks.length : 0,
-        }));
-        setProjects(projectsWithTaskCount);
-        setTasks(taskRes.data.results);
-        setTeams(teamRes.data.results);
-      })
-      .catch(() => {
-        setProjects([]);
-        setTasks([]);
-        setTeams([]);
-      })
-      .finally(() => setLoading(false));
+      getProjects(),
+      getTimeSummary().catch(() => null),
+      getActivity(6).catch(() => [] as ActivityLog[]),
+    ]).then(([p, s, a]) => {
+      setProjects(p);
+      setSummary(s);
+      setActivity(a);
+    });
   }, []);
 
-  const handleTaskClick = async (task: Task) => {
-    setSelectedTask(task);
-
-    let projectIdValue = "";
-    if (typeof task.project === "object" && task.project?.id) {
-      projectIdValue = task.project.id.toString();
-    } else if (typeof task.project === "string") {
-      projectIdValue = task.project;
-    }
-    setProjectId(projectIdValue);
-
-    if (projectIdValue) {
-      try {
-        const res = await apiClient.get(`/projects/${projectIdValue}/`);
-        setTeamMembers(res.data.team?.members || []);
-      } catch {
-        setTeamMembers([]);
-      }
-    } else {
-      setTeamMembers([]);
-    }
-  };
-
-  const handleDeleteTask = async (): Promise<void> => {
-    if (!selectedTask || !projectId) return;
-    if (!window.confirm("Are you sure you want to delete this task?")) return;
-    try {
-      await apiClient.delete(`/projects/${projectId}/tasks/${selectedTask.id}/`);
-      setSelectedTask(null);
-      const res = await apiClient.get<{ results: Task[] }>("/my-tasks/");
-      setTasks(res.data.results || res.data);
-    } catch {
-      alert("Could not delete task!");
-    }
-  };
-
-  const handleTaskUpdated = async () => {
-    try {
-      const res = await apiClient.get<{ results: Task[] }>("/my-tasks/");
-      setTasks(res.data.results || res.data);
-    } catch {
-      alert("Failed to refresh tasks.");
-    }
-  };
+  const allTasks = projects.flatMap((p) => p.tasks ?? []);
+  const total = allTasks.length;
+  const done = allTasks.filter((t) => t.status === "done").length;
+  const inProgress = allTasks.filter((t) => t.status === "in_progress").length;
+  const completion = total ? Math.round((done / total) * 100) : 0;
+  const weekMinutes = summary?.week_total_minutes ?? 0;
+  const todayMinutes = summary?.today_minutes ?? 0;
+  const dateStr = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
 
   return (
-    <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-7">
-      <div className="md:col-span-2 flex flex-col gap-7">
-        <section>
-          <ProjectsDashboardCard projects={projects.slice(0, 5)} loading={loading} total={projects.length} />
-        </section>
-        <MyTasksCard tasks={tasks} loading={loading} onTaskClick={handleTaskClick} />
-        <TeamCard teams={teams} loading={loading} />
-      </div>
-      <div className="md:col-span-1 flex flex-col gap-7">
-        <UserProfileCard projects={projects} />
-        <TimeTrackingCard />
-      </div>
-      {selectedTask && (
-              <TaskModal
-                open={!!selectedTask}
-                task={selectedTask}
-                projectId={projectId}
-                teamMembers={teamMembers}
-                onClose={() => setSelectedTask(null)}
-                onDelete={handleDeleteTask}
-                onEditClick={() => setEditTask(selectedTask)}
-                onTaskUpdated={handleTaskUpdated}
-              />
-            )}
-            {editTask && (
-              <EditTaskModal
-                open={!!editTask}
-                task={editTask}
-                projectId={editTask.project?.id || 0}
-                teamMembers={teamMembers}
-                onClose={() => setEditTask(null)}
-                onSaved={async () => {
-                  setEditTask(null);
-                  setSelectedTask(null);
-                  try {
-                    const res = await apiClient.get<{ results: Task[] }>("/my-tasks/");
-                    setTasks(res.data.results || res.data);
-                  } catch {
-                    alert("Failed to refresh tasks.");
-                  }
-                }}
-              />
-            )}
+    <div className="mx-auto max-w-7xl space-y-6">
+      <header>
+        <h1 className="text-2xl font-bold text-white">
+          {greeting()}, <span className="text-emerald-400">{user?.first_name ?? "there"}</span>
+        </h1>
+        <p className="mt-1 text-sm text-zinc-500">
+          {dateStr} · {projects.length} project{projects.length !== 1 ? "s" : ""} active
+        </p>
+      </header>
+
+      {/* KPIs */}
+      <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard label="Tasks completed" value={String(done)} hint={`of ${total} total`} positive={done > 0} />
+        <StatCard label="In progress" value={String(inProgress)} hint={`across ${projects.length} projects`} />
+        <StatCard label="Hours this week" value={formatHours(weekMinutes)} hint={`${formatHours(todayMinutes)} today`} positive />
+        <StatCard label="Completion" value={`${completion}%`} hint={`${done} of ${total} tasks`} positive={completion >= 50} />
+      </section>
+
+      {/* Hours + Activity */}
+      <section className="grid items-start gap-6 lg:grid-cols-3">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <h2 className="font-semibold text-white">Hours tracked</h2>
+            <span className="text-xs text-zinc-500">this week</span>
+          </div>
+          {summary?.per_day?.length ? (
+            <WeekBars data={summary.per_day} />
+          ) : (
+            <p className="py-12 text-center text-sm text-zinc-500">No time logged yet.</p>
+          )}
+        </div>
+
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+          <h2 className="mb-4 font-semibold text-white">Recent activity</h2>
+          <ActivityFeed items={activity} />
+        </div>
+      </section>
+
+      {/* Project progress */}
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
+        <h2 className="mb-4 font-semibold text-white">Project progress</h2>
+        <div className="space-y-4">
+          {projects.length === 0 ? (
+            <p className="text-sm text-zinc-500">No projects yet.</p>
+          ) : (
+            projects.map((p, i) => {
+              const tasks = p.tasks ?? [];
+              const projDone = tasks.filter((t) => t.status === "done").length;
+              const pct = tasks.length ? Math.round((projDone / tasks.length) * 100) : 0;
+              const color = PROJECT_COLORS[i % PROJECT_COLORS.length];
+              return (
+                <Link key={p.id} href={`/dashboard/projects/${p.id}`} className="group block">
+                  <div className="mb-1.5 flex items-center justify-between text-sm">
+                    <span className="flex items-center gap-2 text-zinc-300 group-hover:text-white">
+                      <span className={`h-2 w-2 rounded-full ${color}`} />
+                      {p.name}
+                    </span>
+                    <span className="text-zinc-500">{pct}%</span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800">
+                    <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${pct}%` }} />
+                  </div>
+                </Link>
+              );
+            })
+          )}
+        </div>
+      </section>
     </div>
   );
 }

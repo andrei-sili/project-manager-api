@@ -3,6 +3,8 @@ from apps.users.models import CustomUser
 from apps.projects.models import Project
 
 class ActivityLog(models.Model):
+    """An audit record of an action a user performed on an object."""
+
     ACTION_CHOICES = [
         ('created', 'Created'),
         ('updated', 'Updated'),

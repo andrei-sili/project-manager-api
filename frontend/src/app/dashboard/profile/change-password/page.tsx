@@ -1,8 +1,8 @@
-// frontend/src/app/dashboard/profile/change-password/page.tsx
 "use client";
 import { useState } from "react";
-import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 import { useRouter } from "next/navigation";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function ChangePasswordPage() {
   const [old_password, setOldPassword] = useState("");
@@ -21,23 +21,22 @@ export default function ChangePasswordPage() {
       setError("Passwords do not match.");
       return;
     }
-    if (new_password.length < 8 || new_password.length > 16) {
-      setError("Password must be 8-16 characters.");
+    if (new_password.length < 8) {
+      setError("Password must be at least 8 characters.");
       return;
     }
     setLoading(true);
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/change-password/`,
-        { old_password, new_password },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      await axiosClient.post(
+        `/users/change-password/`,
+        { old_password, new_password }
       );
       setSuccess("Password changed successfully!");
       setOldPassword("");
       setNewPassword("");
       setConfirmPassword("");
-    } catch (err: any) {
-      setError(err?.response?.data?.detail || "Password change failed.");
+    } catch (err) {
+      setError(getErrorMessage(err, "Password change failed."));
     } finally {
       setLoading(false);
     }
@@ -89,7 +88,7 @@ export default function ChangePasswordPage() {
         </div>
         <button
           type="submit"
-          className="w-full mt-3 py-2 rounded bg-blue-600 text-white font-semibold hover:bg-blue-700 transition"
+          className="w-full mt-3 py-2 rounded bg-emerald-600 text-white font-semibold hover:bg-emerald-700 transition"
           disabled={loading}
         >
           {loading ? "Saving..." : "Change password"}

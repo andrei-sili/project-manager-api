@@ -1,10 +1,11 @@
-// frontend/src/app/login/page.tsx
 "use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
 import axiosClient from "@/lib/axiosClient";
+import { setTokens } from "@/lib/token";
+import { getErrorMessage } from "@/lib/errors";
 
 export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -39,31 +40,14 @@ export default function LoginPage() {
           last_name: lastName,
         });
         const { access, refresh } = res.data.token;
-        localStorage.setItem("access", access);
-        localStorage.setItem("refresh", refresh);
+        setTokens(access, refresh);
         router.push("/dashboard");
       } else {
         await login(email, password);
       }
-    } catch (e: any) {
-  const res = e?.response;
-  if (res?.data) {
-    const data = res.data;
-    if (typeof data === "string") {
-      setError(data);
-    } else if (typeof data === "object") {
-      const flatErrors = Object.entries(data)
-        .map(([key, val]) => `${key}: ${Array.isArray(val) ? val.join(", ") : val}`)
-        .join(" | ");
-      setError(flatErrors || "Something went wrong.");
-    } else {
-      setError("Unexpected error occurred.");
-    }
-  } else {
-    setError(e.message || "Request failed.");
-  }
-}
- finally {
+    } catch (e) {
+      setError(getErrorMessage(e, "Request failed."));
+    } finally {
       setLoading(false);
     }
   };
@@ -74,7 +58,7 @@ export default function LoginPage() {
         <div className="mb-6 text-center">
           <button
             className={`px-4 py-1 text-sm font-medium rounded-l-lg ${
-              !isRegister ? "bg-blue-600 text-white" : "text-zinc-400"
+              !isRegister ? "bg-emerald-600 text-white" : "text-zinc-400"
             }`}
             onClick={() => setIsRegister(false)}
           >
@@ -82,7 +66,7 @@ export default function LoginPage() {
           </button>
           <button
             className={`px-4 py-1 text-sm font-medium rounded-r-lg ${
-              isRegister ? "bg-blue-600 text-white" : "text-zinc-400"
+              isRegister ? "bg-emerald-600 text-white" : "text-zinc-400"
             }`}
             onClick={() => setIsRegister(true)}
           >
@@ -174,7 +158,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className={`w-full py-2 rounded-lg font-semibold transition bg-blue-600 hover:bg-blue-700 focus:bg-blue-800 text-white shadow ${
+            className={`w-full py-2 rounded-lg font-semibold transition bg-emerald-600 hover:bg-emerald-700 focus:bg-emerald-700 text-white shadow ${
               loading ? "opacity-60 cursor-not-allowed" : ""
             }`}
           >

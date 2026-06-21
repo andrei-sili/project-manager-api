@@ -32,7 +32,7 @@ class TaskSerializer(serializers.ModelSerializer):
             'created_at',
         ]
 
-    def get_project(self, obj):
+    def get_project(self, obj) -> dict:
         return {
             "id": obj.project.id,
             "name": obj.project.name

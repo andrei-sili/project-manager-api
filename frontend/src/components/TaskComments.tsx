@@ -1,7 +1,6 @@
-// frontend/src/components/TaskComments.tsx
-
+"use client";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 
 type CommentType = {
   id: number;
@@ -36,12 +35,11 @@ export default function TaskComments({
     setLoading(true);
     setError("");
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      const res = await axiosClient.get(
+        `/projects/${projectId}/tasks/${taskId}/comments/`
       );
       setComments(res.data.results || res.data);
-    } catch (e) {
+    } catch {
       setError("Could not load comments.");
     } finally {
       setLoading(false);
@@ -59,10 +57,9 @@ export default function TaskComments({
     if (!newComment.trim()) return;
     setSubmitting(true);
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/`,
-        { text: newComment, parent: null },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      await axiosClient.post(
+        `/projects/${projectId}/tasks/${taskId}/comments/`,
+        { text: newComment, parent: null }
       );
       setNewComment("");
       fetchComments();
@@ -81,10 +78,9 @@ export default function TaskComments({
     if (!replyText || !replyText.trim()) return;
     setSubmitting(true);
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/`,
-        { text: replyText, parent: parentId },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      await axiosClient.post(
+        `/projects/${projectId}/tasks/${taskId}/comments/`,
+        { text: replyText, parent: parentId }
       );
       setReplyContent((prev) => ({ ...prev, [parentId]: "" }));
       setReplyingTo(null);
@@ -104,19 +100,19 @@ export default function TaskComments({
         {replies.map((reply) => (
           <div key={reply.id} className="mb-3">
             <div className="flex items-start gap-2">
-              <div className="w-7 h-7 bg-blue-900 text-blue-200 rounded-full flex items-center justify-center font-bold text-base">
+              <div className="w-7 h-7 bg-emerald-500/15 text-emerald-200 rounded-full flex items-center justify-center font-bold text-base">
                 {reply.user_name?.charAt(0).toUpperCase() || "U"}
               </div>
               <div className="flex-1">
                 <div className="flex gap-2 items-center">
-                  <span className="font-semibold text-blue-200">{reply.user_name}</span>
+                  <span className="font-semibold text-emerald-200">{reply.user_name}</span>
                   <span className="text-xs text-gray-400">
                     {new Date(reply.created_at).toLocaleString()}
                   </span>
                 </div>
                 <div className="text-white">{reply.text}</div>
                 <button
-                  className="text-xs text-blue-400 hover:underline mt-1"
+                  className="text-xs text-emerald-400 hover:underline mt-1"
                   onClick={() => setReplyingTo(reply.id)}
                 >
                   Reply
@@ -127,7 +123,7 @@ export default function TaskComments({
                     className="mt-2 flex flex-col gap-2"
                   >
                     <textarea
-                      className="w-full rounded-xl p-2 bg-zinc-900 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-blue-500 ltr-force"
+                      className="w-full rounded-xl p-2 bg-zinc-900 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-emerald-500 ltr-force"
                       dir="ltr"
                       value={replyContent[reply.id] || ""}
                       onChange={(e) =>
@@ -140,7 +136,7 @@ export default function TaskComments({
                     <div className="flex gap-2 justify-end">
                       <button
                         type="submit"
-                        className="bg-blue-600 hover:bg-blue-700 px-4 py-1 text-white rounded-xl font-bold disabled:opacity-60"
+                        className="bg-emerald-600 hover:bg-emerald-700 px-4 py-1 text-white rounded-xl font-bold disabled:opacity-60"
                         disabled={submitting || !(replyContent[reply.id] || "").trim()}
                       >
                         Reply
@@ -179,19 +175,19 @@ export default function TaskComments({
           comments.map((comment) => (
             <div key={comment.id} className="mb-4">
               <div className="flex items-start gap-3">
-                <div className="w-9 h-9 rounded-full bg-blue-900 text-blue-200 flex items-center justify-center font-bold text-lg">
+                <div className="w-9 h-9 rounded-full bg-emerald-500/15 text-emerald-200 flex items-center justify-center font-bold text-lg">
                   {comment.user_name?.charAt(0).toUpperCase() || "U"}
                 </div>
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold text-blue-200">{comment.user_name}</span>
+                    <span className="font-semibold text-emerald-200">{comment.user_name}</span>
                     <span className="ml-2 text-xs text-gray-400">
                       {new Date(comment.created_at).toLocaleString()}
                     </span>
                   </div>
                   <div className="text-white whitespace-pre-line">{comment.text}</div>
                   <button
-                    className="text-xs text-blue-400 hover:underline mt-1"
+                    className="text-xs text-emerald-400 hover:underline mt-1"
                     onClick={() => setReplyingTo(comment.id)}
                   >
                     Reply
@@ -202,7 +198,7 @@ export default function TaskComments({
                       className="mt-2 flex flex-col gap-2"
                     >
                       <textarea
-                        className="w-full rounded-xl p-2 bg-zinc-900 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-blue-500 ltr-force"
+                        className="w-full rounded-xl p-2 bg-zinc-900 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-emerald-500 ltr-force"
                         dir="ltr"
                         value={replyContent[comment.id] || ""}
                         onChange={(e) =>
@@ -215,7 +211,7 @@ export default function TaskComments({
                       <div className="flex gap-2 justify-end">
                         <button
                           type="submit"
-                          className="bg-blue-600 hover:bg-blue-700 px-4 py-1 text-white rounded-xl font-bold disabled:opacity-60"
+                          className="bg-emerald-600 hover:bg-emerald-700 px-4 py-1 text-white rounded-xl font-bold disabled:opacity-60"
                           disabled={submitting || !(replyContent[comment.id] || "").trim()}
                         >
                           Reply
@@ -245,7 +241,7 @@ export default function TaskComments({
         className="bg-zinc-900 pt-4 pb-4 z-10 flex flex-col gap-2 mt-4 rounded-xl"
       >
         <textarea
-          className="w-full rounded-xl p-3 bg-zinc-800 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-blue-500 ltr-force"
+          className="w-full rounded-xl p-3 bg-zinc-800 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-emerald-500 ltr-force"
           dir="ltr"
           value={newComment}
           onChange={(e) => setNewComment(e.target.value)}
@@ -256,7 +252,7 @@ export default function TaskComments({
         <div className="flex justify-end">
           <button
             type="submit"
-            className="bg-blue-600 hover:bg-blue-700 px-6 py-2 text-white rounded-xl font-bold disabled:opacity-60"
+            className="bg-emerald-600 hover:bg-emerald-700 px-6 py-2 text-white rounded-xl font-bold disabled:opacity-60"
             disabled={submitting || !newComment.trim()}
           >
             {submitting ? "Sending..." : "Send"}
