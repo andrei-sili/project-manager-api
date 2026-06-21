@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
 import axiosClient from "@/lib/axiosClient";
+import { setTokens } from "@/lib/token";
 import { getErrorMessage } from "@/lib/errors";
 
 export default function LoginPage() {
@@ -39,8 +40,7 @@ export default function LoginPage() {
           last_name: lastName,
         });
         const { access, refresh } = res.data.token;
-        localStorage.setItem("access", access);
-        localStorage.setItem("refresh", refresh);
+        setTokens(access, refresh);
         router.push("/dashboard");
       } else {
         await login(email, password);

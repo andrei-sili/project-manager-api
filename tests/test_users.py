@@ -265,3 +265,42 @@ def test_logout_blacklists_refresh_token(api_client):
     # A blacklisted refresh token can no longer be exchanged for a new access token.
     res2 = api_client.post(reverse("token_refresh"), {"refresh": refresh})
     assert res2.status_code == 401
+
+
+@pytest.mark.django_db
+def test_refresh_rotates_refresh_token(api_client):
+    from apps.users.models import CustomUser
+    from rest_framework_simplejwt.tokens import RefreshToken
+
+    user = CustomUser.objects.create_user(
+        email="rotate@example.com", password="password123A!", is_active=True
+    )
+    refresh = str(RefreshToken.for_user(user))
+
+    res = api_client.post(reverse("token_refresh"), {"refresh": refresh})
+    assert res.status_code == 200
+    # Rotation issues a brand-new refresh token alongside the access token.
+    assert "refresh" in res.data
+    assert res.data["refresh"] != refresh
+
+
+@pytest.mark.django_db
+def test_old_refresh_token_blacklisted_after_rotation(api_client):
+    from apps.users.models import CustomUser
+    from rest_framework_simplejwt.tokens import RefreshToken
+
+    user = CustomUser.objects.create_user(
+        email="rotate2@example.com", password="password123A!", is_active=True
+    )
+    refresh = str(RefreshToken.for_user(user))
+
+    first = api_client.post(reverse("token_refresh"), {"refresh": refresh})
+    new_refresh = first.data["refresh"]
+
+    # The original token is blacklisted after rotation and can no longer be reused.
+    reused = api_client.post(reverse("token_refresh"), {"refresh": refresh})
+    assert reused.status_code == 401
+
+    # The rotated token is still valid.
+    ok = api_client.post(reverse("token_refresh"), {"refresh": new_refresh})
+    assert ok.status_code == 200

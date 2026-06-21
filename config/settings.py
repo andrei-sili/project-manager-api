@@ -183,9 +183,11 @@ SPECTACULAR_SETTINGS = {
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
-    # Rotation is enabled together with the frontend changes in a later phase.
-    'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': False,
+    # Each refresh issues a new refresh token and blacklists the previous one,
+    # so a leaked refresh token has a limited useful lifetime. The frontend
+    # persists the rotated token returned by /token/refresh/.
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
 }
 
 # --- Channels ---------------------------------------------------------------
