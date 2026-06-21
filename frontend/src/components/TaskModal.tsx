@@ -1,4 +1,4 @@
-
+"use client";
 import React, { useState, useEffect } from "react";
 import { X, Edit2, Trash2, Play, Pause, PlusCircle, Save, AlertTriangle } from "lucide-react";
 import { StatusBadge, PriorityBadge } from "@/components/TaskBadge";

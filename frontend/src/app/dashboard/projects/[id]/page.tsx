@@ -216,7 +216,6 @@ export default function ProjectDetailsPage() {
         ) : (
           <KanbanBoard
             tasks={tasks}
-            teamMembers={members}
             onStatusChange={handleStatusChange}
             onAddTask={() => setShowAdd(true)}
             onViewTask={setViewTask}

@@ -6,13 +6,12 @@ import {
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
-import { Task, TeamMember, TaskStatus } from "@/lib/types";
+import { Task, TaskStatus } from "@/lib/types";
 
 export interface KanbanBoardProps {
   tasks: Task[];
-  teamMembers: TeamMember[];
   onStatusChange: (taskId: number, status: TaskStatus) => void;
-  onAddTask: () => void;
+  onAddTask?: () => void;
   onViewTask: (task: Task) => void;
 }
 
@@ -72,7 +71,7 @@ export default function KanbanBoard({
                 >
                   <div className="flex justify-between items-center mb-3">
                     <div className="text-lg font-semibold text-white">{col.label}</div>
-                    {col.key === "todo" && (
+                    {col.key === "todo" && onAddTask && (
                       <button
                         onClick={onAddTask}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded text-xs"

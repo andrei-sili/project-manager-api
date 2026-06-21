@@ -1,5 +1,5 @@
 "use client";
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import axios from "axios";
 import type { Project } from "@/lib/types";
 import { getErrorMessage } from "@/lib/errors";
@@ -19,6 +19,16 @@ export default function EditProjectModal({ project, open, onClose, onUpdated }: 
   const [dueDate, setDueDate] = useState(project.due_date ? project.due_date.slice(0,10) : "");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  // Re-sync the form when the modal is (re)opened for a project.
+  useEffect(() => {
+    if (!open) return;
+    setName(project.name);
+    setDescription(project.description);
+    setBudget(project.budget != null ? String(project.budget) : "");
+    setDueDate(project.due_date ? project.due_date.slice(0, 10) : "");
+    setError("");
+  }, [project, open]);
 
   if (!open) return null;
 

@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import axiosClient from "@/lib/axiosClient";
 import KanbanBoard from "@/components/KanbanBoard";
-import AddTaskModal from "@/components/AddTaskModal";
 import EditTaskModal from "@/components/EditTaskModal";
 import TaskModal from "@/components/TaskModal";
 import { Task } from "@/lib/types";
@@ -11,7 +10,6 @@ export default function MyTasksPage() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [viewTask, setViewTask] = useState<Task | null>(null);
   const [editTask, setEditTask] = useState<Task | null>(null);
-  const [showAdd, setShowAdd] = useState(false);
 
   async function loadTasks() {
     try {
@@ -45,21 +43,9 @@ export default function MyTasksPage() {
       <h1 className="text-3xl font-bold text-white mb-6">My Tasks</h1>
       <KanbanBoard
         tasks={tasks}
-        onAddTask={() => setShowAdd(true)}
         onStatusChange={handleStatusChange}
         onViewTask={setViewTask}
-        teamMembers={[]}
       />
-
-      {showAdd && (
-        <AddTaskModal
-          open={showAdd}
-          onClose={() => setShowAdd(false)}
-          onAdded={loadTasks}
-          projectId={""}
-          teamMembers={[]}
-        />
-      )}
 
       {editTask && (
         <EditTaskModal
