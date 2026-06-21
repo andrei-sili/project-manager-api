@@ -16,7 +16,8 @@ class TimeEntry(models.Model):
 
     class Meta:
         ordering = ["-date", "-created_at"]
-       # unique_together = ("user", "task", "date")
+        # No (user, task, date) uniqueness on purpose: a user may log several
+        # separate sessions (each with its own note) for the same task in a day.
 
     def __str__(self):
         return f"{self.user} - {self.task} ({self.minutes} min on {self.date})"
