@@ -8,20 +8,28 @@ import type { Team } from "@/lib/types";
 export default function TeamsPage() {
   const { user } = useAuth();
   const [loading, setLoading] = React.useState(true);
+  const [notice, setNotice] = React.useState("");
   const [teams, setTeams] = React.useState<(Team & { inviteEmail?: string; inviteRole?: string })[]>([]);
 
-  React.useEffect(() => {
-    getTeams().then(data => {
-      setTeams(data);
-      setLoading(false);
-    });
+  const loadTeams = React.useCallback(async () => {
+    const data = await getTeams();
+    setTeams(data);
   }, []);
+
+  React.useEffect(() => {
+    loadTeams().finally(() => setLoading(false));
+  }, [loadTeams]);
 
   if (!user || loading) return <div className="text-emerald-400">Loading teams...</div>;
 
   return (
     <div className="max-w-6xl mx-auto py-10 px-4">
       <h1 className="text-4xl font-bold mb-10 text-white">Your Teams</h1>
+      {notice && (
+        <div className="mb-6 rounded border border-emerald-700 bg-emerald-950/60 px-3 py-2 text-sm text-emerald-300">
+          {notice}
+        </div>
+      )}
       <div className="space-y-10">
         {teams.map(team => (
           <div key={team.id} className="bg-zinc-900 rounded-2xl shadow-xl p-6 border border-zinc-800">
@@ -32,7 +40,12 @@ export default function TeamsPage() {
               </div>
               {team.is_admin && (
                 <button
-                  onClick={() => deleteTeam(team.id).then(() => window.location.reload())}
+                  onClick={async () => {
+                    if (!window.confirm(`Delete team "${team.name}"?`)) return;
+                    await deleteTeam(team.id);
+                    setNotice(`Team "${team.name}" deleted.`);
+                    loadTeams();
+                  }}
                   className="bg-red-700 hover:bg-red-800 text-white rounded px-3 py-1 text-sm"
                 >
                   Delete Team
@@ -69,7 +82,11 @@ export default function TeamsPage() {
                           <div className="flex justify-end gap-2 mt-2">
                             <select
                               value={member.role}
-                              onChange={e => changeRole(team.id, member.user.id, e.target.value).then(() => window.location.reload())}
+                              onChange={async e => {
+                                await changeRole(team.id, member.user.id, e.target.value);
+                                setNotice(`Updated ${fullName}'s role.`);
+                                loadTeams();
+                              }}
                               className="bg-zinc-900 border border-zinc-700 text-white text-xs rounded px-2 py-1"
                             >
                               <option value="developer">Developer</option>
@@ -78,7 +95,12 @@ export default function TeamsPage() {
                             </select>
                             <button
                               className="text-red-500 text-xs hover:underline"
-                              onClick={() => removeMember(team.id, member.user.id).then(() => window.location.reload())}
+                              onClick={async () => {
+                                if (!window.confirm(`Remove ${fullName} from the team?`)) return;
+                                await removeMember(team.id, member.user.id);
+                                setNotice(`Removed ${fullName}.`);
+                                loadTeams();
+                              }}
                             >
                               Remove
                             </button>
@@ -125,13 +147,13 @@ export default function TeamsPage() {
                           email: team.inviteEmail,
                           role: team.inviteRole,
                         });
-                        alert("Invitation sent!");
+                        setNotice(`Invitation sent to ${team.inviteEmail}.`);
                         setTeams(teams => teams.map(t =>
                           t.id === team.id ? { ...t, inviteEmail: "", inviteRole: "developer" } : t
                         ));
-                        window.location.reload();
+                        loadTeams();
                       } catch {
-                        alert("Failed to send invitation!");
+                        setNotice("Failed to send invitation.");
                       }
                     }}
                     disabled={!team.inviteEmail}
