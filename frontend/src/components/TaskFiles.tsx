@@ -22,6 +22,8 @@ interface TaskFilesProps {
 const getFileName = (f: TaskFile) =>
   f.file.split('/').pop() || "file";
 
+const isImageName = (name: string) => /\.(png|jpg|jpeg|gif|bmp|webp)$/i.test(name);
+
 export default function TaskFiles({
   projectId,
   taskId,
@@ -29,11 +31,14 @@ export default function TaskFiles({
   onFilesUpdated,
 }: TaskFilesProps) {
   const [files, setFiles] = useState<TaskFile[]>([]);
+  const [previews, setPreviews] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [uploading, setUploading] = useState(false);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const previewsRef = useRef<Record<number, string>>({});
+  previewsRef.current = previews;
 
   const fetchFiles = async () => {
     setLoading(true);
@@ -41,8 +46,31 @@ export default function TaskFiles({
       const res = await axiosClient.get(
         `/projects/${projectId}/tasks/${taskId}/files/`
       );
-      setFiles(res.data.results || res.data);
+      const list: TaskFile[] = res.data.results || res.data;
+      setFiles(list);
       setError("");
+
+      // Build authenticated object-URL previews for images so we never depend
+      // on a publicly served /media/ path.
+      const pairs = await Promise.all(
+        list
+          .filter((f) => isImageName(getFileName(f)))
+          .map(async (f) => {
+            try {
+              const r = await axiosClient.get(
+                `/projects/${projectId}/tasks/${taskId}/files/${f.id}/download/`,
+                { responseType: "blob" }
+              );
+              return [f.id, URL.createObjectURL(r.data)] as const;
+            } catch {
+              return null;
+            }
+          })
+      );
+      setPreviews((prev) => {
+        Object.values(prev).forEach((u) => URL.revokeObjectURL(u));
+        return Object.fromEntries(pairs.filter(Boolean) as [number, string][]);
+      });
     } catch {
       setError("Could not load files.");
     } finally {
@@ -54,6 +82,11 @@ export default function TaskFiles({
     fetchFiles();
     // eslint-disable-next-line
   }, [projectId, taskId]);
+
+  // Revoke any outstanding object URLs on unmount.
+  useEffect(() => () => {
+    Object.values(previewsRef.current).forEach((u) => URL.revokeObjectURL(u));
+  }, []);
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,32 +208,30 @@ export default function TaskFiles({
           <ul className="space-y-1">
             {files.map((f: TaskFile) => {
               const fileName = getFileName(f);
-              const isImage = /\.(png|jpg|jpeg|gif|bmp|webp)$/i.test(fileName);
-              const url = f.file_url;
+              const preview = previews[f.id];
               return (
                 <li key={f.id} className="flex items-center justify-between bg-zinc-800 p-2 rounded">
                   <div className="flex items-center gap-2 min-w-0">
-                    {isImage ? (
+                    {preview ? (
+                      // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={url}
+                        src={preview}
                         alt={fileName}
                         className="w-8 h-8 object-cover rounded shadow border border-zinc-700 cursor-pointer"
                         style={{ minWidth: 32, minHeight: 32, maxWidth: 32, maxHeight: 32 }}
-                        onClick={() => window.open(url, "_blank")}
-                        title="Preview"
+                        onClick={() => handleDownload(f)}
+                        title="Download"
                       />
                     ) : (
                       <Paperclip size={15} className="text-emerald-300 shrink-0" />
                     )}
-                    <a
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => handleDownload(f)}
                       className="text-emerald-300 font-semibold hover:underline text-xs truncate"
-                      download={fileName}
                     >
                       {fileName}
-                    </a>
+                    </button>
                     <span className="ml-2 text-xs text-gray-400 truncate">
                       by {f.uploaded_by}
                     </span>
