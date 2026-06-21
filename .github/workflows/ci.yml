@@ -39,3 +39,28 @@ jobs:
       - run: npm run build
         env:
           NEXT_PUBLIC_API_URL: http://localhost:8000/api
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build images
+        run: docker compose build
+      - name: Start the stack
+        run: docker compose up -d
+        env:
+          SECRET_KEY: ci-secret-key-not-for-production
+      - name: Wait for the backend to be healthy
+        run: |
+          for i in $(seq 1 30); do
+            if curl -fsS http://localhost:8000/api/health/; then
+              echo "backend healthy" && exit 0
+            fi
+            sleep 5
+          done
+          echo "backend did not become healthy" >&2
+          docker compose logs backend
+          exit 1
+      - name: Tear down
+        if: always()
+        run: docker compose down -v
