@@ -111,6 +111,16 @@ cp .env.example .env            # set a strong SECRET_KEY
 docker compose up --build
 ```
 
+The backend image exposes a `/api/health/` check that `docker compose` waits
+on before starting the frontend. Uploaded files are served through an
+authenticated endpoint (not a public `/media/` path), so they work in
+production without a separate static host.
+
+**Deploying live:** push the two images to a managed platform (Fly.io,
+Railway or Render) that terminates HTTPS for you, then set `ENVIRONMENT=production`,
+a strong `SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`/`CORS_ALLOWED_ORIGINS`
+and point `NEXT_PUBLIC_API_URL` at the API origin.
+
 ## Tests & quality
 
 ```bash
