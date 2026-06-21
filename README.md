@@ -96,7 +96,7 @@ npm install
 npm run dev                     # http://localhost:3000
 ```
 
-**Demo login:** `alice@example.com` / `12345678` (after running `seed_demo.py`).
+**Demo login:** `alice@example.com` / `Demo1234!` (after running `seed_demo.py`).
 
 - App: <http://localhost:3000>
 - API docs (Swagger): <http://localhost:8000/api/docs/>
@@ -114,10 +114,10 @@ docker compose up --build
 ## Tests & quality
 
 ```bash
-pytest                          # backend: 100 tests
+pytest                          # backend tests
 python manage.py check --deploy # security checklist (clean in production)
 
-cd frontend && npm run lint && npm run build
+cd frontend && npm test && npm run lint && npm run build   # frontend tests, lint, build
 ```
 
 ## Security highlights

@@ -7,7 +7,7 @@ Idempotent: clears existing collaboration data and recreates a fresh demo set
 
     python seed_demo.py
 
-Then log in at http://localhost:3000 with alice@example.com / 12345678
+Then log in at http://localhost:3000 with alice@example.com / Demo1234!
 """
 import os
 import random
@@ -29,7 +29,7 @@ from apps.timetrack.models import TimeEntry
 from apps.notify.models import Notification
 from apps.logs.models import ActivityLog
 
-PASSWORD = "12345678"
+PASSWORD = "Demo1234!"
 random.seed(42)
 
 # --- Clear previous demo content (users are kept and updated below) ---
@@ -155,4 +155,4 @@ print(f"  projects: {Project.objects.count()}")
 print(f"  tasks:    {Task.objects.count()}")
 print(f"  comments: {Comment.objects.count()}")
 print(f"  time:     {TimeEntry.objects.count()} entries")
-print("Log in with  alice@example.com / 12345678")
+print("Log in with  alice@example.com / Demo1234!")

@@ -1,57 +1,41 @@
-# Frontend – Project Manager App
+# Frontend — Project Manager
 
-This is the **frontend** part of the Project Management System, built using **Next.js 15**, **React 19**, and **TypeScript**.
+The web client for the Project Manager platform, built with Next.js 15 (App
+Router), React 19 and TypeScript. See the [root README](../README.md) for the
+full stack, architecture and the one-command Docker setup.
 
+## Tech stack
 
-
-## 💡 Features
-
-- User-friendly Kanban board
-- Add/edit/delete tasks via modals
-- Drag-and-drop task handling (with state update)
-- Task files, comments, and history view
-- Profile, Teams, Time Tracking, Projects pages
-- Responsive and clean UI with Tailwind CSS
-- Integrated with backend API (via Axios)
-
-## 🛠️ Tech Stack
-
-- React 19
-- Next.js 15
-- TypeScript
+- Next.js 15, React 19, TypeScript
 - Tailwind CSS 4
-- Zustand (state management)
-- Axios (API communication)
-- Recharts (data visualization)
-- Lucide React (icons)
+- Zustand (state), Axios (API)
+- Recharts (charts), lucide-react (icons), @hello-pangea/dnd (Kanban)
+- Vitest + Testing Library (tests)
 
-## 📁 Project Structure
+## Structure
 
+```
+src/
+  app/         Next.js routes (App Router)
+  components/  Shared UI components
+  lib/         API client, auth/token helpers, types
+```
 
-frontend/
-
-├── public/
-
-├── src/
-
-│      ├── app/# Next.js app pages
-
-│      ├── components/     # Shared UI components
-
-│      ├── lib/            # API utilities and types
-
-│      └── styles/         # Global styles
-
-├── .env.local
-
-├── package.json
-
-└── tailwind.config.ts
-
-## 📦 Install & Run
-
-1. Install dependencies:
+## Develop
 
 ```bash
 npm install
-npm run dev
+cp .env.example .env.local   # set NEXT_PUBLIC_API_URL (e.g. http://localhost:8000/api)
+npm run dev                  # http://localhost:3000
+```
+
+## Test, lint, build
+
+```bash
+npm test        # Vitest unit/component tests
+npm run lint     # ESLint (next/core-web-vitals)
+npm run build    # production build
+```
+
+All calls go through a single Axios client (`src/lib/axiosClient.ts`) that
+attaches the JWT and transparently refreshes it on a 401.
