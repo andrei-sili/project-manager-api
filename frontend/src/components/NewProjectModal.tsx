@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 import type { Team } from "@/lib/types";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -24,10 +24,8 @@ export default function NewProjectModal({
 
   // Fetch all teams on modal open
   useEffect(() => {
-    axios
-      .get(`${process.env.NEXT_PUBLIC_API_URL}/teams/`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` }
-      })
+    axiosClient
+      .get(`/teams/`)
       .then(res => setTeams(Array.isArray(res.data.results) ? res.data.results : []))
       .catch(() => setTeams([]));
   }, []);
@@ -49,10 +47,9 @@ export default function NewProjectModal({
         setLoading(false);
         return;
       }
-      const teamRes = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/teams/`,
-        { name: newTeamName },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      const teamRes = await axiosClient.post(
+        `/teams/`,
+        { name: newTeamName }
       );
       teamId = teamRes.data.id;
     }
@@ -64,10 +61,9 @@ export default function NewProjectModal({
       return;
     }
 
-    await axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL}/projects/`,
-      { name, description, team: teamId },
-      { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+    await axiosClient.post(
+      `/projects/`,
+      { name, description, team: teamId }
     );
 
     setName("");

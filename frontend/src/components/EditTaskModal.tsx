@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 import { X } from "lucide-react";
 import type { Task, TeamMember } from "@/lib/types";
 import { getErrorMessage } from "@/lib/errors";
@@ -64,8 +64,8 @@ export default function EditTaskModal({
     setError("");
     setSuccess("");
     try {
-      await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${task.id}/`,
+      await axiosClient.patch(
+        `/projects/${projectId}/tasks/${task.id}/`,
         {
           title,
           description,
@@ -74,11 +74,6 @@ export default function EditTaskModal({
           status,
           assigned_to: assignee || null,
           project: projectId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-          },
         }
       );
       setSuccess("Task updated!");
@@ -97,13 +92,8 @@ export default function EditTaskModal({
     setLoading(true);
     setError("");
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${task.id}/`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-          },
-        }
+      await axiosClient.delete(
+        `/projects/${projectId}/tasks/${task.id}/`
       );
       onSaved?.();
       onClose();

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { Plus, Search } from "lucide-react";
 import NewProjectModal from "@/components/NewProjectModal";
 import ProjectOverviewCard from "@/components/ProjectOverviewCard";
-import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 import type { Project, Team } from "@/lib/types";
 
 export default function ProjectsPage() {
@@ -17,17 +17,13 @@ export default function ProjectsPage() {
   // Load all projects & teams
   useEffect(() => {
     setLoading(true);
-    axios
-      .get(`${process.env.NEXT_PUBLIC_API_URL}/projects/`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` }
-      })
+    axiosClient
+      .get(`/projects/`)
       .then(res => setProjects(Array.isArray(res.data.results) ? res.data.results : []))
       .finally(() => setLoading(false));
 
-    axios
-      .get(`${process.env.NEXT_PUBLIC_API_URL}/teams/`, {
-        headers: { Authorization: `Bearer ${localStorage.getItem("access")}` }
-      })
+    axiosClient
+      .get(`/teams/`)
       .then(res => setTeams(Array.isArray(res.data.results) ? res.data.results : []));
   }, [showModal]); // reload when a project is added
 

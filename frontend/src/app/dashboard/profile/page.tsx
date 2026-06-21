@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { useAuth } from "@/components/AuthProvider";
-import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
@@ -20,10 +20,9 @@ export default function ProfilePage() {
     setSuccess("");
     setError("");
     try {
-      await axios.patch(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/update-profile/`,
-        { first_name, last_name },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      await axiosClient.patch(
+        `/users/update-profile/`,
+        { first_name, last_name }
       );
       setSuccess("Profile updated successfully!");
       refreshUser();

@@ -1,6 +1,6 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 import type { TeamMember } from "@/lib/types";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -37,8 +37,8 @@ export default function AddTaskModal({
     setSuccess("");
 
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/`,
+      await axiosClient.post(
+        `/projects/${projectId}/tasks/`,
         {
           title,
           description,
@@ -47,9 +47,6 @@ export default function AddTaskModal({
           status: "todo",
           project: projectId,
           assigned_to: assignee || null,
-        },
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
         }
       );
 

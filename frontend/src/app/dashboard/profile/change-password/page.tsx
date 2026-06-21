@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 import { useRouter } from "next/navigation";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -27,10 +27,9 @@ export default function ChangePasswordPage() {
     }
     setLoading(true);
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/users/change-password/`,
-        { old_password, new_password },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      await axiosClient.post(
+        `/users/change-password/`,
+        { old_password, new_password }
       );
       setSuccess("Password changed successfully!");
       setOldPassword("");

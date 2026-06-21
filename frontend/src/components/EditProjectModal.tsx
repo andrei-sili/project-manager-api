@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, type FormEvent } from "react";
-import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 import type { Project } from "@/lib/types";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -36,15 +36,14 @@ export default function EditProjectModal({ project, open, onClose, onUpdated }: 
   e.preventDefault();
   setLoading(true); setError("");
   try {
-    await axios.patch(
-      `${process.env.NEXT_PUBLIC_API_URL}/projects/${project.id}/`,
+    await axiosClient.patch(
+      `/projects/${project.id}/`,
       {
         name,
         description,
         budget: budget ? parseFloat(budget.replace(",", ".")) : null,
         due_date: dueDate || null,
-      },
-      { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      }
     );
     onUpdated();
     onClose();

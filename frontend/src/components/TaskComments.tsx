@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
-import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 
 type CommentType = {
   id: number;
@@ -35,9 +35,8 @@ export default function TaskComments({
     setLoading(true);
     setError("");
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/`,
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      const res = await axiosClient.get(
+        `/projects/${projectId}/tasks/${taskId}/comments/`
       );
       setComments(res.data.results || res.data);
     } catch {
@@ -58,10 +57,9 @@ export default function TaskComments({
     if (!newComment.trim()) return;
     setSubmitting(true);
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/`,
-        { text: newComment, parent: null },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      await axiosClient.post(
+        `/projects/${projectId}/tasks/${taskId}/comments/`,
+        { text: newComment, parent: null }
       );
       setNewComment("");
       fetchComments();
@@ -80,10 +78,9 @@ export default function TaskComments({
     if (!replyText || !replyText.trim()) return;
     setSubmitting(true);
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/comments/`,
-        { text: replyText, parent: parentId },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      await axiosClient.post(
+        `/projects/${projectId}/tasks/${taskId}/comments/`,
+        { text: replyText, parent: parentId }
       );
       setReplyContent((prev) => ({ ...prev, [parentId]: "" }));
       setReplyingTo(null);

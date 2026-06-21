@@ -1,6 +1,6 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 import { getErrorMessage } from "@/lib/errors";
 
 type InviteMemberModalProps = {
@@ -24,10 +24,9 @@ export default function InviteMemberModal({ open, onClose, teamId, onInvited }: 
     e.preventDefault();
     setLoading(true); setError(""); setSuccess("");
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/teams/${teamId}/invite-member/`,
-        { email, role },
-        { headers: { Authorization: `Bearer ${localStorage.getItem("access")}` } }
+      await axiosClient.post(
+        `/teams/${teamId}/invite-member/`,
+        { email, role }
       );
       setSuccess("Invitation sent!");
       setEmail("");

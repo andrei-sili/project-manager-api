@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import axios from "axios";
 import axiosClient from "@/lib/axiosClient";
 import { Paperclip, X } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
@@ -39,11 +38,8 @@ export default function TaskFiles({
   const fetchFiles = async () => {
     setLoading(true);
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/files/`,
-        {
-          headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
-        }
+      const res = await axiosClient.get(
+        `/projects/${projectId}/tasks/${taskId}/files/`
       );
       setFiles(res.data.results || res.data);
       setError("");
@@ -66,14 +62,11 @@ export default function TaskFiles({
     const formData = new FormData();
     formData.append("file", fileToUpload);
     try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/files/`,
+      await axiosClient.post(
+        `/projects/${projectId}/tasks/${taskId}/files/`,
         formData,
         {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-            "Content-Type": "multipart/form-data",
-          },
+          headers: { "Content-Type": "multipart/form-data" },
         }
       );
       setFileToUpload(null);
@@ -111,13 +104,8 @@ export default function TaskFiles({
   const handleDelete = async (fileId: number) => {
     if (!window.confirm("Delete this file?")) return;
     try {
-      await axios.delete(
-        `${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/files/${fileId}/`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("access")}`,
-          },
-        }
+      await axiosClient.delete(
+        `/projects/${projectId}/tasks/${taskId}/files/${fileId}/`
       );
       fetchFiles();
       if (onFilesUpdated) onFilesUpdated(); // Call refresh if provided
