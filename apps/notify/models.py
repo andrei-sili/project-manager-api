@@ -18,5 +18,10 @@ class Notification(models.Model):
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', '-created_at']),
+        ]
+
     def __str__(self):
         return f"{self.user.email} - {self.type} - {self.message[:30]}"

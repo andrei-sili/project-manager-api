@@ -45,19 +45,20 @@ class TimeEntryViewSet(viewsets.ModelViewSet):
         today = datetime.today().date()
         week_start = today - timedelta(days=today.weekday())
 
-        # Breakdown per day (last 7 days)
-        days = [
-            (today - timedelta(days=i)) for i in range(6, -1, -1)
+        # Breakdown for the last 7 days, aggregated in a single query.
+        days = [(today - timedelta(days=i)) for i in range(6, -1, -1)]
+        totals_by_date = {
+            row['date']: row['minutes']
+            for row in queryset.filter(date__gte=days[0])
+            .values('date')
+            .annotate(minutes=Sum('minutes'))
+        }
+        per_day = [
+            {"date": str(day), "minutes": totals_by_date.get(day, 0)}
+            for day in days
         ]
-        per_day = []
-        for day in days:
-            minutes = queryset.filter(date=day).aggregate(s=Sum('minutes'))['s'] or 0
-            per_day.append({
-                "date": str(day),
-                "minutes": minutes
-            })
 
-        today_minutes = queryset.filter(date=today).aggregate(s=Sum('minutes'))['s'] or 0
+        today_minutes = totals_by_date.get(today, 0)
         week_total_minutes = queryset.filter(date__gte=week_start).aggregate(s=Sum('minutes'))['s'] or 0
 
         return Response({

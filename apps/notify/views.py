@@ -14,7 +14,9 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        return Notification.objects.filter(user=self.request.user).order_by('-created_at')[:20]
+        # Ordering only; let pagination cap the page size so older notifications
+        # remain reachable.
+        return Notification.objects.filter(user=self.request.user).order_by('-created_at')
 
     @action(detail=True, methods=["post"], url_path="mark_as_read")
     def mark_as_read(self, request, pk=None):

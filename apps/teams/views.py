@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
-from rest_framework.exceptions import APIException, PermissionDenied
+from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from apps.teams.models import Team, TeamMembership
@@ -37,9 +37,8 @@ class TeamViewSet(viewsets.ModelViewSet):
         return TeamSerializer
 
     def perform_create(self, serializer):
-        name = serializer.validated_data.get("name")
-        if Team.objects.filter(name=name).exists():
-            raise APIException("A team with this name already exists.")
+        # Name uniqueness is enforced by the serializer (Team.name is unique),
+        # which returns a clean 400 instead of a 500.
         team = serializer.save(created_by=self.request.user)
         TeamMembership.objects.create(
             team=team,

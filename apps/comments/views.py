@@ -1,7 +1,6 @@
 from rest_framework import viewsets, permissions
 from rest_framework.exceptions import PermissionDenied
 from django.shortcuts import get_object_or_404
-from rest_framework.response import Response
 from apps.comments.models import Comment
 from apps.comments.permissions import IsProjectTeamMember
 from apps.comments.serializers import CommentCreateSerializer, CommentSerializer
@@ -55,17 +54,6 @@ class CommentViewSet(viewsets.ModelViewSet):
             target_repr=f"Comment on task: {task.title}",
             project=task.project
         )
-
-    def list(self, request, *args, **kwargs):
-        queryset = self.get_queryset()
-        page = self.paginate_queryset(queryset)
-
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
 
     def perform_destroy(self, instance):
         log_activity(

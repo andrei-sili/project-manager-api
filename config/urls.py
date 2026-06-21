@@ -36,7 +36,7 @@ from apps.teams.views import TeamViewSet
 from apps.timetrack.views import TimeEntryViewSet
 
 from apps.users.views import RequestPasswordResetView, ConfirmPasswordResetView, ThrottledTokenObtainPairView
-from config import settings
+from django.conf import settings
 from apps.taskfiles.views import download_task_file
 
 

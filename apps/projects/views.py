@@ -25,7 +25,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
                 team__membership_set__status='accepted',
             )
             .select_related('team', 'created_by')
-            .prefetch_related('tasks', 'tasks__assigned_to', 'team__membership_set__user')
+            .prefetch_related(
+                'tasks', 'tasks__assigned_to', 'tasks__created_by',
+                'team__membership_set__user',
+            )
+            .distinct()
             .order_by('-id')
         )
 
