@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import axiosClient from "@/lib/axiosClient";
 import type { Team } from "@/lib/types";
 import { getErrorMessage } from "@/lib/errors";
+import Modal from "@/components/Modal";
 
 // Modal for creating a new project (with team selection or quick create new team)
 export default function NewProjectModal({
@@ -29,8 +30,6 @@ export default function NewProjectModal({
       .then(res => setTeams(Array.isArray(res.data.results) ? res.data.results : []))
       .catch(() => setTeams([]));
   }, []);
-
-  if (!open) return null;
 
   // Handles submit for both flows: existing team or create new team
   const handleSubmit = async (e: React.FormEvent) => {
@@ -81,18 +80,7 @@ export default function NewProjectModal({
 
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center">
-      <div className="bg-zinc-900 rounded-xl shadow-lg p-8 w-full max-w-md">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-bold">Add New Project</h3>
-          <button
-            className="text-gray-400 hover:text-gray-200 text-2xl px-2"
-            onClick={onClose}
-            aria-label="Close"
-          >
-            &times;
-          </button>
-        </div>
+    <Modal open={open} onClose={onClose} title="Add New Project" widthClass="max-w-md">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-gray-400 mb-1">Project Name</label>
@@ -151,7 +139,6 @@ export default function NewProjectModal({
           </button>
           {error && <div className="text-red-400 mt-2">{error}</div>}
         </form>
-      </div>
-    </div>
+    </Modal>
   );
 }

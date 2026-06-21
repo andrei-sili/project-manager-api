@@ -1,9 +1,9 @@
 "use client";
 import { useEffect, useState } from "react";
 import axiosClient from "@/lib/axiosClient";
-import { X } from "lucide-react";
 import type { Task, TeamMember } from "@/lib/types";
 import { getErrorMessage } from "@/lib/errors";
+import Modal from "@/components/Modal";
 
 
 interface EditTaskModalProps {
@@ -39,7 +39,6 @@ export default function EditTaskModal({
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   // Update form when task changes
   useEffect(() => {
@@ -49,20 +48,14 @@ export default function EditTaskModal({
     setPriority(task?.priority || "medium");
     setStatus(task?.status || "todo");
     setAssignee(task.assigned_to && typeof task.assigned_to === "object" ? task.assigned_to.id : "");
-
-
     setError("");
-    setSuccess("");
   }, [task, open]);
-
-  if (!open) return null;
 
   // PATCH request to update task
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setSuccess("");
     try {
       await axiosClient.patch(
         `/projects/${projectId}/tasks/${task.id}/`,
@@ -76,7 +69,6 @@ export default function EditTaskModal({
           project: projectId,
         }
       );
-      setSuccess("Task updated!");
       onSaved?.();
       onClose();
     } catch (err) {
@@ -111,21 +103,8 @@ export default function EditTaskModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70">
-      <form
-          className="bg-zinc-900 border border-zinc-800 p-6 rounded-2xl shadow-xl w-full max-w-md flex flex-col gap-4 animate-fade-in relative"
-          onSubmit={handleSubmit}
-      >
-        {/* Close */}
-        <button
-            type="button"
-            className="absolute top-4 right-4 text-gray-400 hover:text-emerald-400 text-xl"
-            onClick={onClose}
-            tabIndex={-1}
-        >
-          <X size={24}/>
-        </button>
-        <div className="text-xl font-bold mb-1">Edit Task</div>
+    <Modal open={open} onClose={onClose} title="Edit Task" widthClass="max-w-md">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <label className="text-sm font-semibold">Title
           <input
               className="mt-1 bg-zinc-800 p-2 rounded w-full outline-none border border-zinc-700 focus:ring-2 focus:ring-emerald-500"
@@ -194,14 +173,10 @@ export default function EditTaskModal({
           </select>
         </label>
 
-        {/* Error & Success messages */}
         {error && (
             <div className="text-red-400 text-sm whitespace-pre-wrap">
               {error}
             </div>
-        )}
-        {success && (
-            <div className="text-green-400 text-sm">{success}</div>
         )}
         {/* Action buttons */}
         <div className="flex gap-2 mt-2">
@@ -230,20 +205,6 @@ export default function EditTaskModal({
           </button>
         </div>
       </form>
-      <style jsx global>{`
-        .animate-fade-in {
-          animation: fadeIn 0.20s ease;
-        }
-
-        @keyframes fadeIn {
-          from {
-            opacity: 0;
-          }
-          to {
-            opacity: 1;
-          }
-        }
-      `}</style>
-    </div>
+    </Modal>
   );
 }

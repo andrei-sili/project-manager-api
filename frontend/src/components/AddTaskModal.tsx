@@ -3,6 +3,7 @@ import { useState, type FormEvent } from "react";
 import axiosClient from "@/lib/axiosClient";
 import type { TeamMember } from "@/lib/types";
 import { getErrorMessage } from "@/lib/errors";
+import Modal from "@/components/Modal";
 
 type AddTaskModalProps = {
   open: boolean;
@@ -26,15 +27,11 @@ export default function AddTaskModal({
   const [assignee, setAssignee] = useState<number | "">("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-
-  if (!open) return null;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    setSuccess("");
 
     try {
       await axiosClient.post(
@@ -51,7 +48,6 @@ export default function AddTaskModal({
       );
 
 
-      setSuccess("Task added!");
       setTitle("");
       setDescription("");
       setDueDate("");
@@ -67,22 +63,8 @@ export default function AddTaskModal({
   };
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70">
-      <form
-          className="bg-zinc-900 p-6 rounded-2xl shadow-lg w-full max-w-md flex flex-col gap-4 border border-green-700"
-          onSubmit={handleSubmit}
-      >
-        <div className="flex justify-between items-center mb-1">
-          <div className="text-lg font-bold">Add Task</div>
-          <button
-              type="button"
-              className="text-gray-400 hover:text-red-400 text-xl"
-              onClick={onClose}
-          >
-            ×
-          </button>
-        </div>
-
+    <Modal open={open} onClose={onClose} title="Add Task" widthClass="max-w-md">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <label className="text-sm">Title
           <input
               className="mt-1 bg-zinc-800 p-2 rounded w-full"
@@ -145,7 +127,6 @@ export default function AddTaskModal({
 
 
         {error && <div className="text-red-400 text-sm whitespace-pre-wrap">{error}</div>}
-        {success && <div className="text-green-400 text-sm">{success}</div>}
 
         <button
             type="submit"
@@ -155,7 +136,7 @@ export default function AddTaskModal({
           {loading ? "Saving..." : "Add Task"}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }
 

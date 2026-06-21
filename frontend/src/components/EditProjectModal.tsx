@@ -3,6 +3,7 @@ import { useState, useEffect, type FormEvent } from "react";
 import axiosClient from "@/lib/axiosClient";
 import type { Project } from "@/lib/types";
 import { getErrorMessage } from "@/lib/errors";
+import Modal from "@/components/Modal";
 
 type EditProjectModalProps = {
   project: Project;
@@ -30,8 +31,6 @@ export default function EditProjectModal({ project, open, onClose, onUpdated }: 
     setError("");
   }, [project, open]);
 
-  if (!open) return null;
-
   const handleSubmit = async (e: FormEvent) => {
   e.preventDefault();
   setLoading(true); setError("");
@@ -56,15 +55,8 @@ export default function EditProjectModal({ project, open, onClose, onUpdated }: 
 
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70">
-      <form
-        className="bg-zinc-900 p-6 rounded-2xl shadow-lg w-full max-w-lg flex flex-col gap-4 border border-zinc-800"
-        onSubmit={handleSubmit}
-      >
-        <div className="flex justify-between items-center mb-1">
-          <div className="text-lg font-bold">Edit Project</div>
-          <button type="button" className="text-gray-400 hover:text-red-400 text-xl" onClick={onClose}>×</button>
-        </div>
+    <Modal open={open} onClose={onClose} title="Edit Project">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <label className="text-sm">Name
           <input className="mt-1 bg-zinc-800 p-2 rounded w-full" value={name} onChange={e=>setName(e.target.value)} required/>
         </label>
@@ -86,7 +78,7 @@ export default function EditProjectModal({ project, open, onClose, onUpdated }: 
           {loading ? "Saving..." : "Save Changes"}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }
 

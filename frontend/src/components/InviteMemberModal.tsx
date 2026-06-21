@@ -2,6 +2,7 @@
 import { useState, type FormEvent } from "react";
 import axiosClient from "@/lib/axiosClient";
 import { getErrorMessage } from "@/lib/errors";
+import Modal from "@/components/Modal";
 
 type InviteMemberModalProps = {
   open: boolean;
@@ -17,8 +18,6 @@ export default function InviteMemberModal({ open, onClose, teamId, onInvited }: 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
-  if (!open) return null;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -40,15 +39,8 @@ export default function InviteMemberModal({ open, onClose, teamId, onInvited }: 
   };
 
   return (
-    <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/70">
-      <form
-        className="bg-zinc-900 p-6 rounded-2xl shadow-lg w-full max-w-md flex flex-col gap-4 border border-zinc-800"
-        onSubmit={handleSubmit}
-      >
-        <div className="flex justify-between items-center mb-1">
-          <div className="text-lg font-bold">Invite Member</div>
-          <button type="button" className="text-gray-400 hover:text-red-400 text-xl" onClick={onClose}>×</button>
-        </div>
+    <Modal open={open} onClose={onClose} title="Invite Member" widthClass="max-w-md">
+      <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <label className="text-sm">Email
           <input className="mt-1 bg-zinc-800 p-2 rounded w-full" type="email" value={email} onChange={e=>setEmail(e.target.value)} required/>
         </label>
@@ -69,7 +61,7 @@ export default function InviteMemberModal({ open, onClose, teamId, onInvited }: 
           {loading ? "Sending..." : "Send Invitation"}
         </button>
       </form>
-    </div>
+    </Modal>
   );
 }
 
