@@ -20,7 +20,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         return (
-            Project.objects.filter(team__members=self.request.user)
+            Project.objects.filter(
+                team__membership_set__user=self.request.user,
+                team__membership_set__status='accepted',
+            )
             .select_related('team', 'created_by')
             .prefetch_related('tasks', 'tasks__assigned_to', 'team__membership_set__user')
             .order_by('-id')
@@ -38,7 +41,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         team = serializer.validated_data.get('team')
-        if not team.members.filter(id=self.request.user.id).exists():
+        if not team.has_member(self.request.user):
             raise PermissionDenied("You are not a member of this team.")
         serializer.save(created_by=self.request.user)
 

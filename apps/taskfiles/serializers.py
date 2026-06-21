@@ -4,8 +4,10 @@ from rest_framework import serializers
 
 from apps.taskfiles.models import TaskFile
 
+# SVG is intentionally excluded: it can carry inline <script> and would
+# execute in the app's origin (stored XSS) if ever rendered.
 ALLOWED_FILE_EXTENSIONS = {
-    ".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg",
+    ".png", ".jpg", ".jpeg", ".gif", ".webp",
     ".pdf", ".txt", ".csv", ".md",
     ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx",
     ".zip",

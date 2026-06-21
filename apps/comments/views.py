@@ -19,7 +19,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
     def get_task(self):
         task = get_object_or_404(Task, id=self.kwargs["task_pk"], project_id=self.kwargs["project_pk"])
-        if not task.project.team.members.filter(id=self.request.user.id).exists():
+        if not task.project.team.has_member(self.request.user):
             raise PermissionDenied("You are not a member of this team.")
         return task
 

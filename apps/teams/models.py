@@ -13,6 +13,20 @@ class Team(models.Model):
     def __str__(self):
         return self.name
 
+    def has_member(self, user):
+        """True if the user is an accepted member of this team."""
+        return self.membership_set.filter(
+            user=user, status=TeamMembership.STATUS_ACCEPTED
+        ).exists()
+
+    def has_admin(self, user):
+        """True if the user is an accepted admin of this team."""
+        return self.membership_set.filter(
+            user=user,
+            role=TeamMembership.ROLE_ADMIN,
+            status=TeamMembership.STATUS_ACCEPTED,
+        ).exists()
+
 
 class TeamMembership(models.Model):
     """A user's membership in a team: their role and invitation status."""

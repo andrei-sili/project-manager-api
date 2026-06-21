@@ -47,8 +47,7 @@ class TeamSerializer(serializers.ModelSerializer):
         return f"{obj.created_by.first_name} {obj.created_by.last_name}"
 
     def get_is_admin(self, obj) -> bool:
-        user = self.context['request'].user
-        return obj.membership_set.filter(user=user, role='admin').exists()
+        return obj.has_admin(self.context['request'].user)
 
 
 class TeamCreateSerializer(serializers.ModelSerializer):

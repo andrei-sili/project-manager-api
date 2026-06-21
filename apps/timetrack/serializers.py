@@ -22,7 +22,8 @@ class TimeEntrySerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         if request and request.user.is_authenticated:
             self.fields["task_id"].queryset = Task.objects.filter(
-                project__team__members=request.user
+                project__team__membership_set__user=request.user,
+                project__team__membership_set__status="accepted",
             )
 
     class Meta:

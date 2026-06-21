@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import viewsets, permissions, filters
 from rest_framework.exceptions import PermissionDenied
@@ -29,7 +30,11 @@ class TaskViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         project_id = self.kwargs.get('project_pk')
         return (
-            Task.objects.filter(project__id=project_id, project__team__members=self.request.user)
+            Task.objects.filter(
+                project__id=project_id,
+                project__team__membership_set__user=self.request.user,
+                project__team__membership_set__status='accepted',
+            )
             .select_related('project', 'assigned_to', 'created_by')
             .order_by("-id")
         )
@@ -44,13 +49,13 @@ class TaskViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         """Validate team membership and assignee, save, notify the assignee and log the activity."""
         project_id = self.kwargs.get('project_pk')
-        project = Project.objects.get(id=project_id)
+        project = get_object_or_404(Project, id=project_id)
 
-        if not project.team.members.filter(id=self.request.user.id).exists():
+        if not project.team.has_member(self.request.user):
             raise PermissionDenied("You're not a member of this team.")
 
         assigned_user = serializer.validated_data.get('assigned_to')
-        if assigned_user and not project.team.members.filter(id=assigned_user.id).exists():
+        if assigned_user and not project.team.has_member(assigned_user):
             raise PermissionDenied("Assigned user is not part of this team.")
 
         task = serializer.save(created_by=self.request.user, project=project)
@@ -73,6 +78,10 @@ class TaskViewSet(viewsets.ModelViewSet):
         )
 
     def perform_update(self, serializer):
+        assigned_user = serializer.validated_data.get('assigned_to')
+        if assigned_user and not serializer.instance.project.team.has_member(assigned_user):
+            raise PermissionDenied("Assigned user is not part of this team.")
+
         task = serializer.save()
 
         log_activity(

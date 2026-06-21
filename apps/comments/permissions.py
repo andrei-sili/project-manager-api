@@ -7,4 +7,4 @@ class IsProjectTeamMember(BasePermission):
         task = getattr(obj, 'task', None)
         if not task:
             return False
-        return task.project.team.members.filter(id=request.user.id).exists()
+        return task.project.team.has_member(request.user)

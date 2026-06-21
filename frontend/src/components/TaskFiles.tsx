@@ -1,6 +1,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import axios from "axios";
+import axiosClient from "@/lib/axiosClient";
 import { Paperclip, X } from "lucide-react";
 import { getErrorMessage } from "@/lib/errors";
 
@@ -83,6 +84,27 @@ export default function TaskFiles({
       setError(getErrorMessage(err, "Failed to upload file."));
     } finally {
       setUploading(false);
+    }
+  };
+
+  // The download endpoint is authenticated, so fetch it as a blob (carrying the
+  // bearer token via axiosClient) rather than navigating to a bare URL.
+  const handleDownload = async (f: TaskFile) => {
+    try {
+      const res = await axiosClient.get(
+        `/projects/${projectId}/tasks/${taskId}/files/${f.id}/download/`,
+        { responseType: "blob" }
+      );
+      const url = window.URL.createObjectURL(res.data);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = getFileName(f);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      setError("Failed to download file.");
     }
   };
 
@@ -196,14 +218,14 @@ export default function TaskFiles({
                     </span>
                   </div>
                   <div className="flex gap-1">
-                    <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL}/projects/${projectId}/tasks/${taskId}/files/${f.id}/download/`}
-                        className="text-xs bg-zinc-700 hover:bg-emerald-700 text-white px-2 py-0.5 rounded"
-                        style={{fontSize: "10px"}}
+                    <button
+                        type="button"
+                        onClick={() => handleDownload(f)}
+                        className="text-xs bg-zinc-700 hover:bg-emerald-700 text-white px-2 py-0.5 rounded text-[10px]"
                         title="Download"
                     >
                       Download
-                    </a>
+                    </button>
 
                     <button
                         className="text-xs bg-zinc-700 hover:bg-red-700 text-white px-2 py-0.5 rounded"

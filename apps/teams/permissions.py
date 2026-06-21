@@ -1,5 +1,4 @@
 from rest_framework.permissions import BasePermission
-from .models import TeamMembership
 
 
 class IsTeamAdmin(BasePermission):
@@ -9,8 +8,4 @@ class IsTeamAdmin(BasePermission):
         if not view.detail:
             return False
         team = view.get_object()
-        return TeamMembership.objects.filter(
-            team=team,
-            user=request.user,
-            role='admin'
-        ).exists()
+        return team.has_admin(request.user)
