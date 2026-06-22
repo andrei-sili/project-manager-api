@@ -1,5 +1,12 @@
 # Project Manager
 
+[![CI](https://github.com/andrei-sili/project-manager-api/actions/workflows/ci.yml/badge.svg)](https://github.com/andrei-sili/project-manager-api/actions/workflows/ci.yml)
+[![Live demo](https://img.shields.io/badge/demo-pm.andreisili.com-34d399)](https://pm.andreisili.com)
+![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-5.2-092E20?logo=django&logoColor=white)
+![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=next.js&logoColor=white)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
 A full-stack team-collaboration platform — Kanban boards, time tracking, team
 roles, a calendar, analytics and real-time notifications. Built with a
 Django REST + Channels backend and a Next.js frontend.
