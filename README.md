@@ -4,6 +4,8 @@ A full-stack team-collaboration platform — Kanban boards, time tracking, team
 roles, a calendar, analytics and real-time notifications. Built with a
 Django REST + Channels backend and a Next.js frontend.
 
+**Live demo:** [pm.andreisili.com](https://pm.andreisili.com) — log in with `alice@example.com` / `Demo1234!`
+
 <p align="center">
   <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="900">
 </p>
