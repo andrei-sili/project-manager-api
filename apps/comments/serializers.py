@@ -2,16 +2,14 @@ from rest_framework import serializers
 
 from apps.comments.models import Comment
 
-
-class RecursiveField(serializers.Serializer):
-    def to_representation(self, value):
-        serializer = self.parent.parent.__class__(value, context=self.context)
-        return serializer.data
+# How many levels of nested replies to serialize. Beyond this, replies are
+# truncated to avoid unbounded recursion and N+1 queries on deep threads.
+MAX_REPLY_DEPTH = 4
 
 
 class CommentSerializer(serializers.ModelSerializer):
-    replies = RecursiveField(many=True, read_only=True)
     user_name = serializers.SerializerMethodField()
+    replies = serializers.SerializerMethodField()
 
     class Meta:
         model = Comment
@@ -19,6 +17,16 @@ class CommentSerializer(serializers.ModelSerializer):
 
     def get_user_name(self, obj) -> str:
         return f"{obj.user.first_name} {obj.user.last_name}"
+
+    def get_replies(self, obj) -> list:
+        depth = self.context.get("reply_depth", 0)
+        if depth >= MAX_REPLY_DEPTH:
+            return []
+        return CommentSerializer(
+            obj.replies.all(),
+            many=True,
+            context={**self.context, "reply_depth": depth + 1},
+        ).data
 
 
 class CommentCreateSerializer(serializers.ModelSerializer):
