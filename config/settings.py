@@ -212,6 +212,11 @@ CSRF_TRUSTED_ORIGINS = env_list("CSRF_TRUSTED_ORIGINS")
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = list(default_headers) + ["authorization", "content-type"]
 
+# WebSocket allowed origins for Channels' OriginValidator. "*" (default) allows
+# any origin — fine for local dev and tests; in production set this to the
+# frontend origin, e.g. "https://pm.example.com".
+CHANNELS_ALLOWED_ORIGINS = env_list("CHANNELS_ALLOWED_ORIGINS", "*")
+
 # --- Internationalization ---------------------------------------------------
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
