@@ -5,7 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 
 from apps.projects.models import Project
 from apps.projects.permissions import IsTeamMember, IsProjectAdmin
-from apps.projects.serializers import ProjectCreateSerializer, ProjectSerializer
+from apps.projects.serializers import ProjectCreateSerializer, ProjectSerializer, ProjectListSerializer
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
@@ -41,6 +41,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'create':
             return ProjectCreateSerializer
+        if self.action == 'list':
+            return ProjectListSerializer
         return ProjectSerializer
 
     def perform_create(self, serializer):
