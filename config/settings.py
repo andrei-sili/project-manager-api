@@ -166,7 +166,9 @@ REST_FRAMEWORK = {
         # Disabled while the test suite runs; enforced otherwise.
         'anon': None if TESTING else '40/min',
         'user': None if TESTING else '240/min',
-        'auth': None if TESTING else '8/min',  # login / register / password reset
+        'auth': None if TESTING else '8/min',       # login / password reset
+        'register': None if TESTING else '10/hour',  # email-sending: cap per IP
+        'invite': None if TESTING else '30/hour',    # email-sending: cap per user
     },
 }
 
@@ -181,7 +183,7 @@ SPECTACULAR_SETTINGS = {
 
 # --- SimpleJWT --------------------------------------------------------------
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=15),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=7),
     # Each refresh issues a new refresh token and blacklists the previous one,
     # so a leaked refresh token has a limited useful lifetime. The frontend

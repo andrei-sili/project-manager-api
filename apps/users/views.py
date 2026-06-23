@@ -10,7 +10,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from apps.teams.models import TeamMembership
-from apps.users.throttles import AuthRateThrottle
+from apps.users.throttles import AuthRateThrottle, RegisterRateThrottle
 from apps.users.models import CustomUser, PasswordResetToken, EmailVerificationToken
 from apps.users.serializers import (
     UserSerializer,
@@ -53,7 +53,7 @@ class UserViewSet(viewsets.ViewSet):
         responses={201: OpenApiResponse(description="Account created; verification email sent.")},
     )
     @action(detail=False, methods=['post'], url_path='register',
-            permission_classes=[permissions.AllowAny], throttle_classes=[AuthRateThrottle])
+            permission_classes=[permissions.AllowAny], throttle_classes=[RegisterRateThrottle])
     def register(self, request):
         serializer = UserRegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
