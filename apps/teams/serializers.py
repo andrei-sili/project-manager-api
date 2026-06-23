@@ -6,6 +6,7 @@ from apps.teams.models import Team, TeamMembership
 class TeamMembershipSerializer(serializers.ModelSerializer):
     user = serializers.SerializerMethodField()
     role = serializers.CharField()
+    status = serializers.CharField()
     joined_at = serializers.DateTimeField()
 
     class Meta:
@@ -13,6 +14,7 @@ class TeamMembershipSerializer(serializers.ModelSerializer):
         fields = [
             'user',
             'role',
+            'status',
             'joined_at',
         ]
 

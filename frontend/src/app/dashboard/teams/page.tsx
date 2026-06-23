@@ -76,7 +76,13 @@ export default function TeamsPage() {
                         </div>
                         <div className="flex justify-between items-center text-sm">
                           <span className="bg-emerald-500/15 text-emerald-300 px-2 py-0.5 rounded text-xs">{member.role}</span>
-                          <span className="text-zinc-500 text-xs">Joined: {joinedAt}</span>
+                          {member.status === "pending" ? (
+                            <span className="bg-amber-500/15 text-amber-300 px-2 py-0.5 rounded text-xs">Pending invitation</span>
+                          ) : member.status === "declined" ? (
+                            <span className="bg-red-500/15 text-red-300 px-2 py-0.5 rounded text-xs">Declined</span>
+                          ) : (
+                            <span className="text-zinc-500 text-xs">Joined: {joinedAt}</span>
+                          )}
                         </div>
                         {team.is_admin && user.id !== member.user.id && (
                           <div className="flex justify-end gap-2 mt-2">

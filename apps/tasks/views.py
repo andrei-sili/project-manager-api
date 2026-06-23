@@ -5,7 +5,7 @@ from rest_framework import viewsets, permissions, filters
 from rest_framework.exceptions import PermissionDenied
 
 from apps.logs.services import log_activity
-from apps.notify.services import notify_user
+from apps.notify.services import notify_user, notify_team
 from apps.projects.models import Project
 from apps.projects.permissions import IsTeamMember
 from apps.tasks.models import Task
@@ -76,6 +76,12 @@ class TaskViewSet(viewsets.ModelViewSet):
             target_repr=f"Task: {task.title}",
             project=project
         )
+        notify_team(
+            project.team,
+            f"{self.request.user.first_name} added task '{task.title}'",
+            exclude_user=self.request.user,
+            type='task',
+        )
 
     def perform_update(self, serializer):
         assigned_user = serializer.validated_data.get('assigned_to')
@@ -92,8 +98,16 @@ class TaskViewSet(viewsets.ModelViewSet):
             target_repr=f"Task: {task.title}",
             project=task.project
         )
+        notify_team(
+            task.project.team,
+            f"{self.request.user.first_name} updated task '{task.title}'",
+            exclude_user=self.request.user,
+            type='task',
+        )
 
     def perform_destroy(self, instance):
+        team = instance.project.team
+        title = instance.title
         log_activity(
             user=self.request.user,
             action='deleted',
@@ -103,6 +117,12 @@ class TaskViewSet(viewsets.ModelViewSet):
             project=instance.project
         )
         instance.delete()
+        notify_team(
+            team,
+            f"{self.request.user.first_name} deleted task '{title}'",
+            exclude_user=self.request.user,
+            type='task',
+        )
 
 
 class MyTaskViewSet(viewsets.ReadOnlyModelViewSet):
