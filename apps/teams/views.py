@@ -4,7 +4,7 @@ from django.conf import settings
 from django.core.mail import send_mail
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action, api_view, permission_classes
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
@@ -83,7 +83,7 @@ class TeamViewSet(viewsets.ModelViewSet):
             user.save()
 
         if TeamMembership.objects.filter(team=team, user=user).exists():
-            return Response({'error': 'User already invited or added'}, status=400)
+            raise ValidationError("User already invited or added.")
 
         membership = TeamMembership.objects.create(
             team=team,
@@ -113,28 +113,26 @@ class TeamViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=['post'], url_path='accept-invite', permission_classes=[permissions.IsAuthenticated])
     def accept_invite(self, request, pk=None):
         team = self.get_object()
-        try:
-            membership = TeamMembership.objects.get(team=team, user=request.user)
-            if membership.status != 'pending':
-                return Response({'error': 'Invitation already processed'}, status=400)
-            membership.status = 'accepted'
-            membership.save()
-            return Response({'status': 'accepted'})
-        except TeamMembership.DoesNotExist:
-            return Response({'error': 'No invitation found'}, status=404)
+        membership = TeamMembership.objects.filter(team=team, user=request.user).first()
+        if not membership:
+            raise NotFound("No invitation found.")
+        if membership.status != 'pending':
+            raise ValidationError("Invitation already processed.")
+        membership.status = 'accepted'
+        membership.save()
+        return Response({'status': 'accepted'})
 
     @action(detail=True, methods=['post'], url_path='decline-invite', permission_classes=[permissions.IsAuthenticated])
     def decline_invite(self, request, pk=None):
         team = self.get_object()
-        try:
-            membership = TeamMembership.objects.get(team=team, user=request.user)
-            if membership.status != 'pending':
-                return Response({'error': 'Invitation already processed'}, status=400)
-            membership.status = 'declined'
-            membership.save()
-            return Response({'status': 'declined'})
-        except TeamMembership.DoesNotExist:
-            return Response({'error': 'No invitation found'}, status=404)
+        membership = TeamMembership.objects.filter(team=team, user=request.user).first()
+        if not membership:
+            raise NotFound("No invitation found.")
+        if membership.status != 'pending':
+            raise ValidationError("Invitation already processed.")
+        membership.status = 'declined'
+        membership.save()
+        return Response({'status': 'declined'})
 
     @staticmethod
     def _is_last_admin(team):
@@ -148,17 +146,15 @@ class TeamViewSet(viewsets.ModelViewSet):
         user_id = request.data.get('user_id')
 
         if str(request.user.id) == str(user_id):
-            return Response({'error': 'Admin cannot remove themselves.'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError("Admin cannot remove themselves.")
 
-        try:
-            membership = TeamMembership.objects.get(team=team, user_id=user_id)
-            if membership.role == 'admin' and self._is_last_admin(team):
-                return Response({'error': 'Cannot remove the last admin of the team.'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            membership.delete()
-            return Response({'status': 'member removed'})
-        except TeamMembership.DoesNotExist:
-            return Response({'error': 'Membership not found'}, status=status.HTTP_404_NOT_FOUND)
+        membership = TeamMembership.objects.filter(team=team, user_id=user_id).first()
+        if not membership:
+            raise NotFound("Membership not found.")
+        if membership.role == 'admin' and self._is_last_admin(team):
+            raise ValidationError("Cannot remove the last admin of the team.")
+        membership.delete()
+        return Response({'status': 'member removed'})
 
     @action(detail=True, methods=['post'], url_path='change-role', permission_classes=[IsTeamAdmin])
     def change_role(self, request, pk=None):
@@ -167,18 +163,16 @@ class TeamViewSet(viewsets.ModelViewSet):
         new_role = request.data.get('role')
 
         if new_role not in dict(TeamMembership.ROLE_CHOICES):
-            return Response({'error': 'Invalid role'}, status=status.HTTP_400_BAD_REQUEST)
+            raise ValidationError("Invalid role.")
 
-        try:
-            membership = TeamMembership.objects.get(team=team, user_id=user_id)
-            if membership.role == 'admin' and new_role != 'admin' and self._is_last_admin(team):
-                return Response({'error': 'The team must keep at least one admin.'},
-                                status=status.HTTP_400_BAD_REQUEST)
-            membership.role = new_role
-            membership.save()
-            return Response({'status': f'Role changed to {new_role}'})
-        except TeamMembership.DoesNotExist:
-            return Response({'error': 'Membership not found'}, status=status.HTTP_404_NOT_FOUND)
+        membership = TeamMembership.objects.filter(team=team, user_id=user_id).first()
+        if not membership:
+            raise NotFound("Membership not found.")
+        if membership.role == 'admin' and new_role != 'admin' and self._is_last_admin(team):
+            raise ValidationError("The team must keep at least one admin.")
+        membership.role = new_role
+        membership.save()
+        return Response({'status': f'Role changed to {new_role}'})
 
     def destroy(self, request, *args, **kwargs):
         team = self.get_object()
