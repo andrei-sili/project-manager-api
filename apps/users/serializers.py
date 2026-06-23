@@ -3,7 +3,6 @@ import re
 from django.contrib.auth.password_validation import validate_password as django_validate_password
 from django.core.exceptions import ValidationError as DjangoValidationError
 from rest_framework import serializers
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from apps.users.models import CustomUser
 
@@ -30,7 +29,6 @@ class UserSerializer(serializers.ModelSerializer):
 
 class UserRegisterSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True)
-    token = serializers.SerializerMethodField()
 
     class Meta:
         model = CustomUser
@@ -39,7 +37,7 @@ class UserRegisterSerializer(serializers.ModelSerializer):
             'first_name',
             'last_name',
             'password',
-            'token']
+        ]
 
         extra_kwargs = {
             'email': {'required': True},
@@ -49,18 +47,16 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         }
 
     def create(self, validated_data):
-        user = CustomUser.objects.create_user(**validated_data)
+        # Inactive until the email is verified; the user can't log in before then.
+        user = CustomUser.objects.create_user(is_active=False, **validated_data)
         return user
-
-    def get_token(self, user) -> dict:
-        refresh = RefreshToken.for_user(user)
-        return {
-            'refresh': str(refresh),
-            'access': str(refresh.access_token),
-        }
 
     def validate_password(self, value):
         return validate_password_strength(value)
+
+
+class VerifyEmailSerializer(serializers.Serializer):
+    token = serializers.UUIDField()
 
 
 class UserChangePasswordSerializer(serializers.Serializer):
@@ -109,11 +105,10 @@ def validate_password_strength(value):
 
 
 class RegisterAndAcceptInviteSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    token = serializers.UUIDField()
     password = serializers.CharField(write_only=True)
     first_name = serializers.CharField()
     last_name = serializers.CharField()
-    team_id = serializers.IntegerField()
 
     def validate_password(self, value):
         return validate_password_strength(value)

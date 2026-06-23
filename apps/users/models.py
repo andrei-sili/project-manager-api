@@ -57,4 +57,15 @@ class PasswordResetToken(models.Model):
         return timezone.now() > self.created_at + timedelta(hours=1)
 
 
+class EmailVerificationToken(models.Model):
+    """One-time token to verify a new account's email (expires after 24h)."""
+
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    token = models.UUIDField(default=uuid.uuid4, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timedelta(hours=24)
+
+
 

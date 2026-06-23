@@ -5,6 +5,7 @@ from tests.factories import UserFactory
 
 @pytest.mark.django_db
 def test_user_register(api_client):
+    from apps.users.models import CustomUser, EmailVerificationToken
     url = reverse("user-register")
     data = {
         "email": "newuser@example.com",
@@ -14,7 +15,35 @@ def test_user_register(api_client):
     }
     response = api_client.post(url, data)
     assert response.status_code == 201
-    assert "token" in response.data
+    # Account is created inactive and a verification token is issued (no auto-login).
+    user = CustomUser.objects.get(email="newuser@example.com")
+    assert user.is_active is False
+    assert EmailVerificationToken.objects.filter(user=user).exists()
+
+
+@pytest.mark.django_db
+def test_verify_email_activates_account(api_client):
+    from apps.users.models import CustomUser, EmailVerificationToken
+    user = CustomUser.objects.create_user(
+        email="verify@example.com", password="password123A!", is_active=False
+    )
+    token = EmailVerificationToken.objects.create(user=user)
+
+    res = api_client.post(reverse("user-verify-email"), {"token": str(token.token)})
+    assert res.status_code == 200
+
+    user.refresh_from_db()
+    assert user.is_active is True
+    assert not EmailVerificationToken.objects.filter(id=token.id).exists()
+
+
+@pytest.mark.django_db
+def test_verify_email_invalid_token(api_client):
+    res = api_client.post(
+        reverse("user-verify-email"),
+        {"token": "12345678-aaaa-bbbb-cccc-123456789000"},
+    )
+    assert res.status_code == 400
 
 
 @pytest.mark.django_db

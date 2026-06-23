@@ -32,7 +32,9 @@ from apps.notify.views import NotificationViewSet
 from apps.projects.views import ProjectViewSet
 from apps.taskfiles.views import TaskFileViewSet
 from apps.tasks.views import TaskViewSet, MyTaskViewSet
-from apps.teams.views import TeamViewSet
+from apps.teams.views import (
+    TeamViewSet, invitation_detail, invitation_accept, invitation_decline,
+)
 from apps.timetrack.views import TimeEntryViewSet
 
 from apps.users.views import RequestPasswordResetView, ConfirmPasswordResetView, ThrottledTokenObtainPairView
@@ -87,6 +89,9 @@ urlpatterns = [
                        download_task_file,
                        name='download_task_file'
                        ),
+                  path('api/invitations/<uuid:token>/', invitation_detail, name='invitation-detail'),
+                  path('api/invitations/<uuid:token>/accept/', invitation_accept, name='invitation-accept'),
+                  path('api/invitations/<uuid:token>/decline/', invitation_decline, name='invitation-decline'),
               ] + auth_urlpatterns + request_confirm_pass_urlpatterns
 
 if settings.DEBUG:

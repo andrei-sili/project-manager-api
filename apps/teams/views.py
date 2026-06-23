@@ -1,10 +1,14 @@
+import uuid
+
 from django.conf import settings
 from django.core.mail import send_mail
 from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import action
+from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 
+from apps.notify.services import notify_user
 from apps.teams.models import Team, TeamMembership
 from apps.teams.permissions import IsTeamAdmin
 from drf_spectacular.utils import OpenApiResponse, extend_schema
@@ -12,6 +16,18 @@ from drf_spectacular.utils import OpenApiResponse, extend_schema
 from apps.teams.serializers import TeamSerializer, TeamCreateSerializer, InviteMemberSerializer
 from apps.users.models import CustomUser
 from django.db.models import Q
+
+
+def _inviter_name(membership):
+    inviter = membership.invited_by
+    if not inviter:
+        return "A teammate"
+    return f"{inviter.first_name} {inviter.last_name}".strip() or inviter.email
+
+
+def _invitee_name(membership):
+    user = membership.user
+    return f"{user.first_name} {user.last_name}".strip() or user.email
 
 
 class TeamViewSet(viewsets.ModelViewSet):
@@ -69,21 +85,30 @@ class TeamViewSet(viewsets.ModelViewSet):
         if TeamMembership.objects.filter(team=team, user=user).exists():
             return Response({'error': 'User already invited or added'}, status=400)
 
-        TeamMembership.objects.create(
+        membership = TeamMembership.objects.create(
             team=team,
             user=user,
             role=role,
-            status='pending'
+            status='pending',
+            invited_by=request.user,
+            invite_token=uuid.uuid4(),
         )
-        self.send_invite_email(user, team)
+        self.send_invite_email(membership)
 
         return Response({'status': 'invitation sent', 'email': email})
 
-    def send_invite_email(self, user, team):
-        invite_link = f"{settings.FRONTEND_URL}/register?email={user.email}&team_id={team.id}"
-        subject = f"You've been invited to join the team: {team.name}"
-        message = f"Hi,\n\nYou've been invited to join '{team.name}' on Project Manager.\nAccept your invitation: {invite_link}"
-        send_mail(subject, message, None, [user.email])  # None -> DEFAULT_FROM_EMAIL
+    def send_invite_email(self, membership):
+        team = membership.team
+        accept_link = f"{settings.FRONTEND_URL}/invite/accept?token={membership.invite_token}"
+        decline_link = f"{settings.FRONTEND_URL}/invite/decline?token={membership.invite_token}"
+        subject = f"You're invited to the team '{team.name}'"
+        message = (
+            f"Hi,\n\n{_inviter_name(membership)} invited you to join the team "
+            f"'{team.name}' as {membership.get_role_display()} on Project Manager.\n\n"
+            f"Accept:  {accept_link}\n"
+            f"Decline: {decline_link}\n"
+        )
+        send_mail(subject, message, None, [membership.user.email])  # None -> DEFAULT_FROM_EMAIL
 
     @action(detail=True, methods=['post'], url_path='accept-invite', permission_classes=[permissions.IsAuthenticated])
     def accept_invite(self, request, pk=None):
@@ -167,3 +192,75 @@ class TeamViewSet(viewsets.ModelViewSet):
             {"detail": f"Team '{team_name}' was deleted successfully."},
             status=status.HTTP_204_NO_CONTENT
         )
+
+
+def _pending_invite(token):
+    return (
+        TeamMembership.objects
+        .select_related('team', 'user', 'invited_by')
+        .filter(invite_token=token)
+        .first()
+    )
+
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def invitation_detail(request, token):
+    """Public invite details for the email link landing page."""
+    membership = _pending_invite(token)
+    if not membership:
+        return Response({'detail': 'Invitation not found.'}, status=status.HTTP_404_NOT_FOUND)
+    return Response({
+        'team': membership.team.name,
+        'role': membership.role,
+        'status': membership.status,
+        'email': membership.user.email,
+        'invited_by': _inviter_name(membership),
+        'has_account': membership.user.has_usable_password(),
+    })
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def invitation_accept(request, token):
+    """Accept an invitation as the already-registered, logged-in invitee."""
+    membership = _pending_invite(token)
+    if not membership:
+        return Response({'detail': 'Invitation not found.'}, status=status.HTTP_404_NOT_FOUND)
+    if membership.user_id != request.user.id:
+        return Response({'detail': 'This invitation is for a different account.'},
+                        status=status.HTTP_403_FORBIDDEN)
+    if membership.status != 'pending':
+        return Response({'detail': 'Invitation already handled.'}, status=status.HTTP_400_BAD_REQUEST)
+    membership.status = 'accepted'
+    membership.invite_token = None
+    membership.save(update_fields=['status', 'invite_token'])
+    return Response({'status': 'accepted', 'team_id': membership.team_id})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def invitation_decline(request, token):
+    """Decline an invitation from the email link and notify the inviter."""
+    membership = _pending_invite(token)
+    if not membership:
+        return Response({'detail': 'Invitation not found.'}, status=status.HTTP_404_NOT_FOUND)
+    if membership.status != 'pending':
+        return Response({'detail': 'Invitation already handled.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    team_name = membership.team.name
+    invitee = _invitee_name(membership)
+    inviter = membership.invited_by
+    membership.status = 'declined'
+    membership.invite_token = None
+    membership.save(update_fields=['status', 'invite_token'])
+
+    if inviter:
+        notify_user(
+            user=inviter,
+            message=f"{invitee} declined your invitation to '{team_name}'.",
+            type='invite',
+            email_subject="Invitation declined",
+            email_body=f"{invitee} declined your invitation to join '{team_name}'.",
+        )
+    return Response({'status': 'declined'})
