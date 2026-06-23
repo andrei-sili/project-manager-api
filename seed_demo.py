@@ -2,8 +2,9 @@
 Rich demo seed for local testing: users, teams, projects, tasks, threaded
 comments, time entries, notifications and activity logs.
 
-Idempotent: clears existing collaboration data and recreates a fresh demo set
-(users are kept / updated). Run with the virtualenv active:
+Idempotent: wipes all existing data — including any non-demo accounts — and
+recreates a fresh demo set. Run nightly in production so the public demo never
+retains real user emails (privacy / GDPR). Run with the virtualenv active:
 
     python seed_demo.py
 
@@ -49,6 +50,12 @@ people = [
     ("carol@example.com", "Carol", "Clark"),
     ("dave@example.com", "Dave", "Davis"),
 ]
+
+# Privacy: drop any account that is not part of the demo set so real emails
+# (from public sign-ups) are never retained longer than a day. Cascades to any
+# tokens/data still tied to them.
+CustomUser.objects.exclude(email__in=[p[0] for p in people]).delete()
+
 users = {}
 for email, first, last in people:
     user, _ = CustomUser.objects.get_or_create(email=email)
