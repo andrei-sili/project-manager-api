@@ -18,6 +18,20 @@ export default function LoginPage() {
 
   const { login } = useAuth();
 
+  // Read-only demo account, reseeded nightly on the server.
+  const handleDemo = async () => {
+    setError("");
+    setInfo("");
+    setLoading(true);
+    try {
+      await login("alice@example.com", "Demo1234!");
+    } catch (e) {
+      setError(getErrorMessage(e, "Demo sign-in failed."));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
@@ -178,6 +192,27 @@ export default function LoginPage() {
               : "Sign In"}
           </button>
         </form>
+
+        {!isRegister && (
+          <>
+            <div className="my-6 flex items-center gap-3 text-xs text-zinc-500">
+              <span className="h-px flex-1 bg-zinc-800" />
+              or
+              <span className="h-px flex-1 bg-zinc-800" />
+            </div>
+            <button
+              type="button"
+              onClick={handleDemo}
+              disabled={loading}
+              className="w-full py-2 rounded-lg font-semibold transition border border-emerald-700 text-emerald-300 hover:bg-emerald-700/20 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              Try the demo
+            </button>
+            <p className="mt-2 text-center text-xs text-zinc-500">
+              Explore a sample workspace — no sign-up needed.
+            </p>
+          </>
+        )}
       </div>
     </div>
   );

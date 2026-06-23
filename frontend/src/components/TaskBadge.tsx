@@ -18,6 +18,15 @@ export function priorityBadgeColor(priority: string) {
     default: return "bg-gray-500 text-white";
   }
 }
+// Left-border accent for Kanban cards; mirrors the priority palette above.
+export function priorityBorderColor(priority: string) {
+  switch ((priority ?? "").toLowerCase()) {
+    case "high": return "border-red-600";
+    case "medium": return "border-yellow-400";
+    case "low": return "border-green-700";
+    default: return "border-zinc-700";
+  }
+}
 export const StatusBadge = ({ status }: { status: string }) => (
   <span className={`inline-block px-2 py-1 rounded text-xs font-bold ${statusBadgeColor(status)}`}>
     {(status ?? "").replace("_", " ").toUpperCase()}
