@@ -11,7 +11,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 
 from apps.teams.models import TeamMembership
 from apps.users.throttles import AuthRateThrottle
-from apps.users.models import CustomUser, PasswordResetToken
+from apps.users.models import CustomUser, PasswordResetToken, EmailVerificationToken
 from apps.users.serializers import (
     UserSerializer,
     UserRegisterSerializer,
@@ -19,7 +19,24 @@ from apps.users.serializers import (
     ConfirmPasswordResetSerializer,
     RequestPasswordResetSerializer,
     RegisterAndAcceptInviteSerializer,
+    VerifyEmailSerializer,
 )
+
+
+def send_verification_email(user):
+    """Create a verification token and email the activation link to the user."""
+    token = EmailVerificationToken.objects.create(user=user)
+    link = f"{settings.FRONTEND_URL}/verify-email?token={token.token}"
+    send_mail(
+        subject="Verify your email",
+        message=(
+            "Welcome to Project Manager!\n\n"
+            f"Confirm your email to activate your account:\n{link}\n\n"
+            "The link expires in 24 hours."
+        ),
+        from_email=None,  # uses DEFAULT_FROM_EMAIL
+        recipient_list=[user.email],
+    )
 
 
 class ThrottledTokenObtainPairView(TokenObtainPairView):
@@ -31,15 +48,49 @@ class ThrottledTokenObtainPairView(TokenObtainPairView):
 class UserViewSet(viewsets.ViewSet):
     """Self-service user endpoints: register, current profile, change password."""
 
-    @extend_schema(request=UserRegisterSerializer, responses={201: UserRegisterSerializer})
+    @extend_schema(
+        request=UserRegisterSerializer,
+        responses={201: OpenApiResponse(description="Account created; verification email sent.")},
+    )
     @action(detail=False, methods=['post'], url_path='register',
             permission_classes=[permissions.AllowAny], throttle_classes=[AuthRateThrottle])
     def register(self, request):
         serializer = UserRegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        send_verification_email(user)
+        return Response(
+            {"detail": "Account created. Check your email for a link to verify and activate it."},
+            status=status.HTTP_201_CREATED,
+        )
+
+    @extend_schema(
+        request=VerifyEmailSerializer,
+        responses={200: OpenApiResponse(description="Email verified; the account is active.")},
+    )
+    @action(detail=False, methods=['post'], url_path='verify-email',
+            permission_classes=[permissions.AllowAny], throttle_classes=[AuthRateThrottle])
+    def verify_email(self, request):
+        serializer = VerifyEmailSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            token_obj = EmailVerificationToken.objects.select_related('user').get(
+                token=serializer.validated_data['token']
+            )
+        except EmailVerificationToken.DoesNotExist:
+            return Response({'detail': 'Invalid or already-used verification link.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if token_obj.is_expired():
+            token_obj.delete()
+            return Response({'detail': 'Verification link expired. Please register again.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        user = token_obj.user
+        user.is_active = True
+        user.save(update_fields=['is_active'])
+        token_obj.delete()
+        return Response({'detail': 'Email verified. You can now log in.'}, status=status.HTTP_200_OK)
 
     @extend_schema(responses={200: UserSerializer})
     @action(detail=False, methods=['get'], url_path='me', permission_classes=[permissions.IsAuthenticated])

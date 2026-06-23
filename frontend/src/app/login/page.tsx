@@ -1,10 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/useAuth";
 import axiosClient from "@/lib/axiosClient";
-import { setTokens } from "@/lib/token";
 import { getErrorMessage } from "@/lib/errors";
 
 export default function LoginPage() {
@@ -15,14 +13,15 @@ export default function LoginPage() {
   const [firstName, setFirstName] = useState(""); // register only
   const [lastName, setLastName]   = useState(""); // register only
   const [error, setError]       = useState("");
+  const [info, setInfo]         = useState("");
   const [loading, setLoading]   = useState(false);
 
-  const router = useRouter();
   const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setInfo("");
 
     if (!email.trim() || !password.trim() || (isRegister && (!firstName.trim() || !lastName.trim()))) {
       setError("All fields are required.");
@@ -33,15 +32,18 @@ export default function LoginPage() {
 
     try {
       if (isRegister) {
-        const res = await axiosClient.post("/users/register/", {
+        await axiosClient.post("/users/register/", {
           email,
           password,
           first_name: firstName,
           last_name: lastName,
         });
-        const { access, refresh } = res.data.token;
-        setTokens(access, refresh);
-        router.push("/dashboard");
+        // Account is created inactive; the user must verify by email before login.
+        setInfo("Account created! Check your email for a verification link, then sign in.");
+        setIsRegister(false);
+        setPassword("");
+        setFirstName("");
+        setLastName("");
       } else {
         await login(email, password);
       }
@@ -149,6 +151,11 @@ export default function LoginPage() {
             />
           </div>
 
+          {info && (
+            <div className="bg-emerald-900/60 border border-emerald-800 rounded px-3 py-2 text-sm text-emerald-200">
+              {info}
+            </div>
+          )}
           {error && (
             <div className="bg-red-800/70 border border-red-900 rounded px-3 py-2 text-sm text-red-200">
               {error}
