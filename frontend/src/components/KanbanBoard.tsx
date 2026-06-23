@@ -1,4 +1,4 @@
-import { StatusBadge, PriorityBadge } from "./TaskBadge";
+import { StatusBadge, PriorityBadge, priorityBorderColor } from "./TaskBadge";
 import React from "react";
 import {
   DragDropContext,
@@ -44,12 +44,12 @@ export default function KanbanBoard({
   };
 
   function getAssignee(task: Task) {
-  if (task.assigned_to && typeof task.assigned_to === "object") {
-    const user = task.assigned_to;
-    return [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email || "";
+    if (task.assigned_to && typeof task.assigned_to === "object") {
+      const user = task.assigned_to;
+      return [user.first_name, user.last_name].filter(Boolean).join(" ") || user.email || "";
+    }
+    return "";
   }
-  return "";
-}
 
 
   return (
@@ -81,7 +81,7 @@ export default function KanbanBoard({
                     )}
                   </div>
                   {tasksByStatus[col.key].length === 0 && (
-                    <div className="text-gray-400 text-center py-4 text-sm">
+                    <div className="text-zinc-400 text-center py-4 text-sm">
                       No tasks
                     </div>
                   )}
@@ -92,15 +92,9 @@ export default function KanbanBoard({
                           ref={provided.innerRef}
                           {...provided.draggableProps}
                           {...provided.dragHandleProps}
-                          className={`mb-4 p-4 rounded-xl shadow border-l-4 transition bg-zinc-900
-                          ${
-                            (task.priority ?? "").toLowerCase() === "high"
-                              ? "border-red-600"
-                              : (task.priority ?? "").toLowerCase() === "medium"
-                              ? "border-yellow-400"
-                              : "border-green-700"
-                          }
-                          ${snapshot.isDragging ? "bg-emerald-500/15 shadow-xl" : ""}`}
+                          className={`mb-4 p-4 rounded-xl shadow border-l-4 transition bg-zinc-900 ${priorityBorderColor(
+                            task.priority
+                          )} ${snapshot.isDragging ? "bg-emerald-500/15 shadow-xl" : ""}`}
                         >
                           <div className="flex justify-between items-center">
                             <div
@@ -112,7 +106,7 @@ export default function KanbanBoard({
                             </div>
 
                             <button
-                                className="text-xs bg-emerald-700 hover:bg-blue-500 text-white px-2 py-1 rounded ml-2"
+                                className="text-xs bg-emerald-700 hover:bg-emerald-600 text-white px-2 py-1 rounded ml-2"
                                 onClick={() => onViewTask(task)}
                             >
                               View
@@ -129,7 +123,7 @@ export default function KanbanBoard({
                               </span>
                             )}
                             {task.due_date && (
-                              <span className="inline-block bg-zinc-800 text-gray-300 px-2 rounded">
+                              <span className="inline-block bg-zinc-800 text-zinc-300 px-2 rounded">
                                 {new Date(task.due_date).toLocaleDateString()}
                               </span>
                             )}
