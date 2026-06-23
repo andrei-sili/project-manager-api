@@ -48,6 +48,14 @@ services:
       DATABASE_USER: ${DATABASE_USER:-projectmanager}
       DATABASE_PASSWORD: ${DATABASE_PASSWORD}
       REDIS_URL: redis://redis:6379/0
+      # Email (Resend SMTP in production; defaults to the console backend).
+      EMAIL_BACKEND: ${EMAIL_BACKEND:-django.core.mail.backends.console.EmailBackend}
+      EMAIL_HOST: ${EMAIL_HOST:-}
+      EMAIL_PORT: ${EMAIL_PORT:-587}
+      EMAIL_HOST_USER: ${EMAIL_HOST_USER:-}
+      EMAIL_HOST_PASSWORD: ${EMAIL_HOST_PASSWORD:-}
+      EMAIL_USE_TLS: ${EMAIL_USE_TLS:-true}
+      DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-no-reply@projectmanager.local}
     volumes:
       - media:/app/media
     depends_on:
