@@ -111,7 +111,7 @@ export default function NotificationBell() {
           </div>
           <div className="max-h-96 overflow-y-auto">
             {items.length === 0 ? (
-              <p className="px-4 py-6 text-center text-sm text-zinc-500">No notifications yet.</p>
+              <p className="px-4 py-6 text-center text-sm text-zinc-400">No notifications yet.</p>
             ) : (
               items.map((n) => (
                 <div key={n.id} className="flex gap-3 border-b border-zinc-800/50 px-4 py-3 last:border-0">
@@ -122,7 +122,7 @@ export default function NotificationBell() {
                   />
                   <div className="min-w-0">
                     <p className="text-sm text-zinc-200">{n.message}</p>
-                    <p className="text-xs text-zinc-500">{timeAgo(n.created_at)}</p>
+                    <p className="text-xs text-zinc-400">{timeAgo(n.created_at)}</p>
                   </div>
                 </div>
               ))

@@ -57,7 +57,7 @@ export default function TeamsPage() {
               <h3 className="font-bold text-emerald-400 mb-4 text-lg">Members</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
                 {team.members.length === 0 ? (
-                  <div className="text-zinc-500 col-span-full">No members yet.</div>
+                  <div className="text-zinc-400 col-span-full">No members yet.</div>
                 ) : (
                   team.members.map(member => {
                     const fullName = `${member.user.first_name} ${member.user.last_name}`.trim() || member.user.email;
@@ -81,7 +81,7 @@ export default function TeamsPage() {
                           ) : member.status === "declined" ? (
                             <span className="bg-red-500/15 text-red-300 px-2 py-0.5 rounded text-xs">Declined</span>
                           ) : (
-                            <span className="text-zinc-500 text-xs">Joined: {joinedAt}</span>
+                            <span className="text-zinc-400 text-xs">Joined: {joinedAt}</span>
                           )}
                         </div>
                         {team.is_admin && user.id !== member.user.id && (

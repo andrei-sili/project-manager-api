@@ -33,7 +33,7 @@ export default function ProjectOverviewCard({ project }: Props) {
               {project.team.name}
             </span>
           )}
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-gray-400">
             Created by:{" "}
             {typeof project.created_by === "object"
               ? `${project.created_by.first_name ?? ""} ${project.created_by.last_name ?? ""}`.trim() ||

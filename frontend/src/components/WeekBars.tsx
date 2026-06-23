@@ -35,7 +35,7 @@ export default function WeekBars({ data }: { data: TimeSummaryDay[] }) {
                 style={{ height: `${height}px` }}
               />
             </div>
-            <span className={`text-xs ${isToday ? "font-semibold text-emerald-400" : "text-zinc-500"}`}>
+            <span className={`text-xs ${isToday ? "font-semibold text-emerald-400" : "text-zinc-400"}`}>
               {weekday}
             </span>
           </div>

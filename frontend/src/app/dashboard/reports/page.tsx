@@ -92,7 +92,7 @@ export default function ReportsPage() {
     <div className="mx-auto max-w-7xl space-y-6">
       <header>
         <h1 className="text-2xl font-bold text-white">Reports</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-zinc-400">
           Overview across {projects.length} project{projects.length !== 1 ? "s" : ""}
         </p>
       </header>
@@ -130,11 +130,11 @@ export default function ReportsPage() {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="flex h-full items-center justify-center text-sm text-zinc-500">No tasks yet.</div>
+              <div className="flex h-full items-center justify-center text-sm text-zinc-400">No tasks yet.</div>
             )}
             <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-3xl font-bold text-white">{total}</span>
-              <span className="text-xs text-zinc-500">tasks</span>
+              <span className="text-xs text-zinc-400">tasks</span>
             </div>
           </div>
           <div className="mt-2 flex flex-wrap justify-center gap-4 text-xs">
@@ -152,7 +152,7 @@ export default function ReportsPage() {
           <h2 className="mb-4 font-semibold text-white">Completion by project</h2>
           <div className="space-y-4">
             {projStats.length === 0 ? (
-              <p className="text-sm text-zinc-500">No projects.</p>
+              <p className="text-sm text-zinc-400">No projects.</p>
             ) : (
               projStats.map((p) => (
                 <div key={p.name}>
@@ -161,7 +161,7 @@ export default function ReportsPage() {
                       <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />
                       {p.name}
                     </span>
-                    <span className="text-zinc-500">
+                    <span className="text-zinc-400">
                       {p.done}/{p.total} · {p.pct}%
                     </span>
                   </div>
@@ -181,11 +181,11 @@ export default function ReportsPage() {
           <h2 className="font-semibold text-white">Member contribution</h2>
         </div>
         {members.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-zinc-500">No assigned tasks yet.</p>
+          <p className="px-5 py-6 text-sm text-zinc-400">No assigned tasks yet.</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs uppercase tracking-wide text-zinc-500">
+              <tr className="text-xs uppercase tracking-wide text-zinc-400">
                 <th className="px-5 py-3 text-left font-medium">Member</th>
                 <th className="px-5 py-3 text-left font-medium">Completed</th>
                 <th className="px-5 py-3 text-left font-medium">Assigned</th>

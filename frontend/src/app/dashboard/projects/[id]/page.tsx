@@ -158,7 +158,7 @@ export default function ProjectDetailsPage() {
               <div className="w-32 h-2 bg-zinc-800 rounded ml-2">
                 <div className="bg-blue-500 h-2 rounded" style={{width: `${progress}%`}}></div>
               </div>
-              <span className="ml-2 text-xs text-zinc-500">{doneTasks}/{totalTasks} done</span>
+              <span className="ml-2 text-xs text-zinc-400">{doneTasks}/{totalTasks} done</span>
             </div>
             <div className="text-zinc-400 flex gap-2 items-center">
               <span className="font-bold text-lg text-green-400">{totalHours}h {restMinutes}m</span> Total tracked
@@ -197,7 +197,7 @@ export default function ProjectDetailsPage() {
         <h2 className="text-2xl font-bold mb-5 text-white">Team Members</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {members.length === 0 && (
-              <div className="text-zinc-500 col-span-full text-center">No team members found.</div>
+              <div className="text-zinc-400 col-span-full text-center">No team members found.</div>
           )}
           {members.map((member) => (
               <div key={member.user?.id}
