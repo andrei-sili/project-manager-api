@@ -16,6 +16,7 @@ class TaskSerializer(serializers.ModelSerializer):
     assigned_to = UserShortSerializer()
     created_by = serializers.StringRelatedField()
     project = serializers.SerializerMethodField()
+    can_manage = serializers.SerializerMethodField()
 
     class Meta:
         model = Task
@@ -30,6 +31,7 @@ class TaskSerializer(serializers.ModelSerializer):
             'created_by',
             'project',
             'created_at',
+            'can_manage',
         ]
 
     def get_project(self, obj) -> dict:
@@ -37,6 +39,18 @@ class TaskSerializer(serializers.ModelSerializer):
             "id": obj.project.id,
             "name": obj.project.name
         }
+
+    def get_can_manage(self, obj) -> bool:
+        """Whether the requesting user (admin/manager) may edit/delete this task."""
+        request = self.context.get("request")
+        if not request or not request.user.is_authenticated:
+            return False
+        # Memoize per team within one serialization pass (avoids N+1 in lists).
+        cache = self.context.setdefault("_can_manage_cache", {})
+        team_id = obj.project.team_id
+        if team_id not in cache:
+            cache[team_id] = obj.project.team.can_manage_tasks(request.user)
+        return cache[team_id]
 
 
 class TaskCreateSerializer(serializers.ModelSerializer):

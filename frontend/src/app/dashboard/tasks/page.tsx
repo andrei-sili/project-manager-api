@@ -63,17 +63,17 @@ export default function MyTasksPage() {
           open={!!viewTask}
           task={viewTask}
           onClose={() => setViewTask(null)}
-          onEditClick={() => {
+          onEditClick={viewTask.can_manage ? () => {
             setEditTask(viewTask);
             setViewTask(null);
-          }}
-          onDelete={async () => {
+          } : undefined}
+          onDelete={viewTask.can_manage ? async () => {
             if (window.confirm("Delete this task?")) {
               await axiosClient.delete(`/projects/${viewTask.project.id}/tasks/${viewTask.id}/`);
               setViewTask(null);
               loadTasks();
             }
-          }}
+          } : undefined}
           onTaskUpdated={loadTasks}
           projectId={viewTask.project.id.toString()}
           teamMembers={[]}

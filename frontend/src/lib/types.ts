@@ -56,6 +56,7 @@ export interface Task {
   project: { id: number; name: string };
   created_at: string;
   minutes?: number;
+  can_manage?: boolean; // requesting user may edit/delete (admin/manager)
 }
 
 // Project
