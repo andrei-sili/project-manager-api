@@ -14,7 +14,7 @@ from apps.tasks.models import Task
 def test_create_task(auth_client):
     team = TeamFactory()
     assignee = UserFactory()
-    TeamMembership.objects.create(team=team, user=auth_client.handler._force_user, role="developer", status="accepted")
+    TeamMembership.objects.create(team=team, user=auth_client.handler._force_user, role="manager", status="accepted")
     TeamMembership.objects.create(team=team, user=assignee, role="developer", status="accepted")
     project = ProjectFactory(team=team)
     url = reverse("project-tasks-list", args=[project.id])
@@ -84,7 +84,7 @@ def test_unauthorized_task_access_should_fail(api_client):
 @pytest.mark.django_db
 def test_create_task_without_assignee(auth_client):
     team = TeamFactory()
-    TeamMembership.objects.create(team=team, user=auth_client.handler._force_user, role="developer", status="accepted")
+    TeamMembership.objects.create(team=team, user=auth_client.handler._force_user, role="manager", status="accepted")
     project = ProjectFactory(team=team)
     url = reverse("project-tasks-list", args=[project.id])
     data = {
@@ -106,7 +106,7 @@ def test_notify_called_if_creator_not_assignee(mock_notify, auth_client):
     team = TeamFactory()
     creator = auth_client.handler._force_user
     assignee = UserFactory()
-    TeamMembership.objects.create(team=team, user=creator, role="developer", status="accepted")
+    TeamMembership.objects.create(team=team, user=creator, role="manager", status="accepted")
     TeamMembership.objects.create(team=team, user=assignee, role="developer", status="accepted")
     project = ProjectFactory(team=team)
 
@@ -127,17 +127,79 @@ def test_notify_called_if_creator_not_assignee(mock_notify, auth_client):
 
 
 @pytest.mark.django_db
-def test_update_task_by_assignee_if_allowed(api_client):
+def test_developer_can_move_assigned_task_status(api_client):
+    user = UserFactory()
+    team = TeamFactory()
+    TeamMembership.objects.create(team=team, user=user, role="developer", status="accepted")
+    project = ProjectFactory(team=team)
+    task = TaskFactory(project=project, assigned_to=user, status="todo")
+    api_client.force_authenticate(user=user)
+    url = reverse("project-tasks-detail", args=[project.id, task.id])
+    res = api_client.patch(url, {"status": "in_progress"})
+    assert res.status_code == 200
+    task.refresh_from_db()
+    assert task.status == "in_progress"
+
+
+@pytest.mark.django_db
+def test_developer_cannot_create_task(api_client):
+    user = UserFactory()
+    team = TeamFactory()
+    TeamMembership.objects.create(team=team, user=user, role="developer", status="accepted")
+    project = ProjectFactory(team=team)
+    api_client.force_authenticate(user=user)
+    url = reverse("project-tasks-list", args=[project.id])
+    res = api_client.post(url, {
+        "title": "Dev task", "description": "x", "project": project.id,
+        "status": "todo", "priority": "low",
+        "due_date": timezone.now().date() + timedelta(days=5),
+    })
+    assert res.status_code == 403
+
+
+@pytest.mark.django_db
+def test_developer_cannot_delete_task(api_client):
     user = UserFactory()
     team = TeamFactory()
     TeamMembership.objects.create(team=team, user=user, role="developer", status="accepted")
     project = ProjectFactory(team=team)
     task = TaskFactory(project=project, assigned_to=user)
     api_client.force_authenticate(user=user)
+    res = api_client.delete(reverse("project-tasks-detail", args=[project.id, task.id]))
+    assert res.status_code == 403
+
+
+@pytest.mark.django_db
+def test_developer_cannot_edit_non_status_fields(api_client):
+    user = UserFactory()
+    team = TeamFactory()
+    TeamMembership.objects.create(team=team, user=user, role="developer", status="accepted")
+    project = ProjectFactory(team=team)
+    task = TaskFactory(project=project, assigned_to=user, description="original")
+    api_client.force_authenticate(user=user)
     url = reverse("project-tasks-detail", args=[project.id, task.id])
-    res = api_client.patch(url, {"description": "Updated by assignee"})
-    assert res.status_code == 200
-    assert res.data["description"] == "Updated by assignee"
+    res = api_client.patch(url, {"description": "hacked"})
+    assert res.status_code == 200  # status-only serializer ignores other fields
+    task.refresh_from_db()
+    assert task.description == "original"
+
+
+@pytest.mark.django_db
+def test_manager_can_create_and_delete_task(api_client):
+    user = UserFactory()
+    team = TeamFactory()
+    TeamMembership.objects.create(team=team, user=user, role="manager", status="accepted")
+    project = ProjectFactory(team=team)
+    api_client.force_authenticate(user=user)
+    create = api_client.post(reverse("project-tasks-list", args=[project.id]), {
+        "title": "Mgr task", "description": "x", "project": project.id,
+        "status": "todo", "priority": "low",
+        "due_date": timezone.now().date() + timedelta(days=5),
+    })
+    assert create.status_code == 201
+    task_id = Task.objects.get(title="Mgr task").id
+    delete = api_client.delete(reverse("project-tasks-detail", args=[project.id, task_id]))
+    assert delete.status_code == 204
 
 
 @pytest.mark.django_db

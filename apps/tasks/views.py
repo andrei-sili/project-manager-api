@@ -9,8 +9,9 @@ from apps.notify.services import notify_user, notify_team
 from apps.projects.models import Project
 from apps.projects.permissions import IsTeamMember
 from apps.tasks.models import Task
-from apps.tasks.permissions import IsTaskCreatorOrAssignee
-from apps.tasks.serializers import TaskSerializer, TaskCreateSerializer, TaskUpdateSerializer
+from apps.tasks.serializers import (
+    TaskSerializer, TaskCreateSerializer, TaskUpdateSerializer, TaskStatusSerializer,
+)
 
 
 class TaskViewSet(viewsets.ModelViewSet):
@@ -23,9 +24,13 @@ class TaskViewSet(viewsets.ModelViewSet):
     search_fields = ['title', 'description']
 
     def get_permissions(self):
-        if self.action in ['update', 'partial_update', 'destroy']:
-            return [permissions.IsAuthenticated(), IsTaskCreatorOrAssignee()]
+        # Team membership is required everywhere; role-based rules (admin/manager
+        # manage tasks, developers only move status) are enforced in perform_*.
         return [permissions.IsAuthenticated(), IsTeamMember()]
+
+    def _team_role(self):
+        project = get_object_or_404(Project, id=self.kwargs.get('project_pk'))
+        return project.team.member_role(self.request.user)
 
     def get_queryset(self):
         project_id = self.kwargs.get('project_pk')
@@ -40,8 +45,11 @@ class TaskViewSet(viewsets.ModelViewSet):
         )
 
     def get_serializer_class(self):
-        if self.action == 'update' or self.action == 'partial_update':
-            return TaskUpdateSerializer
+        if self.action in ('update', 'partial_update'):
+            # Developers may only change status; admins/managers get the full form.
+            if self._team_role() in ('admin', 'manager'):
+                return TaskUpdateSerializer
+            return TaskStatusSerializer
         elif self.action == 'create':
             return TaskCreateSerializer
         return TaskSerializer
@@ -53,6 +61,8 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         if not project.team.has_member(self.request.user):
             raise PermissionDenied("You're not a member of this team.")
+        if not project.team.can_manage_tasks(self.request.user):
+            raise PermissionDenied("Only admins and managers can create tasks.")
 
         assigned_user = serializer.validated_data.get('assigned_to')
         if assigned_user and not project.team.has_member(assigned_user):
@@ -84,8 +94,15 @@ class TaskViewSet(viewsets.ModelViewSet):
         )
 
     def perform_update(self, serializer):
+        task = serializer.instance
+        team = task.project.team
+        if not team.can_manage_tasks(self.request.user):
+            # Developers may only move the status of tasks assigned to them.
+            if task.assigned_to_id != self.request.user.id:
+                raise PermissionDenied("You can only update the status of tasks assigned to you.")
+
         assigned_user = serializer.validated_data.get('assigned_to')
-        if assigned_user and not serializer.instance.project.team.has_member(assigned_user):
+        if assigned_user and not team.has_member(assigned_user):
             raise PermissionDenied("Assigned user is not part of this team.")
 
         task = serializer.save()
@@ -107,6 +124,8 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_destroy(self, instance):
         team = instance.project.team
+        if not team.can_manage_tasks(self.request.user):
+            raise PermissionDenied("Only admins and managers can delete tasks.")
         title = instance.title
         log_activity(
             user=self.request.user,

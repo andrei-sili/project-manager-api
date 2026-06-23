@@ -32,6 +32,17 @@ class Team(models.Model):
             status=TeamMembership.STATUS_ACCEPTED,
         ).exists()
 
+    def member_role(self, user):
+        """Role of the user as an accepted member, or None if not a member."""
+        membership = self.membership_set.filter(
+            user=user, status=TeamMembership.STATUS_ACCEPTED
+        ).first()
+        return membership.role if membership else None
+
+    def can_manage_tasks(self, user):
+        """Admins and managers may create/edit/delete tasks."""
+        return self.member_role(user) in (TeamMembership.ROLE_ADMIN, TeamMembership.ROLE_MANAGER)
+
 
 class TeamMembership(models.Model):
     """A user's membership in a team: their role and invitation status."""
