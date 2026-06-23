@@ -9,6 +9,7 @@ import InviteMemberModal from "@/components/InviteMemberModal";
 import { useRouter, useParams } from "next/navigation";
 import { Project, Task, TaskStatus, TeamMember } from "@/lib/types";
 import EditProjectModal from "@/components/EditProjectModal";
+import MemberStatusBadge from "@/components/MemberStatusBadge";
 import { useAuth } from "@/lib/useAuth";
 
 export default function ProjectDetailsPage() {
@@ -206,11 +207,9 @@ export default function ProjectDetailsPage() {
                   {member.user?.first_name} {member.user?.last_name}
               </div>
               <div className="text-green-300 text-xs">{member.user?.email}</div>
-              <div className="text-xs text-zinc-400 flex gap-3">
+              <div className="text-xs text-zinc-400 flex items-center gap-3">
                 <span className="font-bold">{member.role || "Member"}</span>
-                <span className="ml-2">
-                  Joined: {member.joined_at ? new Date(member.joined_at).toLocaleDateString() : "-"}
-                </span>
+                <MemberStatusBadge status={member.status} joinedAt={member.joined_at} />
               </div>
             </div>
           ))}
