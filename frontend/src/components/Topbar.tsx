@@ -59,7 +59,7 @@ const Topbar: React.FC = () => {
           <span className="hidden max-w-[180px] truncate text-sm text-zinc-300 sm:block">
             {user?.email}
           </span>
-          <ChevronDown size={16} className="text-zinc-500" />
+          <ChevronDown size={16} className="text-zinc-400" />
         </button>
 
         {open && (

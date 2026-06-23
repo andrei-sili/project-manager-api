@@ -99,7 +99,7 @@ export default function CalendarPage() {
         {/* Weekday header */}
         <div className="grid grid-cols-7 border-b border-zinc-800 bg-zinc-900/60">
           {WEEKDAYS.map((d) => (
-            <div key={d} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-zinc-500">
+            <div key={d} className="px-3 py-2 text-xs font-medium uppercase tracking-wide text-zinc-400">
               {d}
             </div>
           ))}
@@ -126,7 +126,7 @@ export default function CalendarPage() {
                         ? "bg-emerald-400 font-bold text-zinc-950"
                         : inMonth
                           ? "text-zinc-400"
-                          : "text-zinc-600"
+                          : "text-zinc-400"
                     }`}
                   >
                     {d.getDate()}
@@ -146,7 +146,7 @@ export default function CalendarPage() {
                     </div>
                   ))}
                   {items.length > 3 && (
-                    <div className="px-1 text-[11px] text-zinc-500">+{items.length - 3} more</div>
+                    <div className="px-1 text-[11px] text-zinc-400">+{items.length - 3} more</div>
                   )}
                 </div>
               </div>

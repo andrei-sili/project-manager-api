@@ -70,7 +70,7 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold text-white">
           {greeting()}, <span className="text-emerald-400">{user?.first_name ?? "there"}</span>
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-zinc-400">
           {dateStr} · {projects.length} project{projects.length !== 1 ? "s" : ""} active
         </p>
       </header>
@@ -88,12 +88,12 @@ export default function DashboardPage() {
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 lg:col-span-2">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-white">Hours tracked</h2>
-            <span className="text-xs text-zinc-500">this week</span>
+            <span className="text-xs text-zinc-400">this week</span>
           </div>
           {summary?.per_day?.length ? (
             <WeekBars data={summary.per_day} />
           ) : (
-            <p className="py-12 text-center text-sm text-zinc-500">No time logged yet.</p>
+            <p className="py-12 text-center text-sm text-zinc-400">No time logged yet.</p>
           )}
         </div>
 
@@ -108,7 +108,7 @@ export default function DashboardPage() {
         <h2 className="mb-4 font-semibold text-white">Project progress</h2>
         <div className="space-y-4">
           {projects.length === 0 ? (
-            <p className="text-sm text-zinc-500">No projects yet.</p>
+            <p className="text-sm text-zinc-400">No projects yet.</p>
           ) : (
             projects.map((p, i) => {
               const tasks = p.tasks ?? [];
@@ -122,7 +122,7 @@ export default function DashboardPage() {
                       <span className={`h-2 w-2 rounded-full ${color}`} />
                       {p.name}
                     </span>
-                    <span className="text-zinc-500">{pct}%</span>
+                    <span className="text-zinc-400">{pct}%</span>
                   </div>
                   <div className="h-2 w-full overflow-hidden rounded-full bg-zinc-800">
                     <div className={`h-full rounded-full ${color} transition-all`} style={{ width: `${pct}%` }} />

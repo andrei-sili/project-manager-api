@@ -83,7 +83,7 @@ export default function TimeTrackingPage() {
     <div className="mx-auto max-w-7xl space-y-6">
       <header>
         <h1 className="text-2xl font-bold text-white">Time Tracking</h1>
-        <p className="mt-1 text-sm text-zinc-500">Today · {formatMinutes(todayMinutes)} logged</p>
+        <p className="mt-1 text-sm text-zinc-400">Today · {formatMinutes(todayMinutes)} logged</p>
       </header>
 
       {/* Currently tracking */}
@@ -98,13 +98,13 @@ export default function TimeTrackingPage() {
             <div className="mt-1 text-lg font-semibold text-white">
               {timer.running && timer.taskId ? taskTitle(timer.taskId) : "No timer running"}
             </div>
-            <div className="text-sm text-zinc-500">
+            <div className="text-sm text-zinc-400">
               {timer.running ? "Stop it from the task to save an entry" : "Start a timer from a task to track time"}
             </div>
           </div>
           <div
             className={`font-mono text-4xl font-bold tabular-nums ${
-              timer.running ? "text-emerald-400" : "text-zinc-600"
+              timer.running ? "text-emerald-400" : "text-zinc-400"
             }`}
           >
             {formatClock(timer.running ? getElapsed() : 0)}
@@ -117,12 +117,12 @@ export default function TimeTrackingPage() {
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5 lg:col-span-2">
           <div className="flex items-center justify-between">
             <h2 className="font-semibold text-white">This week</h2>
-            <span className="text-xs text-zinc-500">last 7 days</span>
+            <span className="text-xs text-zinc-400">last 7 days</span>
           </div>
           {summary?.per_day?.length ? (
             <WeekBars data={summary.per_day} />
           ) : (
-            <p className="py-12 text-center text-sm text-zinc-500">No time logged yet.</p>
+            <p className="py-12 text-center text-sm text-zinc-400">No time logged yet.</p>
           )}
         </div>
         <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 p-5">
@@ -162,11 +162,11 @@ export default function TimeTrackingPage() {
           </div>
         </div>
         {filtered.length === 0 ? (
-          <p className="px-5 py-6 text-sm text-zinc-500">No time entries.</p>
+          <p className="px-5 py-6 text-sm text-zinc-400">No time entries.</p>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs uppercase tracking-wide text-zinc-500">
+              <tr className="text-xs uppercase tracking-wide text-zinc-400">
                 <th className="px-5 py-3 text-left font-medium">Date</th>
                 <th className="px-5 py-3 text-left font-medium">Task</th>
                 <th className="px-5 py-3 text-left font-medium">Duration</th>

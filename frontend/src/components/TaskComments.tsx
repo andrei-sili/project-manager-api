@@ -170,7 +170,7 @@ export default function TaskComments({
         {loading ? (
           <div className="text-gray-400 py-4">Loading comments...</div>
         ) : comments.length === 0 ? (
-          <div className="text-gray-500 py-4">No comments yet.</div>
+          <div className="text-gray-400 py-4">No comments yet.</div>
         ) : (
           comments.map((comment) => (
             <div key={comment.id} className="mb-4">

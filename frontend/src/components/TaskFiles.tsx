@@ -203,7 +203,7 @@ export default function TaskFiles({
         {loading ? (
           <div className="text-gray-400 py-2">Loading files...</div>
         ) : files.length === 0 ? (
-          <div className="text-gray-500 py-2">No files attached.</div>
+          <div className="text-gray-400 py-2">No files attached.</div>
         ) : (
           <ul className="space-y-1">
             {files.map((f: TaskFile) => {

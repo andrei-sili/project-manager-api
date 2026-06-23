@@ -107,7 +107,7 @@ export default function Sidebar() {
               <div className="truncate text-sm font-semibold text-white">
                 {user.first_name} {user.last_name}
               </div>
-              <div className="truncate text-xs text-zinc-500">{user.email}</div>
+              <div className="truncate text-xs text-zinc-400">{user.email}</div>
             </div>
           </div>
         )}

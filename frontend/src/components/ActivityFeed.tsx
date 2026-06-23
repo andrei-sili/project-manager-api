@@ -27,7 +27,7 @@ const VERB: Record<string, string> = {
 
 export default function ActivityFeed({ items }: { items: ActivityLog[] }) {
   if (items.length === 0) {
-    return <p className="text-sm text-zinc-500">No recent activity yet.</p>;
+    return <p className="text-sm text-zinc-400">No recent activity yet.</p>;
   }
 
   return (
@@ -47,7 +47,7 @@ export default function ActivityFeed({ items }: { items: ActivityLog[] }) {
                 <span className="font-semibold text-white">{name}</span> {VERB[a.action] ?? a.action}{" "}
                 <span className="font-medium text-emerald-300">{a.target_repr}</span>
               </p>
-              <p className="text-xs text-zinc-500">{timeAgo(a.timestamp)}</p>
+              <p className="text-xs text-zinc-400">{timeAgo(a.timestamp)}</p>
             </div>
           </li>
         );

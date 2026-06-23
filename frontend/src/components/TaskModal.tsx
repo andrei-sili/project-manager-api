@@ -287,7 +287,7 @@ export default function TaskModal({
           <section className="mb-5">
             <div className="font-semibold text-gray-400 mb-1">Description</div>
             <div className="bg-zinc-800 text-white rounded-xl px-4 py-3 text-base leading-relaxed min-h-[38px] shadow">
-              {task.description || (<span className="text-gray-500">No description…</span>)}
+              {task.description || (<span className="text-gray-400">No description…</span>)}
             </div>
           </section>
 
@@ -353,7 +353,7 @@ export default function TaskModal({
             {isLoadingEntries ? (
               <div className="text-gray-400">Loading...</div>
             ) : timeEntries.length === 0 ? (
-              <div className="text-gray-500">No time entries for this task.</div>
+              <div className="text-gray-400">No time entries for this task.</div>
             ) : (
               <ul>
                 {timeEntries.map((entry) => (
