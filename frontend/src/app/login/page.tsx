@@ -101,11 +101,24 @@ export default function LoginPage() {
         <h1 className="text-2xl font-bold text-center text-white mb-2 tracking-tight">
           {isRegister ? "Create Account" : "Sign In"}
         </h1>
-        <p className="text-zinc-400 text-center mb-8">
+        <p className="text-zinc-400 text-center mb-4">
           {isRegister
             ? "Register to access your project manager account"
             : "Access your project manager account"}
         </p>
+
+        <div className="mb-6 rounded-lg border border-emerald-800/60 bg-emerald-950/40 px-4 py-3 text-xs leading-relaxed text-emerald-100/90">
+          <p className="mb-1 font-semibold text-emerald-300">This is a live demo</p>
+          <p>
+            Register with a real email to experience the full flow — email
+            verification and your own account. Or use{" "}
+            <span className="font-semibold">Try the demo</span> (on the Sign In
+            tab) to jump straight in with a sample account, no sign-up needed.
+          </p>
+          <p className="mt-1 text-emerald-200/70">
+            Heads up: all data is wiped and reset once a day.
+          </p>
+        </div>
 
         <form className="space-y-6" onSubmit={handleSubmit} autoComplete="on">
           {isRegister && (
