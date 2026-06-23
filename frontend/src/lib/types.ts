@@ -18,6 +18,7 @@ export interface TeamMember {
     email: string;
   };
   role: string;
+  status: string; // pending | accepted | declined
   joined_at: string;
 }
 

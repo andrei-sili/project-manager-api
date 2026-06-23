@@ -6,7 +6,7 @@ from apps.comments.permissions import IsProjectTeamMember, IsCommentAuthor
 from apps.comments.serializers import CommentCreateSerializer, CommentSerializer
 from apps.logs.services import log_activity
 
-from apps.notify.services import notify_user
+from apps.notify.services import notify_user, notify_team
 from apps.tasks.models import Task
 
 
@@ -58,6 +58,12 @@ class CommentViewSet(viewsets.ModelViewSet):
             target_id=comment.id,
             target_repr=f"Comment on task: {task.title}",
             project=task.project
+        )
+        notify_team(
+            task.project.team,
+            f"{self.request.user.first_name} commented on '{task.title}'",
+            exclude_user=self.request.user,
+            type='comment',
         )
 
     def perform_destroy(self, instance):

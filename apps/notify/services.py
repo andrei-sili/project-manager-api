@@ -37,3 +37,12 @@ def notify_user(user, message, email_subject=None, email_body=None, type='genera
     # DB
     if save:
         Notification.objects.create(user=user, message=message, type=type)
+
+
+def notify_team(team, message, exclude_user=None, type='general'):
+    """In-app/WebSocket notify every accepted team member (no email, to avoid spam)."""
+    members = team.membership_set.filter(status='accepted').select_related('user')
+    for membership in members:
+        if exclude_user and membership.user_id == exclude_user.id:
+            continue
+        notify_user(membership.user, message, type=type)
