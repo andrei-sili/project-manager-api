@@ -2,9 +2,8 @@ from rest_framework import serializers
 
 from apps.comments.models import Comment
 
-# How many levels of nested replies to serialize. Beyond this, replies are
-# truncated to avoid unbounded recursion and N+1 queries on deep threads.
-MAX_REPLY_DEPTH = 4
+# Comments allow a single level of replies (a reply cannot be replied to).
+MAX_REPLY_DEPTH = 1
 
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -38,6 +37,9 @@ class CommentCreateSerializer(serializers.ModelSerializer):
         parent = data.get("parent")
         task = self.context["view"].get_task()
 
-        if parent and parent.task_id != task.id:
-            raise serializers.ValidationError("Parent comment must belong to the same task.")
+        if parent:
+            if parent.task_id != task.id:
+                raise serializers.ValidationError("Parent comment must belong to the same task.")
+            if parent.parent_id is not None:
+                raise serializers.ValidationError("Replies can only be one level deep.")
         return data

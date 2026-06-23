@@ -30,7 +30,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         task = self.get_task()
         return Comment.objects.filter(task=task, parent__isnull=True).prefetch_related('replies').order_by(
-            '-created_at')
+            'created_at')
 
     def get_serializer_class(self):
         if self.action in ['create', 'update', 'partial_update']:
