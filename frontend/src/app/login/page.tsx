@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { useAuth } from "@/lib/useAuth";
 import axiosClient from "@/lib/axiosClient";
 import { getErrorMessage } from "@/lib/errors";
+import Turnstile, { turnstileEnabled } from "@/components/Turnstile";
 
 export default function LoginPage() {
   const [isRegister, setIsRegister] = useState(false);
@@ -12,6 +13,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState(""); // register only
   const [lastName, setLastName]   = useState(""); // register only
+  const [captchaToken, setCaptchaToken] = useState(""); // register only
   const [error, setError]       = useState("");
   const [info, setInfo]         = useState("");
   const [loading, setLoading]   = useState(false);
@@ -41,6 +43,10 @@ export default function LoginPage() {
       setError("All fields are required.");
       return;
     }
+    if (isRegister && turnstileEnabled && !captchaToken) {
+      setError("Please complete the CAPTCHA.");
+      return;
+    }
 
     setLoading(true);
 
@@ -51,6 +57,7 @@ export default function LoginPage() {
           password,
           first_name: firstName,
           last_name: lastName,
+          turnstile_token: captchaToken,
         });
         // Account is created inactive; the user must verify by email before login.
         setInfo("Account created! Check your email for a verification link, then sign in.");
@@ -58,6 +65,7 @@ export default function LoginPage() {
         setPassword("");
         setFirstName("");
         setLastName("");
+        setCaptchaToken("");
       } else {
         await login(email, password);
       }
@@ -164,6 +172,8 @@ export default function LoginPage() {
               required
             />
           </div>
+
+          {isRegister && <Turnstile onVerify={setCaptchaToken} />}
 
           {info && (
             <div className="bg-emerald-900/60 border border-emerald-800 rounded px-3 py-2 text-sm text-emerald-200">

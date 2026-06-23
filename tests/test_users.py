@@ -147,6 +147,50 @@ def test_register_password_without_special_char(api_client):
 
 
 @pytest.mark.django_db
+def test_register_blocked_without_turnstile_when_enabled(api_client, settings):
+    """With a secret key configured, registration requires a CAPTCHA token."""
+    settings.TURNSTILE_SECRET_KEY = "test-secret"
+    data = {
+        "email": "bot@example.com",
+        "password": "test12345A!",
+        "first_name": "B",
+        "last_name": "T",
+    }
+    res = api_client.post(reverse("user-register"), data)
+    assert res.status_code == 400
+    assert "turnstile" in res.data
+
+
+@pytest.mark.django_db
+def test_register_succeeds_with_valid_turnstile(api_client, settings, monkeypatch):
+    """A token that Cloudflare accepts lets registration through."""
+    settings.TURNSTILE_SECRET_KEY = "test-secret"
+
+    class _Resp:
+        def __enter__(self):
+            return self
+
+        def __exit__(self, *exc):
+            return False
+
+        def read(self):
+            return b'{"success": true}'
+
+    import apps.users.turnstile as turnstile
+    monkeypatch.setattr(turnstile.request, "urlopen", lambda *a, **k: _Resp())
+
+    data = {
+        "email": "human@example.com",
+        "password": "test12345A!",
+        "first_name": "H",
+        "last_name": "U",
+        "turnstile_token": "valid-token",
+    }
+    res = api_client.post(reverse("user-register"), data)
+    assert res.status_code == 201
+
+
+@pytest.mark.django_db
 def test_user_login(api_client):
     from apps.users.models import CustomUser
     user = CustomUser.objects.create_user(
