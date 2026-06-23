@@ -5,15 +5,24 @@ import type { NextConfig } from 'next';
 const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
 const apiOrigin = new URL(apiUrl).origin;
 const wsOrigin = apiOrigin.replace(/^http/, 'ws');
-const connectSrc = ["'self'", apiOrigin, wsOrigin, 'http://localhost:8000', 'ws://localhost:8000'].join(' ');
+const turnstile = 'https://challenges.cloudflare.com';
+const connectSrc = [
+  "'self'",
+  apiOrigin,
+  wsOrigin,
+  'http://localhost:8000',
+  'ws://localhost:8000',
+  turnstile,
+].join(' ');
 
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${turnstile}`,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self' data:",
   `connect-src ${connectSrc}`,
+  `frame-src ${turnstile}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",

@@ -250,6 +250,10 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@projectmanager.local")
 
+# --- Cloudflare Turnstile (anti-bot on registration) ------------------------
+# Leave unset to disable the CAPTCHA check entirely (local/dev/tests).
+TURNSTILE_SECRET_KEY = os.getenv("TURNSTILE_SECRET_KEY", "")
+
 # --- Production security hardening ------------------------------------------
 # Only enforced when DEBUG is off, so local development stays on plain HTTP.
 if not DEBUG:
