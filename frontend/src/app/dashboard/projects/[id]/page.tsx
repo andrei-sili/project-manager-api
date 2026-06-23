@@ -101,6 +101,9 @@ export default function ProjectDetailsPage() {
 }
   const { user } = useAuth();
   const canEdit = canEditOrDeleteProject(members, user?.id);
+  // Only admins/managers create, edit or delete tasks (developers move status only).
+  const myRole = members.find((m) => m.user?.id === user?.id)?.role;
+  const canManageTasks = myRole === "admin" || myRole === "manager";
 
 
   return (
@@ -223,7 +226,7 @@ export default function ProjectDetailsPage() {
           <KanbanBoard
             tasks={tasks}
             onStatusChange={handleStatusChange}
-            onAddTask={() => setShowAdd(true)}
+            onAddTask={canManageTasks ? () => setShowAdd(true) : undefined}
             onViewTask={setViewTask}
           />
         )}
@@ -275,17 +278,17 @@ export default function ProjectDetailsPage() {
           projectId={id}
           teamMembers={members}
           onClose={() => setViewTask(null)}
-          onEditClick={() => {
+          onEditClick={canManageTasks ? () => {
             setEditTask(viewTask);
             setViewTask(null);
-          }}
-          onDelete={async () => {
+          } : undefined}
+          onDelete={canManageTasks ? async () => {
             if (window.confirm("Delete this task?")) {
               await axiosClient.delete(`/projects/${id}/tasks/${viewTask.id}/`);
               setViewTask(null);
               fetchAll();
             }
-          }}
+          } : undefined}
           onTaskUpdated={fetchAll}
         />
       )}

@@ -110,7 +110,8 @@ def test_pending_admin_cannot_invite_members(api_client):
 @pytest.mark.django_db
 def test_cannot_reassign_task_to_non_member_on_update(api_client):
     user = UserFactory()
-    team = TeamFactory(members=[user])
+    team = TeamFactory()
+    TeamMembership.objects.create(team=team, user=user, role="manager", status="accepted")
     project = ProjectFactory(team=team)
     task = TaskFactory(project=project, created_by=user, assigned_to=user)
     outsider = UserFactory()

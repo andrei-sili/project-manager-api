@@ -87,3 +87,11 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
         if value and value < timezone.now():
             raise serializers.ValidationError("Due date cannot be in the past.")
         return value
+
+
+class TaskStatusSerializer(serializers.ModelSerializer):
+    """Developers may only move a task between Kanban columns."""
+
+    class Meta:
+        model = Task
+        fields = ['status']
