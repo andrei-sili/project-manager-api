@@ -105,11 +105,10 @@ def validate_password_strength(value):
 
 
 class RegisterAndAcceptInviteSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    token = serializers.UUIDField()
     password = serializers.CharField(write_only=True)
     first_name = serializers.CharField()
     last_name = serializers.CharField()
-    team_id = serializers.IntegerField()
 
     def validate_password(self, value):
         return validate_password_strength(value)

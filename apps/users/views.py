@@ -209,41 +209,41 @@ class RegisterAndAcceptInviteView(APIView):
         serializer = RegisterAndAcceptInviteSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
-        email = data["email"]
-        password = data["password"]
-        first_name = data["first_name"]
-        last_name = data["last_name"]
-        team_id = data["team_id"]
 
-        try:
-            user = CustomUser.objects.get(email=email)
-        except CustomUser.DoesNotExist:
-            return Response({"error": "Invalid invitation."}, status=status.HTTP_404_NOT_FOUND)
+        membership = (
+            TeamMembership.objects.select_related('user')
+            .filter(invite_token=data["token"]).first()
+        )
+        if not membership:
+            return Response({"detail": "Invitation not found."}, status=status.HTTP_404_NOT_FOUND)
+        if membership.status != 'pending':
+            return Response({"detail": "Invitation already handled."}, status=status.HTTP_400_BAD_REQUEST)
 
+        user = membership.user
         if user.has_usable_password():
-            return Response({"error": "User already registered."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"detail": "Account already exists. Please sign in to accept."},
+                            status=status.HTTP_400_BAD_REQUEST)
 
-        user.first_name = first_name
-        user.last_name = last_name
-        user.set_password(password)
+        # The invite email proves the address is the invitee's, so activate
+        # directly without a separate verification step.
+        user.first_name = data["first_name"]
+        user.last_name = data["last_name"]
+        user.set_password(data["password"])
+        user.is_active = True
         user.save()
 
-        try:
-            membership = TeamMembership.objects.get(user=user, team_id=team_id)
-            if membership.status != 'pending':
-                return Response({'error': 'Invitation already handled.'}, status=status.HTTP_400_BAD_REQUEST)
-            membership.status = 'accepted'
-            membership.save()
-        except TeamMembership.DoesNotExist:
-            return Response({'error': 'No pending invite found.'}, status=status.HTTP_404_NOT_FOUND)
+        membership.status = 'accepted'
+        membership.invite_token = None
+        membership.save(update_fields=['status', 'invite_token'])
 
         refresh = RefreshToken.for_user(user)
         return Response({
             "refresh": str(refresh),
             "access": str(refresh.access_token),
+            "team_id": membership.team_id,
             "user": {
                 "email": user.email,
                 "first_name": user.first_name,
-                "last_name": user.last_name
-            }
+                "last_name": user.last_name,
+            },
         })
