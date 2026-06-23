@@ -11,6 +11,7 @@ from rest_framework.response import Response
 from apps.notify.services import notify_user
 from apps.teams.models import Team, TeamMembership
 from apps.teams.permissions import IsTeamAdmin
+from apps.users.throttles import InviteRateThrottle
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 
 from apps.teams.serializers import TeamSerializer, TeamCreateSerializer, InviteMemberSerializer
@@ -67,7 +68,8 @@ class TeamViewSet(viewsets.ModelViewSet):
         request=InviteMemberSerializer,
         responses={200: OpenApiResponse(description="Invitation sent.")},
     )
-    @action(detail=True, methods=['post'], url_path='invite-member', permission_classes=[IsTeamAdmin])
+    @action(detail=True, methods=['post'], url_path='invite-member',
+            permission_classes=[IsTeamAdmin], throttle_classes=[InviteRateThrottle])
     def invite_member(self, request, pk=None):
         team = self.get_object()
         serializer = InviteMemberSerializer(data=request.data)
