@@ -4,6 +4,7 @@ import React from "react";
 import { getTeams, removeMember, changeRole, inviteTeamMember, deleteTeam } from "@/lib/api";
 import { useAuth } from "@/lib/useAuth";
 import type { Team } from "@/lib/types";
+import MemberStatusBadge from "@/components/MemberStatusBadge";
 
 export default function TeamsPage() {
   const { user } = useAuth();
@@ -61,7 +62,6 @@ export default function TeamsPage() {
                 ) : (
                   team.members.map(member => {
                     const fullName = `${member.user.first_name} ${member.user.last_name}`.trim() || member.user.email;
-                    const joinedAt = new Date(member.joined_at).toLocaleDateString();
                     const initial = member.user.first_name?.[0] || member.user.last_name?.[0] || member.user.email[0];
                     return (
                       <div key={member.user.id} className="bg-zinc-800 rounded-xl p-4 flex flex-col gap-2 border border-zinc-700 hover:border-emerald-500/50 transition">
@@ -76,13 +76,7 @@ export default function TeamsPage() {
                         </div>
                         <div className="flex justify-between items-center text-sm">
                           <span className="bg-emerald-500/15 text-emerald-300 px-2 py-0.5 rounded text-xs">{member.role}</span>
-                          {member.status === "pending" ? (
-                            <span className="bg-amber-500/15 text-amber-300 px-2 py-0.5 rounded text-xs">Pending invitation</span>
-                          ) : member.status === "declined" ? (
-                            <span className="bg-red-500/15 text-red-300 px-2 py-0.5 rounded text-xs">Declined</span>
-                          ) : (
-                            <span className="text-zinc-400 text-xs">Joined: {joinedAt}</span>
-                          )}
+                          <MemberStatusBadge status={member.status} joinedAt={member.joined_at} />
                         </div>
                         {team.is_admin && user.id !== member.user.id && (
                           <div className="flex justify-end gap-2 mt-2">
