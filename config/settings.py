@@ -250,6 +250,20 @@ EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "true").lower() == "true"
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "no-reply@projectmanager.local")
 
+# --- Sentry (error monitoring) ----------------------------------------------
+# Disabled unless SENTRY_DSN is set, so local/dev/tests send nothing.
+SENTRY_DSN = os.getenv("SENTRY_DSN", "")
+if SENTRY_DSN and not TESTING:
+    import sentry_sdk
+
+    sentry_sdk.init(
+        dsn=SENTRY_DSN,
+        environment=ENVIRONMENT,
+        # Privacy: never attach user emails / IPs to error events.
+        send_default_pii=False,
+        traces_sample_rate=0.1,
+    )
+
 # --- Cloudflare Turnstile (anti-bot on registration) ------------------------
 # Leave unset to disable the CAPTCHA check entirely (local/dev/tests).
 TURNSTILE_SECRET_KEY = os.getenv("TURNSTILE_SECRET_KEY", "")

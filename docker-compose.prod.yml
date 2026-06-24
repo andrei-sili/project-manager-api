@@ -58,6 +58,8 @@ services:
       DEFAULT_FROM_EMAIL: ${DEFAULT_FROM_EMAIL:-no-reply@projectmanager.local}
       # Cloudflare Turnstile (anti-bot on registration; unset = disabled).
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+      # Sentry error monitoring (unset = disabled).
+      SENTRY_DSN: ${SENTRY_DSN:-}
     volumes:
       - media:/app/media
     depends_on:

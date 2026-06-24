@@ -13,6 +13,7 @@ const connectSrc = [
   'http://localhost:8000',
   'ws://localhost:8000',
   turnstile,
+  'https://*.sentry.io', // error reporting (no-op unless a DSN is configured)
 ].join(' ');
 
 const csp = [
