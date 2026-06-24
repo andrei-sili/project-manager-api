@@ -2,7 +2,8 @@
 
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Bell } from "lucide-react";
-import { getNotifications, markNotificationRead } from "@/lib/api";
+import { getNotifications, getUnreadNotificationCount, markAllNotificationsRead } from "@/lib/api";
+import { refreshAccessToken } from "@/lib/token";
 import type { NotificationItem } from "@/lib/types";
 
 function timeAgo(iso: string) {
@@ -31,9 +32,11 @@ export default function NotificationBell() {
 
   const refresh = useCallback(async () => {
     try {
-      const data = await getNotifications();
+      // The list is page 1 (most recent); the unread badge uses a full count so
+      // it stays correct even with more than one page of notifications.
+      const [data, count] = await Promise.all([getNotifications(), getUnreadNotificationCount()]);
       setItems(data);
-      setUnread(data.filter((n) => !n.is_read).length);
+      setUnread(count);
     } catch {
       /* ignore — keep current state */
     }
@@ -58,7 +61,17 @@ export default function NotificationBell() {
         setTimeout(refresh, 700); // the DB row is written right after the push
       };
       ws.onclose = () => {
-        if (!stopped) reconnectTimer = setTimeout(connect, 5000);
+        if (stopped) return;
+        // The token may have expired (15 min); refresh it before reconnecting so
+        // the live feed recovers instead of looping forever with a stale token.
+        reconnectTimer = setTimeout(async () => {
+          try {
+            await refreshAccessToken();
+          } catch {
+            /* refresh failed (logged out / expired) — connect() will no-op */
+          }
+          connect();
+        }, 5000);
       };
     }
     connect();
@@ -82,10 +95,10 @@ export default function NotificationBell() {
     const next = !open;
     setOpen(next);
     if (next && unread > 0) {
-      const unreadItems = items.filter((n) => !n.is_read);
       setUnread(0);
       setItems((prev) => prev.map((n) => ({ ...n, is_read: true })));
-      await Promise.all(unreadItems.map((n) => markNotificationRead(n.id).catch(() => {})));
+      // Mark everything read server-side (not just the visible page).
+      await markAllNotificationsRead().catch(() => {});
     }
   }
 

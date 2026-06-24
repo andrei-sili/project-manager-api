@@ -39,10 +39,15 @@ def notify_user(user, message, email_subject=None, email_body=None, type='genera
         Notification.objects.create(user=user, message=message, type=type)
 
 
-def notify_team(team, message, exclude_user=None, type='general'):
-    """In-app/WebSocket notify every accepted team member (no email, to avoid spam)."""
+def notify_team(team, message, exclude_user_ids=None, type='general'):
+    """In-app/WebSocket notify every accepted team member (no email, to avoid spam).
+
+    ``exclude_user_ids`` skips users already notified individually (the actor and,
+    e.g., an assignee) so nobody gets the same event twice.
+    """
+    exclude = set(exclude_user_ids or ())
     members = team.membership_set.filter(status='accepted').select_related('user')
     for membership in members:
-        if exclude_user and membership.user_id == exclude_user.id:
+        if membership.user_id in exclude:
             continue
         notify_user(membership.user, message, type=type)
