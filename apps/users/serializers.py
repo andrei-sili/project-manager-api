@@ -40,7 +40,9 @@ class UserRegisterSerializer(serializers.ModelSerializer):
         ]
 
         extra_kwargs = {
-            'email': {'required': True},
+            # Drop the auto UniqueValidator so an existing email is not revealed
+            # (the view handles existing accounts without leaking which exist).
+            'email': {'required': True, 'validators': []},
             'first_name': {'required': True},
             'last_name': {'required': True},
             'password': {'required': True},
