@@ -93,7 +93,7 @@ export default function TaskComments({
     }
   };
 
-  // Render replies list
+  // Render replies (single level — replies cannot be replied to)
   function Replies({ replies }: { replies: CommentType[] }) {
     return (
       <div className="pl-5 border-l border-zinc-700 mt-2">
@@ -110,50 +110,7 @@ export default function TaskComments({
                     {new Date(reply.created_at).toLocaleString()}
                   </span>
                 </div>
-                <div className="text-white">{reply.text}</div>
-                <button
-                  className="text-xs text-emerald-400 hover:underline mt-1"
-                  onClick={() => setReplyingTo(reply.id)}
-                >
-                  Reply
-                </button>
-                {replyingTo === reply.id && (
-                  <form
-                    onSubmit={(e) => handleAddReply(reply.id, e)}
-                    className="mt-2 flex flex-col gap-2"
-                  >
-                    <textarea
-                      className="w-full rounded-xl p-2 bg-zinc-900 text-white border border-zinc-700 resize-none focus:ring-2 focus:ring-emerald-500 ltr-force"
-                      dir="ltr"
-                      value={replyContent[reply.id] || ""}
-                      onChange={(e) =>
-                        setReplyContent((prev) => ({ ...prev, [reply.id]: e.target.value }))
-                      }
-                      placeholder="Write a reply..."
-                      rows={2}
-                      autoFocus
-                    />
-                    <div className="flex gap-2 justify-end">
-                      <button
-                        type="submit"
-                        className="bg-emerald-600 hover:bg-emerald-700 px-4 py-1 text-white rounded-xl font-bold disabled:opacity-60"
-                        disabled={submitting || !(replyContent[reply.id] || "").trim()}
-                      >
-                        Reply
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setReplyingTo(null)}
-                        className="bg-zinc-700 px-3 py-1 rounded-xl text-white text-xs"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                )}
-                {reply.replies && reply.replies.length > 0 && (
-                  <Replies replies={reply.replies} />
-                )}
+                <div className="text-white whitespace-pre-line">{reply.text}</div>
               </div>
             </div>
           </div>

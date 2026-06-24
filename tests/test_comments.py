@@ -146,6 +146,20 @@ def test_create_reply_to_comment(auth_client):
 
 
 @pytest.mark.django_db
+def test_reply_to_a_reply_should_fail(auth_client):
+    team = TeamFactory()
+    user = auth_client.handler._force_user
+    TeamMembership.objects.create(team=team, user=user, role="developer", status="accepted")
+    project = ProjectFactory(team=team)
+    task = TaskFactory(project=project)
+    parent = CommentFactory(task=task, user=user)
+    reply = CommentFactory(task=task, user=user, parent=parent)
+    url = reverse("task-comments-list", args=[project.id, task.id])
+    res = auth_client.post(url, {"text": "nested", "parent": reply.id})
+    assert res.status_code == 400
+
+
+@pytest.mark.django_db
 def test_create_reply_to_comment_from_another_task_should_fail(auth_client):
     team = TeamFactory()
     user = auth_client.handler._force_user
