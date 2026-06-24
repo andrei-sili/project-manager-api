@@ -24,3 +24,13 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
         note.is_read = True
         note.save()
         return Response({"status": "marked as read"})
+
+    @action(detail=False, methods=["get"], url_path="unread_count")
+    def unread_count(self, request):
+        count = Notification.objects.filter(user=request.user, is_read=False).count()
+        return Response({"unread": count})
+
+    @action(detail=False, methods=["post"], url_path="mark_all_read")
+    def mark_all_read(self, request):
+        Notification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return Response({"status": "all marked as read"})

@@ -122,3 +122,12 @@ export async function getNotifications(): Promise<NotificationItem[]> {
 export async function markNotificationRead(id: number): Promise<void> {
   await axiosClient.post(`/notifications/${id}/mark_as_read/`);
 }
+
+export async function getUnreadNotificationCount(): Promise<number> {
+  const res = await axiosClient.get<{ unread: number }>("/notifications/unread_count/");
+  return res.data.unread;
+}
+
+export async function markAllNotificationsRead(): Promise<void> {
+  await axiosClient.post("/notifications/mark_all_read/");
+}

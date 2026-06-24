@@ -43,6 +43,7 @@ class CommentViewSet(viewsets.ModelViewSet):
 
         assigned = task.assigned_to
 
+        notified_ids = {self.request.user.id}
         if assigned and assigned != self.request.user:
             notify_user(
                 user=assigned,
@@ -50,6 +51,7 @@ class CommentViewSet(viewsets.ModelViewSet):
                 email_subject="New Comment on Your Task",
                 email_body=f"{self.request.user.first_name} commented on your task '{task.title}' in project '{task.project.name}'."
             )
+            notified_ids.add(assigned.id)
 
         log_activity(
             user=self.request.user,
@@ -62,7 +64,7 @@ class CommentViewSet(viewsets.ModelViewSet):
         notify_team(
             task.project.team,
             f"{self.request.user.first_name} commented on '{task.title}'",
-            exclude_user=self.request.user,
+            exclude_user_ids=notified_ids,
             type='comment',
         )
 

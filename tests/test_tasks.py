@@ -34,6 +34,27 @@ def test_create_task(auth_client):
 
 
 @pytest.mark.django_db
+def test_assignee_notified_once_on_task_create(auth_client):
+    from apps.notify.models import Notification
+    team = TeamFactory()
+    assignee = UserFactory()
+    TeamMembership.objects.create(team=team, user=auth_client.handler._force_user, role="manager", status="accepted")
+    TeamMembership.objects.create(team=team, user=assignee, role="developer", status="accepted")
+    project = ProjectFactory(team=team)
+    url = reverse("project-tasks-list", args=[project.id])
+    data = {
+        "title": "T", "description": "d", "project": project.id,
+        "assigned_to": assignee.id, "status": "todo", "priority": "medium",
+        "due_date": timezone.now().date() + timedelta(days=10),
+    }
+    res = auth_client.post(url, data)
+    assert res.status_code == 201
+    # Assignee is notified individually and is also a team member, but must not
+    # also receive the team-wide notification → exactly one.
+    assert Notification.objects.filter(user=assignee).count() == 1
+
+
+@pytest.mark.django_db
 def test_list_tasks_for_project(auth_client):
     team = TeamFactory()
     TeamMembership.objects.create(team=team, user=auth_client.handler._force_user, role="developer", status="accepted")

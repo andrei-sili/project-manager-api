@@ -147,3 +147,25 @@ def test_mark_as_read_requires_auth(api_client):
 def test_notify_user_none_user_should_fail():
     with pytest.raises(ValueError):
         notify_user(user=None, message="No user", type="general")
+
+
+@pytest.mark.django_db
+def test_unread_count(auth_client):
+    user = auth_client.handler._force_user
+    NotificationFactory(user=user, is_read=False)
+    NotificationFactory(user=user, is_read=False)
+    NotificationFactory(user=user, is_read=True)
+    NotificationFactory(is_read=False)  # different user
+    res = auth_client.get(reverse("notifications-unread-count"))
+    assert res.status_code == 200
+    assert res.data["unread"] == 2
+
+
+@pytest.mark.django_db
+def test_mark_all_read(auth_client):
+    user = auth_client.handler._force_user
+    NotificationFactory(user=user, is_read=False)
+    NotificationFactory(user=user, is_read=False)
+    res = auth_client.post(reverse("notifications-mark-all-read"))
+    assert res.status_code == 200
+    assert Notification.objects.filter(user=user, is_read=False).count() == 0

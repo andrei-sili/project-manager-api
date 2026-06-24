@@ -70,6 +70,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
         task = serializer.save(created_by=self.request.user, project=project)
 
+        notified_ids = {self.request.user.id}
         if assigned_user and assigned_user != self.request.user:
             notify_user(
                 user=assigned_user,
@@ -77,6 +78,7 @@ class TaskViewSet(viewsets.ModelViewSet):
                 email_subject="New Task Assigned",
                 email_body=f"You have been assigned a new task in project '{project.name}'."
             )
+            notified_ids.add(assigned_user.id)
 
         log_activity(
             user=self.request.user,
@@ -89,7 +91,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         notify_team(
             project.team,
             f"{self.request.user.first_name} added task '{task.title}'",
-            exclude_user=self.request.user,
+            exclude_user_ids=notified_ids,
             type='task',
         )
 
@@ -118,7 +120,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         notify_team(
             task.project.team,
             f"{self.request.user.first_name} updated task '{task.title}'",
-            exclude_user=self.request.user,
+            exclude_user_ids={self.request.user.id},
             type='task',
         )
 
@@ -139,7 +141,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         notify_team(
             team,
             f"{self.request.user.first_name} deleted task '{title}'",
-            exclude_user=self.request.user,
+            exclude_user_ids={self.request.user.id},
             type='task',
         )
 
