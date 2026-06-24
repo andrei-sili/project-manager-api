@@ -97,10 +97,9 @@ class TaskUpdateSerializer(serializers.ModelSerializer):
             'assigned_to',
         ]
 
-    def validate_due_date(self, value):
-        if value and value < timezone.now():
-            raise serializers.ValidationError("Due date cannot be in the past.")
-        return value
+    # No past-date check on update: a task may already be overdue, and editing
+    # other fields must not be blocked by its date. Creation still requires a
+    # future due date.
 
 
 class TaskStatusSerializer(serializers.ModelSerializer):

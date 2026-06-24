@@ -261,6 +261,20 @@ def test_create_task_with_past_due_date_should_fail(auth_client):
 
 
 @pytest.mark.django_db
+def test_update_overdue_task_is_allowed(auth_client):
+    # Editing a task that is already past its due date must not be blocked.
+    team = TeamFactory()
+    TeamMembership.objects.create(team=team, user=auth_client.handler._force_user, role="manager", status="accepted")
+    project = ProjectFactory(team=team)
+    past = timezone.now() - timedelta(days=5)
+    task = TaskFactory(project=project, due_date=past)
+    url = reverse("project-tasks-detail", args=[project.id, task.id])
+    res = auth_client.patch(url, {"title": "Edited", "due_date": past.date().isoformat()})
+    assert res.status_code == 200
+    assert res.data["title"] == "Edited"
+
+
+@pytest.mark.django_db
 def test_my_tasks_returns_only_own_tasks(auth_client):
     user = auth_client.handler._force_user
     team = TeamFactory(members=[user])

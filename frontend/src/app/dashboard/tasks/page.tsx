@@ -5,7 +5,7 @@ import axiosClient from "@/lib/axiosClient";
 import KanbanBoard from "@/components/KanbanBoard";
 import EditTaskModal from "@/components/EditTaskModal";
 import TaskModal from "@/components/TaskModal";
-import { Task } from "@/lib/types";
+import { Task, TeamMember } from "@/lib/types";
 
 const PRIORITIES = ["all", "high", "medium", "low"] as const;
 
@@ -15,6 +15,7 @@ export default function MyTasksPage() {
   const [editTask, setEditTask] = useState<Task | null>(null);
   const [query, setQuery] = useState("");
   const [priority, setPriority] = useState<(typeof PRIORITIES)[number]>("all");
+  const [activeMembers, setActiveMembers] = useState<TeamMember[]>([]);
   const searchRef = useRef<HTMLInputElement>(null);
 
   const filtered = useMemo(() => {
@@ -56,6 +57,35 @@ export default function MyTasksPage() {
   useEffect(() => {
     loadTasks();
   }, []);
+
+  // My Tasks spans many teams, so load the accepted members of the active task's
+  // team on demand (needed for the assignee dropdown when editing).
+  useEffect(() => {
+    const active = editTask || viewTask;
+    if (!active) {
+      setActiveMembers([]);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const proj = await axiosClient.get(`/projects/${active.project.id}/`);
+        const teamId = proj.data.team?.id ?? proj.data.team;
+        if (!teamId) return;
+        const team = await axiosClient.get(`/teams/${teamId}/`);
+        if (!cancelled) {
+          setActiveMembers(
+            (team.data.members || []).filter((m: TeamMember) => m.status === "accepted")
+          );
+        }
+      } catch {
+        /* ignore — dropdown just stays empty */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [editTask, viewTask]);
 
   // Cmd/Ctrl-K focuses the search box.
   useEffect(() => {
@@ -113,7 +143,7 @@ export default function MyTasksPage() {
         <EditTaskModal
           open={!!editTask}
           task={editTask}
-          teamMembers={[]}
+          teamMembers={activeMembers}
           onClose={() => setEditTask(null)}
           onSaved={loadTasks}
           projectId={editTask.project.id}
@@ -138,7 +168,7 @@ export default function MyTasksPage() {
           } : undefined}
           onTaskUpdated={loadTasks}
           projectId={viewTask.project.id.toString()}
-          teamMembers={[]}
+          teamMembers={activeMembers}
         />
       )}
     </div>
