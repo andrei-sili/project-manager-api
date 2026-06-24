@@ -11,7 +11,7 @@ A full-stack team-collaboration platform — Kanban boards, time tracking, team
 roles, a calendar, analytics and real-time notifications. Built with a
 Django REST + Channels backend and a Next.js frontend.
 
-**Live demo:** [pm.andreisili.com](https://pm.andreisili.com) — log in with `alice@example.com` / `Demo1234!`
+**Live demo:** [pm.andreisili.com](https://pm.andreisili.com) — sign in with `alice@example.com` / `Demo1234!`, or click **Try the demo**. The database resets to a fresh demo set once a day, so no real sign-up data is kept.
 
 <p align="center">
   <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="900">
@@ -21,12 +21,15 @@ Django REST + Channels backend and a Next.js frontend.
 
 ## Features
 
-- **Authentication** — JWT (access/refresh) with register, login, logout
-  (refresh-token blacklist) and password reset.
-- **Teams & roles** — invite members, roles (admin / manager / developer),
-  with a guard that a team always keeps at least one admin.
+- **Authentication** — JWT (access/refresh) with email-verified registration,
+  login/logout (refresh-token blacklist) and self-service password reset.
+  Bot sign-ups are blocked with Cloudflare Turnstile and per-IP rate limiting.
+- **Teams & roles** — email invitations with accept / decline, roles
+  (admin / manager / developer) with strict task permissions (developers move
+  their own tasks; admins/managers manage), and a guard that a team always
+  keeps at least one admin.
 - **Projects & tasks** — Kanban board with drag-and-drop, priorities,
-  assignees, due dates, threaded comments and file attachments.
+  assignees, due dates, task comments with replies and file attachments.
 - **Time tracking** — live timer, manual entries, weekly target, charts and
   CSV export.
 - **Calendar** — monthly view of tasks placed on their due dates.
@@ -70,8 +73,8 @@ permissions:
 
 | App | Responsibility |
 | --- | --- |
-| `users` | custom user (email login), auth, password reset |
-| `teams` | teams, memberships, roles, invitations |
+| `users` | custom user (email login), auth, email verification, password reset, Turnstile |
+| `teams` | teams, memberships, roles, tokenized email invitations |
 | `projects` | projects |
 | `tasks` | tasks (Kanban, status, priority, assignees) |
 | `comments` | threaded task comments |
@@ -125,10 +128,23 @@ on before starting the frontend. Uploaded files are served through an
 authenticated endpoint (not a public `/media/` path), so they work in
 production without a separate static host.
 
-**Deploying live:** push the two images to a managed platform (Fly.io,
-Railway or Render) that terminates HTTPS for you, then set `ENVIRONMENT=production`,
-a strong `SECRET_KEY`, `ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`/`CORS_ALLOWED_ORIGINS`
-and point `NEXT_PUBLIC_API_URL` at the API origin.
+## Live deployment
+
+The demo runs on a split, fully-Dockerised stack:
+
+- **Backend** — an Oracle Cloud VM running `docker-compose.prod.yml`
+  (PostgreSQL + Redis + Django/Daphne) behind **Caddy**, which terminates
+  HTTPS with automatic Let's Encrypt certificates. The app container runs as a
+  non-root user; transactional email is sent through **Resend** (SMTP).
+- **Frontend** — **Vercel**, auto-deployed on every push to `main`, with a
+  Content-Security-Policy and security headers set in `next.config.ts`.
+- **Demo hygiene** — a nightly cron reseeds the demo data and removes any
+  accounts created during the day, so the public demo retains no real personal
+  data; unverified accounts and expired tokens are pruned daily as well.
+
+To deploy your own: set `ENVIRONMENT=production`, a strong `SECRET_KEY`,
+`ALLOWED_HOSTS`, `CSRF_TRUSTED_ORIGINS`/`CORS_ALLOWED_ORIGINS`, the `EMAIL_*`
+SMTP variables, and point `NEXT_PUBLIC_API_URL` at the API origin.
 
 ## Tests & quality
 
@@ -141,10 +157,14 @@ cd frontend && npm test && npm run lint && npm run build   # frontend tests, lin
 
 ## Security highlights
 
-Secure-by-default permissions, object-level authorization, JWT with
-refresh-token blacklist, rate limiting on auth endpoints, password-strength
-validation, upload type/size validation, and production security headers
-(HSTS, secure cookies, SSL redirect) gated behind `ENVIRONMENT`.
+Secure-by-default permissions, object-level authorization and role-based task
+permissions; JWT with a short-lived access token plus refresh rotation and
+blacklist; email-verified accounts; Cloudflare Turnstile and per-IP / per-user
+rate limiting on auth and email-sending endpoints (so the mail provider can't be
+abused); password-strength validation; upload type/size validation; a
+Content-Security-Policy and security headers on the frontend; and production
+headers (HSTS, secure cookies, SSL redirect) gated behind `ENVIRONMENT`. The
+public demo resets daily, so no real user data is retained.
 
 ## License
 
