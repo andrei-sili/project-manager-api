@@ -158,8 +158,10 @@ export default function TaskModal({
     stopTimer();
     // Save time entry if there is elapsed time
     const elapsedSec = useTimerStore.getState().getElapsed();
-    const minutes = Math.round(elapsedSec / 60);
-    if (minutes > 0) {
+    // Any tracked session counts as at least one minute (a short session used to
+    // round to 0 and be discarded silently).
+    if (elapsedSec > 0) {
+      const minutes = Math.max(1, Math.round(elapsedSec / 60));
       try {
         await createTimeEntry({
           task_id: task.id,
