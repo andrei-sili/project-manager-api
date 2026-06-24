@@ -129,6 +129,18 @@ def test_change_member_role(auth_client):
 
 
 @pytest.mark.django_db
+def test_change_role_on_pending_member_fails(auth_client):
+    team = TeamFactory(created_by=auth_client.handler._force_user)
+    TeamMembership.objects.create(team=team, user=auth_client.handler._force_user, role="admin", status="accepted")
+    member = UserFactory()
+    TeamMembership.objects.create(team=team, user=member, role="developer", status="pending")
+    url = reverse("teams-change-role", args=[team.id])
+    res = auth_client.post(url, {"user_id": member.id, "role": "manager"})
+    assert res.status_code == 400
+    assert TeamMembership.objects.get(team=team, user=member).role == "developer"
+
+
+@pytest.mark.django_db
 def test_delete_team(auth_client):
     team = TeamFactory(created_by=auth_client.handler._force_user)
     TeamMembership.objects.create(

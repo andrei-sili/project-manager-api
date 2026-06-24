@@ -170,6 +170,8 @@ class TeamViewSet(viewsets.ModelViewSet):
         membership = TeamMembership.objects.filter(team=team, user_id=user_id).first()
         if not membership:
             raise NotFound("Membership not found.")
+        if membership.status != 'accepted':
+            raise ValidationError("Can only change the role of an active member.")
         if membership.role == 'admin' and new_role != 'admin' and self._is_last_admin(team):
             raise ValidationError("The team must keep at least one admin.")
         membership.role = new_role

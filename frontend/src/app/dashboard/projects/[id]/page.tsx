@@ -97,14 +97,20 @@ export default function ProjectDetailsPage() {
   function canEditOrDeleteProject(members: TeamMember[], userId: number | null | undefined) {
   if (!userId) return false;
   return members.some(
-    (member) => member.user?.id === userId && member.role === "admin"
+    (member) =>
+      member.user?.id === userId && member.status === "accepted" && member.role === "admin"
   );
 }
   const { user } = useAuth();
   const canEdit = canEditOrDeleteProject(members, user?.id);
+  // Role checks only count accepted memberships (a pending invite has no role yet).
+  const myRole = members.find(
+    (m) => m.user?.id === user?.id && m.status === "accepted"
+  )?.role;
   // Only admins/managers create, edit or delete tasks (developers move status only).
-  const myRole = members.find((m) => m.user?.id === user?.id)?.role;
   const canManageTasks = myRole === "admin" || myRole === "manager";
+  // Only accepted members can be assigned to tasks.
+  const acceptedMembers = members.filter((m) => m.status === "accepted");
 
 
   return (
@@ -256,7 +262,7 @@ export default function ProjectDetailsPage() {
           open={showAdd}
           onClose={() => setShowAdd(false)}
           projectId={id}
-          teamMembers={members}
+          teamMembers={acceptedMembers}
           onAdded={fetchAll}
         />
       )}
@@ -264,7 +270,7 @@ export default function ProjectDetailsPage() {
         <EditTaskModal
           open={!!editTask}
           task={editTask}
-          teamMembers={members}
+          teamMembers={acceptedMembers}
           projectId={Number(id)}
           onClose={() => setEditTask(null)}
           onSaved={fetchAll}
@@ -275,7 +281,7 @@ export default function ProjectDetailsPage() {
           open={!!viewTask}
           task={viewTask}
           projectId={id}
-          teamMembers={members}
+          teamMembers={acceptedMembers}
           onClose={() => setViewTask(null)}
           onEditClick={canManageTasks ? () => {
             setEditTask(viewTask);

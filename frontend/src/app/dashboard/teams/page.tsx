@@ -80,29 +80,35 @@ export default function TeamsPage() {
                         </div>
                         {team.is_admin && user.id !== member.user.id && (
                           <div className="flex justify-end gap-2 mt-2">
-                            <select
-                              value={member.role}
-                              onChange={async e => {
-                                await changeRole(team.id, member.user.id, e.target.value);
-                                setNotice(`Updated ${fullName}'s role.`);
-                                loadTeams();
-                              }}
-                              className="bg-zinc-900 border border-zinc-700 text-white text-xs rounded px-2 py-1"
-                            >
-                              <option value="developer">Developer</option>
-                              <option value="manager">Manager</option>
-                              <option value="admin">Admin</option>
-                            </select>
+                            {member.status === "accepted" && (
+                              <select
+                                value={member.role}
+                                onChange={async e => {
+                                  await changeRole(team.id, member.user.id, e.target.value);
+                                  setNotice(`Updated ${fullName}'s role.`);
+                                  loadTeams();
+                                }}
+                                className="bg-zinc-900 border border-zinc-700 text-white text-xs rounded px-2 py-1"
+                              >
+                                <option value="developer">Developer</option>
+                                <option value="manager">Manager</option>
+                                <option value="admin">Admin</option>
+                              </select>
+                            )}
                             <button
                               className="text-red-500 text-xs hover:underline"
                               onClick={async () => {
-                                if (!window.confirm(`Remove ${fullName} from the team?`)) return;
+                                const isPending = member.status !== "accepted";
+                                const confirmMsg = isPending
+                                  ? `Cancel the invitation for ${fullName}?`
+                                  : `Remove ${fullName} from the team?`;
+                                if (!window.confirm(confirmMsg)) return;
                                 await removeMember(team.id, member.user.id);
-                                setNotice(`Removed ${fullName}.`);
+                                setNotice(isPending ? `Cancelled invitation for ${fullName}.` : `Removed ${fullName}.`);
                                 loadTeams();
                               }}
                             >
-                              Remove
+                              {member.status === "accepted" ? "Remove" : "Cancel invite"}
                             </button>
                           </div>
                         )}
