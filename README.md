@@ -42,6 +42,10 @@ Django REST + Channels backend and a Next.js frontend.
 
 ## Screenshots
 
+| Sign in (live demo) | Real-time notifications |
+| --- | --- |
+| ![Sign in](docs/screenshots/login.png) | ![Notifications](docs/screenshots/notifications.png) |
+
 | Kanban board | Calendar |
 | --- | --- |
 | ![Kanban](docs/screenshots/kanban.png) | ![Calendar](docs/screenshots/calendar.png) |
