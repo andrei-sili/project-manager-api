@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axiosClient from "@/lib/axiosClient";
 import KanbanBoard from "@/components/KanbanBoard";
 import AddTaskModal from "@/components/AddTaskModal";
@@ -38,7 +38,7 @@ export default function ProjectDetailsPage() {
 
   // Fetch project, tasks and time summary in parallel; team depends on the
   // project's team id so it follows.
-  async function fetchAll() {
+  const fetchAll = useCallback(async () => {
     setLoading(true);
     setError("");
     try {
@@ -67,12 +67,11 @@ export default function ProjectDetailsPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [id]);
 
   useEffect(() => {
     fetchAll();
-
-  }, [id]);
+  }, [fetchAll]);
 
   // Optimistically move the card; revert if the request fails.
   async function handleStatusChange(taskId: number, newStatus: string) {
