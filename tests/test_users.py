@@ -276,17 +276,58 @@ def test_reset_password_confirm(api_client, user, db):
 
 
 @pytest.mark.django_db
-def test_register_existing_user(api_client, user):
+def test_register_existing_active_email_is_non_enumerable(api_client, user):
+    # An already-registered (active) email returns the same 201 as a new one, so
+    # registration can't be used to probe which emails exist.
+    from apps.users.models import CustomUser
     url = reverse("user-register")
     data = {
         "email": user.email,
         "password": "password123A!",
         "first_name": "Ion",
-        "last_name": "Popescu"
+        "last_name": "Popescu",
     }
     response = api_client.post(url, data)
-    assert response.status_code == 400
-    assert "email" in response.data
+    assert response.status_code == 201
+    assert CustomUser.objects.filter(email=user.email).count() == 1
+
+
+@pytest.mark.django_db
+def test_register_unverified_email_resends_verification(api_client):
+    from apps.users.models import CustomUser, EmailVerificationToken
+    existing = CustomUser.objects.create_user(
+        email="pending@example.com", password="OldPass123!", is_active=False
+    )
+    EmailVerificationToken.objects.create(user=existing)
+    url = reverse("user-register")
+    data = {
+        "email": "pending@example.com",
+        "password": "NewPass123!",
+        "first_name": "New",
+        "last_name": "Name",
+    }
+    res = api_client.post(url, data)
+    assert res.status_code == 201
+    existing.refresh_from_db()
+    assert existing.first_name == "New"
+    assert existing.check_password("NewPass123!")
+    # A fresh verification token is issued (still inactive until verified).
+    assert existing.is_active is False
+    assert EmailVerificationToken.objects.filter(user=existing).count() == 1
+
+
+@pytest.mark.django_db
+def test_login_unverified_account_hints_to_verify(api_client):
+    from apps.users.models import CustomUser
+    CustomUser.objects.create_user(
+        email="unverified@example.com", password="GoodPass123!", is_active=False
+    )
+    res = api_client.post(
+        reverse("token_obtain_pair"),
+        {"email": "unverified@example.com", "password": "GoodPass123!"},
+    )
+    assert res.status_code == 401
+    assert "verify" in str(res.data).lower()
 
 
 @pytest.mark.django_db

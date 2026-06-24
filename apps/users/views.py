@@ -6,6 +6,8 @@ from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 
@@ -40,10 +42,29 @@ def send_verification_email(user):
     )
 
 
+class EmailAwareTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """On login failure, distinguish an unverified account (correct password but
+    inactive) from bad credentials — only when the password matches, so it does
+    not leak which emails exist."""
+
+    def validate(self, attrs):
+        try:
+            return super().validate(attrs)
+        except AuthenticationFailed:
+            user = CustomUser.objects.filter(email=attrs.get("email")).first()
+            if user and not user.is_active and user.check_password(attrs.get("password", "")):
+                raise AuthenticationFailed(
+                    "Please verify your email before signing in — check your inbox for the link.",
+                    code="email_not_verified",
+                )
+            raise
+
+
 class ThrottledTokenObtainPairView(TokenObtainPairView):
     """Login endpoint with a stricter per-IP throttle to slow brute-force."""
 
     throttle_classes = [AuthRateThrottle]
+    serializer_class = EmailAwareTokenObtainPairSerializer
 
 
 class UserViewSet(viewsets.ViewSet):
@@ -59,10 +80,25 @@ class UserViewSet(viewsets.ViewSet):
         verify_turnstile(request.data.get("turnstile_token"), request.META.get("REMOTE_ADDR"))
         serializer = UserRegisterSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        user = serializer.save()
-        send_verification_email(user)
+        data = serializer.validated_data
+
+        existing = CustomUser.objects.filter(email=data["email"]).first()
+        if existing is None:
+            send_verification_email(serializer.save())
+        elif not existing.is_active:
+            # Unverified account re-registering: refresh details and resend the link.
+            existing.first_name = data["first_name"]
+            existing.last_name = data["last_name"]
+            existing.set_password(data["password"])
+            existing.save()
+            EmailVerificationToken.objects.filter(user=existing).delete()
+            send_verification_email(existing)
+        # An already-active email gets no mail; the response is identical either
+        # way so registration cannot be used to probe which emails exist.
+
         return Response(
-            {"detail": "Account created. Check your email for a link to verify and activate it."},
+            {"detail": "Thanks! If that email can be registered, we've sent a verification "
+                       "link — please check your inbox."},
             status=status.HTTP_201_CREATED,
         )
 

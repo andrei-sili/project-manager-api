@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/useAuth";
 import axiosClient from "@/lib/axiosClient";
 import { getErrorMessage } from "@/lib/errors";
@@ -184,6 +185,13 @@ export default function LoginPage() {
               disabled={loading}
               required
             />
+            {!isRegister && (
+              <div className="mt-1 text-right">
+                <Link href="/forgot-password" className="text-xs text-emerald-400 hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
+            )}
           </div>
 
           {isRegister && <Turnstile onVerify={setCaptchaToken} />}
