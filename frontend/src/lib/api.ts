@@ -103,8 +103,23 @@ export async function getTimeSummary(): Promise<TimeSummary> {
   return res.data;
 }
 export async function getAllTimeEntries(): Promise<TimeEntry[]> {
-  const res = await axiosClient.get<{ results?: TimeEntry[] }>("/time-entries/");
-  return res.data.results ?? [];
+  // Follow pagination so the table and CSV export see the full history, not just
+  // the first page.
+  const all: TimeEntry[] = [];
+  let page = 1;
+  for (;;) {
+    const res = await axiosClient.get<Paginated<TimeEntry> | TimeEntry[]>(
+      `/time-entries/?page=${page}`
+    );
+    if (Array.isArray(res.data)) {
+      all.push(...res.data);
+      break;
+    }
+    all.push(...(res.data.results ?? []));
+    if (!res.data.next) break;
+    page += 1;
+  }
+  return all;
 }
 
 /* ----- ACTIVITY ----- */

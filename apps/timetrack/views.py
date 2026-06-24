@@ -6,7 +6,8 @@ from rest_framework.decorators import action
 from .models import TimeEntry
 from .serializers import TimeEntrySerializer
 from django.db.models import Sum, Q
-from datetime import datetime, timedelta
+from django.utils import timezone
+from datetime import timedelta
 
 
 class TimeEntryViewSet(viewsets.ModelViewSet):
@@ -42,7 +43,9 @@ class TimeEntryViewSet(viewsets.ModelViewSet):
         queryset = self.get_queryset()
         total_minutes = queryset.aggregate(total=Sum('minutes'))['total'] or 0
 
-        today = datetime.today().date()
+        # Use the configured timezone so "today"/week match the UTC dates entries
+        # are stored with (avoids attributing time to the wrong day near midnight).
+        today = timezone.localdate()
         week_start = today - timedelta(days=today.weekday())
 
         # Breakdown for the last 7 days, aggregated in a single query.
