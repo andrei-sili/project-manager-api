@@ -12,7 +12,12 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# The base image ships without .pyc files and PYTHONDONTWRITEBYTECODE stops them
+# being cached, so every short-lived python process (healthcheck, cron management
+# commands) recompiled the stdlib: ~1s idle on a small VM, past the healthcheck
+# timeout under load. Precompile stdlib and dependencies once at build time.
+RUN pip install --no-cache-dir -r requirements.txt \
+    && python -m compileall -q /usr/local/lib/python3.12
 
 COPY . .
 
@@ -25,7 +30,7 @@ EXPOSE 8000
 
 # Liveness check used by docker-compose / orchestrators (public endpoint).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
-    CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/api/health/').status==200 else 1)"
+    CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/health/').status==200 else 1)"
 
 # Entrypoint fixes volume ownership as root, then runs migrate/collectstatic/daphne as appuser.
 ENTRYPOINT ["sh", "/app/deploy/entrypoint.sh"]
