@@ -96,7 +96,7 @@ Requirements: Python 3.12, Node.js 22. Redis/PostgreSQL are optional in dev
 
 ```bash
 python -m venv venv && source venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt
 cp .env.example .env            # set SECRET_KEY and ENVIRONMENT=development
 python manage.py migrate
 python seed_demo.py             # optional: rich demo data
