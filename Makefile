@@ -15,6 +15,3 @@ superuser:
 
 test:
 	pytest
-
-freeze:
-	pip freeze > requirements.txt
