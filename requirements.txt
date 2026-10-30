@@ -47,7 +47,6 @@ pytz==2025.2
 PyYAML==6.0.3
 redis==6.1.0
 referencing==0.37.0
-routing==0.2.0
 rpds-py==2026.5.1
 service-identity==24.2.0
 setuptools==80.8.0
