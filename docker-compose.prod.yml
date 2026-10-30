@@ -28,6 +28,9 @@ services:
   backend:
     build: .
     restart: unless-stopped
+    # daphne runs as PID 1 and never reaps children; healthcheck processes
+    # killed on timeout were left as zombies. tini (init) reaps them.
+    init: true
     environment:
       ENVIRONMENT: production
       SECRET_KEY: ${SECRET_KEY:?set SECRET_KEY in .env}
